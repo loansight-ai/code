@@ -1,0 +1,19 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+# Python and notebooks
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+# JavaScript dependencies and build output
+node_modules/
+dist/
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
