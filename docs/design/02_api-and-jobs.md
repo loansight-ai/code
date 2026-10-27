@@ -97,7 +97,7 @@ POST /analyses
                               NOTIFY → FastAPI → SSE
 ```
 
-- Worker는 RabbitMQ consumer로 구독한다. PostgreSQL 작업 테이블을 주기적으로 조회해 신규 분석을 가져가는 방식은 사용하지 않는다. Python 큐 라이브러리와 구체적인 큐 종류는 구현 시 확정한다.
+- Worker는 aio-pika를 사용하는 RabbitMQ consumer로 구독한다. PostgreSQL 작업 테이블을 주기적으로 조회해 신규 분석을 가져가는 방식은 사용하지 않는다. 구체적인 큐 종류는 구현 시 확정한다. 라이브러리 구성은 [백엔드 설계](05_project-and-deployment.md#backend-stack)를 따른다.
 - API는 `analysis_job`, 사용자 작업 연결, `outbox_message`를 같은 DB 트랜잭션에 저장한다. DB 커밋 후 MQ에 직접 발행하는 이중 쓰기를 피한다. `202`는 요청의 영속 접수를 뜻하며 MQ 전달 완료를 뜻하지 않는다.
 - Relay는 Outbox를 읽어 durable 큐에 persistent 메시지를 발행하고, publisher confirm과 라우팅 실패를 확인한 뒤 발행 완료를 기록한다. 메시지에는 `message_id`, `job_id`, 실행 세대와 계약 버전을 포함하고 원문·결과는 ID로 참조한다.
 - DB 커밋과 MQ 전달 사이의 장애는 미발행 Outbox 재전송으로 복구한다. Relay의 대기·재시도 확인에는 제한적인 내부 조회를 허용한다. 여러 Relay의 Outbox 선점에는 `FOR UPDATE SKIP LOCKED` 등을 사용할 수 있으며 분석 작업 큐와 구분한다.
@@ -113,6 +113,7 @@ POST /analyses
 
 **작업 실행은 MQ, 현재 상태와 이력은 DB, 브라우저 알림은 SSE가 담당한다.** 브라우저의 주기적 상태 폴링을 기본 흐름으로 사용하지 않으며 요청·결과 조회·알림 확인은 REST로 처리한다. 현재 요구에는 서버→브라우저 단방향 알림이면 충분하므로 WebSocket은 도입하지 않는다.
 
+- SSE 응답은 FastAPI 내장 EventSourceResponse·ServerSentEvent로 구성하고 내부 변경 알림은 Psycopg 3의 전용 LISTEN 연결로 수신한다. 현재 상태 복원과 이벤트 재생은 아래 DB 기반 계약으로 구현한다.
 - Worker의 상태 변경과 연결된 사용자들의 `task_event` 저장을 같은 트랜잭션에서 처리한다. 이미 실행 중인 분석에 새 사용자가 연결되는 경우에도 현재 상태를 작업 목록에 포함하고 이후 변경이 누락되지 않도록 연결 등록과 상태 변경을 동기화한다.
 - 이벤트는 `task.created`, `task.updated`, `task.completed`, `task.failed`, `task.acknowledged` 등으로 구분한다. 부분 완료는 `task.completed`와 `PARTIAL_SUCCEEDED`로 표현한다.
 - SSE의 `id`는 수신 사용자·Workspace 스트림의 cursor이며 payload에 `task_id`, `task_type`, `job_id`, `analysis_run_id`, 해당 시 `review_id`, `status`, `stage`, `state_version`, 발생 시각을 포함한다. 진행률은 산출 근거가 있는 경우에만 선택적으로 포함한다.

@@ -36,6 +36,8 @@
 
 React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE를 사용합니다. Frontend/Backend 공통 이미지를 Compose 설치형과 k3s SaaS에서 운영하는 방향입니다. 실제 기업 보고서 한 건의 수집부터 화면 조회까지 연결하는 기능부터 구현합니다.
 
+패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
+
 코드가 추가되면 의존성·버전·설정·실행 명령과 검증 결과를 이 문서에 기록합니다. 현재는 실행할 프로그램이 없습니다.
 
 ## 협업

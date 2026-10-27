@@ -12,6 +12,10 @@
 
 아래는 구현 목표 구조다. 현재 저장소는 설계·협업 문서 단계이며 애플리케이션 골격·실행 환경은 아직 생성되지 않았다. 로컬 `docs/`에는 코드와 함께 변경하는 산식·규칙·데이터·API 계약을 두고, 기획·수행일지·제출·발표 자료는 별도 docs 저장소에서 관리한다.
 
+프론트엔드 의존성과 실행 스크립트는 **pnpm**으로 관리하고 `package.json`·`pnpm-lock.yaml`을 함께 버전 관리한다. pnpm과 Node.js 버전은 초기화 시 명시하며 CI·이미지 빌드는 고정된 lockfile을 사용한다. UI별 라이브러리 구성은 [화면·검토 설계](04_ui-and-review.md#frontend-stack)를 따른다.
+
+백엔드 의존성과 실행 환경은 **[uv](https://docs.astral.sh/uv/)**로 관리하고 `pyproject.toml`·`uv.lock`을 함께 버전 관리한다. Python·uv 버전과 패키지 호환 범위는 초기화 시 명시하며 CI·이미지 빌드는 고정된 lockfile을 사용한다. API·Worker·Outbox Relay는 같은 의존성 구성을 사용한다.
+
 ```text
 loansight-ai/
 ├── frontend/                         # React + Vite SPA
@@ -42,6 +46,7 @@ loansight-ai/
 │   ├── Dockerfile
 │   ├── nginx.conf
 │   ├── package.json
+│   ├── pnpm-lock.yaml
 │   └── vite.config.ts
 │
 ├── backend/                          # FastAPI + Python Worker
@@ -92,6 +97,7 @@ loansight-ai/
 │   ├── migrations/                   # Alembic
 │   ├── tests/
 │   ├── pyproject.toml
+│   ├── uv.lock
 │   └── Dockerfile
 │
 ├── deploy/
@@ -114,6 +120,33 @@ loansight-ai/
 3. `worker/*`는 기존 모듈을 조합해 실행하며, 별도의 두 번째 비즈니스 로직을 만들지 않는다.
 4. 기능이 작으면 `service.py` 등 최소 파일부터 시작한다. 모든 모듈에 계층 구조를 강제하지 않는다.
 5. 모델 파일·추론 API·입력 스키마·전처리 산출물·검증 결과는 외부에서 제공받고 운영 Adapter에서 버전 호환성을 확인한다. 모델 개발용 코드·데이터셋·파이프라인은 이 저장소에 두지 않는다.
+
+<a id="backend-stack"></a>
+
+## 백엔드 라이브러리 구성
+
+아래 구성을 구현 기준으로 채택한다. 현재는 설계 단계이며 실제 패키지 설치와 버전 고정은 백엔드 초기화 시 진행한다.
+
+| 용도 | 라이브러리·도구 | 적용 범위 |
+|---|---|---|
+| API·서버 실행 | FastAPI + Uvicorn | REST API와 서버 프로세스 실행 |
+| 데이터 검증 | Pydantic | 요청·응답, 외부 데이터, LLM 구조화 출력 검증 |
+| 환경설정 | pydantic-settings | 환경변수 기반 설정 로딩·검증 |
+| DB 접근 | [SQLAlchemy 2.x](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html) (`sqlalchemy[asyncio]`) | 데이터 모델·비동기 쿼리·트랜잭션 |
+| PostgreSQL 드라이버 | [Psycopg 3](https://www.psycopg.org/psycopg3/docs/advanced/async.html) | DB 연결과 전용 LISTEN/NOTIFY 연결 |
+| DB 마이그레이션 | [Alembic](https://alembic.sqlalchemy.org/en/latest/) | 스키마 변경 이력·적용 |
+| RabbitMQ 통신 | [aio-pika](https://docs.aio-pika.com/apidoc.html) | 발행·구독, 수동 ACK, publisher confirm, 재연결 |
+| SSE | [FastAPI 내장 SSE](https://fastapi.tiangolo.com/reference/sse/) | EventSourceResponse·ServerSentEvent로 진행 이벤트 전달 |
+| 외부 HTTP 통신 | [HTTPX](https://www.python-httpx.org/) | DART·외부 API·원격 추론 서버 비동기 호출 |
+| 외부 호출 재시도 | [Tenacity](https://tenacity.readthedocs.io/en/latest/) | 일시 오류에 제한된 횟수·backoff 적용 |
+| 문서 파싱 | [lxml](https://lxml.de/parsing.html) | 공시 XML·HTML의 문단·표 추출 |
+| 로그 | [structlog](https://www.structlog.org/en/stable/) | analysis_run_id·job_id를 포함한 구조화 로그 |
+| 테스트 | [pytest](https://docs.pytest.org/en/stable/) + pytest-asyncio + HTTPX | 계산·비동기 처리·API 검증 |
+| 코드 품질 | [Ruff](https://docs.astral.sh/ruff/) | 린트·포맷 통일 |
+
+FastAPI는 내장 SSE를 지원하는 버전을 선택한다. SQLAlchemy의 요청·작업별 세션과 Psycopg의 전용 LISTEN 연결은 분리한다. MQ 클라이언트의 재연결과 별개로 작업의 멱등성·임대·이벤트 재생은 [API·작업 처리 계약](02_api-and-jobs.md#mq)에 따라 구현한다. Tenacity는 재시도해도 안전한 외부 호출의 일시 오류에만 적용하고 분석 작업 전체의 재시도는 DB·Outbox로 관리한다.
+
+금액·재무 계산은 표준 라이브러리 `Decimal`을 사용한다. `pandas`·`openpyxl`은 데이터 가공·엑셀 입출력 요구가 생길 때 추가한다. LLM 공급자 SDK와 모델 추론 런타임은 [외부 연동 계약](03_ai-integration.md)에 맞춰 선택하며 모델 학습용 의존성은 기본 구성에 포함하지 않는다.
 
 <a id="deployment"></a>
 

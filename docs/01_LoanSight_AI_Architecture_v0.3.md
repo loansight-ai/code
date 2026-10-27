@@ -58,9 +58,9 @@ API·Worker·Relay는 같은 Backend 이미지의 실행 명령을 구분한다.
 |---|---|---|
 | 제공 형태 | **SaaS 우선**, Self-hosted도 제공 | 채택 |
 | 프론트엔드 | **React + Vite + TypeScript**, Next.js 미사용 | 채택 |
-| 라우팅·UI | React Router, Tailwind CSS | 잠정 |
+| 라우팅·UI | React Router, Tailwind CSS + shadcn/ui. 상세 구성은 [화면·검토 설계](design/04_ui-and-review.md#frontend-stack) 참조 | 채택 |
 | 데이터 조회 캐시 | TanStack Query | 채택 |
-| 백엔드 | **Python FastAPI** | 채택 |
+| 백엔드 | **Python FastAPI + Uvicorn**, uv로 의존성 관리. 상세 구성은 [백엔드 라이브러리](design/05_project-and-deployment.md#backend-stack) 참조 | 채택 |
 | 분석 실행 | FastAPI와 동일 코드베이스의 **별도 Python Worker 프로세스** | 채택 |
 | DB | PostgreSQL | 잠정 |
 | 비동기 작업 | **RabbitMQ** 구독 기반 작업 전달, PostgreSQL에 작업 상태·결과 보관 | 채택 |

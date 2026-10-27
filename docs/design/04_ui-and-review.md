@@ -4,6 +4,29 @@
 
 [전체 아키텍처](../01_LoanSight_AI_Architecture_v0.3.md) / 공통 셸·상태 표시·담당자 체크·메모·초안 충돌
 
+<a id="frontend-stack"></a>
+
+## 프론트엔드 구성
+
+React + TypeScript + Vite를 기반으로 다음 도구를 사용한다. 관련 라이브러리와 제공 컴포넌트를 우선 활용하고, 화면설계서의 KB 색상·정보 밀도·숫자 정렬에 맞춰 조정한다. 버전은 프로젝트 초기화 시 호환성을 확인해 고정한다.
+
+| 영역 | 도구 | 적용 |
+|---|---|---|
+| 라우팅 | React Router | 화면 이동·분석 ID/조회 조건의 URL 관리 |
+| 스타일 | Tailwind CSS | 반응형 레이아웃·공통 디자인 토큰 |
+| UI 컴포넌트 | [shadcn/ui](https://ui.shadcn.com/docs/installation/vite) | 버튼·입력·탭·Dialog/Sheet·Popover·배지·로딩 등 |
+| 서버 상태 | TanStack Query | API 조회·캐시·SSE 이벤트에 따른 갱신 |
+| 데이터 테이블 | [TanStack Table](https://tanstack.com/table/v8/docs/introduction) | 재무표 정렬·필터·페이지 처리, 표시는 공통 UI로 구성 |
+| 차트 | [Apache ECharts](https://echarts.apache.org/en/feature.html) | 추세·워터폴·만기 사다리·불릿·업종 위치의 공통 차트 |
+| 폼·검증 | [React Hook Form](https://react-hook-form.com/get-started) + [Zod](https://zod.dev/) | 코드·직접 입력·메모의 폼 상태와 입력 검증 |
+| 기능 아이콘 | [Lucide React](https://lucide.dev/guide/react/getting-started) | 검색·복사·펼치기 등 조작 의미가 있는 아이콘 |
+| HTTP·진행 알림 | 브라우저 fetch·EventSource | 동일 출처 세션 쿠키로 REST·SSE 연결 |
+| 화면 상태 | URL·React Context·useState | 선택 기준·세션 컨텍스트·팝업 상태 |
+| 코드 품질 | ESLint·Prettier | 정적 검사·형식 통일 |
+| 테스트 | [Vitest](https://vitest.dev/guide/)·[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)·[Playwright](https://playwright.dev/docs/intro) | 단위/컴포넌트·주요 사용자 흐름 검증 |
+
+컴포넌트별 의존성은 실제 사용하는 기능에 맞춰 추가한다. 프론트엔드 입력 검증과 별개로 서버가 입력·권한을 검증하고 재무 계산·최종 판정을 수행한다. 패키지 관리는 [프로젝트 구조·배포 설계](05_project-and-deployment.md#structure)를 따른다.
+
 <a id="screens"></a>
 
 ## 화면별 책임
