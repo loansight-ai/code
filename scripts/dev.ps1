@@ -9,7 +9,7 @@ try {
     if ($options[0].Help) {
         Write-Host 'start.cmd [--backend | --frontend] [--restart]'
         Write-Host 'stop.cmd  [--backend | --frontend]'
-        Write-Host 'No selection means both. Backend includes API and PostgreSQL.'
+        Write-Host 'No selection means both. Backend includes API, DB, RabbitMQ, Worker and Relay.'
         exit 0
     }
     $projectRoot = Split-Path $PSScriptRoot -Parent

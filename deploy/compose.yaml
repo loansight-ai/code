@@ -1,6 +1,26 @@
 # Local development only. Credentials below are examples, not production secrets.
 name: loansight
 
+x-backend: &backend
+  image: loansight-backend:dev
+  build:
+    context: ../backend
+  restart: unless-stopped
+  environment:
+    LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
+    LOANSIGHT_DATABASE_TIMEOUT_SECONDS: "3"
+    LOANSIGHT_RABBITMQ_URL: amqp://loansight:local-example@rabbitmq:5672/
+    # Local development examples, not approved production policies.
+    LOANSIGHT_SESSION_TTL_SECONDS: "86400"
+    LOANSIGHT_ENTRY_WINDOW_SECONDS: "60"
+    LOANSIGHT_ENTRY_IP_LIMIT: "30"
+    LOANSIGHT_ENTRY_CODE_LIMIT: "10"
+    LOANSIGHT_ENTRY_GLOBAL_LIMIT: "100"
+    LOANSIGHT_JOB_MAX_ATTEMPTS: "3"
+    LOANSIGHT_COOKIE_SECURE: "false"
+    LOANSIGHT_TASK_EVENTS_ENABLED: "true"
+    LOANSIGHT_ALLOWED_ORIGINS: '["http://localhost:${LOANSIGHT_API_PORT:-8000}","http://127.0.0.1:${LOANSIGHT_API_PORT:-8000}","http://localhost:${LOANSIGHT_FRONTEND_PORT:-5173}","http://127.0.0.1:${LOANSIGHT_FRONTEND_PORT:-5173}"]'
+
 services:
   db:
     image: postgres:17-bookworm
@@ -17,17 +37,37 @@ services:
       retries: 20
       start_period: 10s
 
-  api:
-    build:
-      context: ../backend
+  rabbitmq:
+    image: rabbitmq:4-alpine
+    restart: unless-stopped
     environment:
-      LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
-      LOANSIGHT_DATABASE_TIMEOUT_SECONDS: "3"
+      RABBITMQ_DEFAULT_USER: loansight
+      RABBITMQ_DEFAULT_PASS: local-example
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: ["/app/.venv/bin/alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *backend
     ports:
       - "127.0.0.1:${LOANSIGHT_API_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test:
         - CMD
@@ -39,5 +79,38 @@ services:
       retries: 12
       start_period: 10s
 
+  worker:
+    <<: *backend
+    command: ["/app/.venv/bin/python", "-m", "app.worker.main"]
+    stop_grace_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-m", "app.core.runtime", "worker"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  outbox-relay:
+    <<: *backend
+    command: ["/app/.venv/bin/python", "-m", "app.messaging.outbox_relay"]
+    stop_grace_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-m", "app.core.runtime", "relay"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
 volumes:
   postgres-data:
+  rabbitmq-data:

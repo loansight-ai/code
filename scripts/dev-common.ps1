@@ -35,29 +35,30 @@ function Invoke-Backend {
     }
     $null = & docker.exe info --format '{{.ServerVersion}}' 2>&1
     if ($LASTEXITCODE -ne 0) { throw 'Docker engine is unavailable. Start Docker Desktop first.' }
-    $running = @(Invoke-Compose $ProjectRoot @('ps', '--status', 'running', '-q', 'api', 'db'))
+    $services = @('api', 'worker', 'outbox-relay', 'rabbitmq', 'db')
+    $running = @(Invoke-Compose $ProjectRoot (@('ps', '--status', 'running', '-q') + $services))
     if ($Action -eq 'stop') {
         if ($running.Count -eq 0) { Write-Host '[backend] Already stopped.'; return }
-        Invoke-Compose $ProjectRoot @('stop', 'api', 'db') | Out-Host
-        Write-Host '[backend] Stopped API and PostgreSQL. DB data is preserved.'
+        Invoke-Compose $ProjectRoot (@('stop') + $services) | Out-Host
+        Write-Host '[backend] Stopped API, Worker, Relay, RabbitMQ and PostgreSQL. Data is preserved.'
         return
     }
-    if ($running.Count -eq 2 -and -not $Restart) {
+    if ($running.Count -eq $services.Count -and -not $Restart) {
         $health = @(& docker.exe inspect --format '{{.State.Health.Status}}' @running)
         if ($LASTEXITCODE -ne 0) { throw 'Could not inspect backend container health.' }
         if (@($health | Where-Object { $_ -ne 'healthy' }).Count -eq 0) {
-            Write-Host '[backend] Already running (API and PostgreSQL healthy). Use --restart to restart.'
+            Write-Host '[backend] Already running (all five services healthy). Use --restart to restart.'
             return
         }
         Write-Host '[backend] Running but not ready; waiting for healthy services.'
     }
     $composeArguments = @('up', '-d', '--build', '--wait', '--wait-timeout', '120')
     if ($Restart) { $composeArguments += '--force-recreate' }
-    $composeArguments += @('db', 'api')
+    $composeArguments += @('db', 'rabbitmq', 'migrate', 'api', 'worker', 'outbox-relay')
     Invoke-Compose $ProjectRoot $composeArguments | Out-Host
     $apiPort = '8000'
     if ($env:LOANSIGHT_API_PORT) { $apiPort = $env:LOANSIGHT_API_PORT }
-    Write-Host "[backend] Ready: http://localhost:$apiPort/docs (API + PostgreSQL)."
+    Write-Host "[backend] Ready: http://localhost:$apiPort/docs (API + DB + MQ + Worker + Relay)."
 }
 
 function Get-FrontendPort {

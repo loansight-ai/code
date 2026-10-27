@@ -1,11 +1,14 @@
 import asyncio
+import sys
 
 from alembic import context
 
 from app.core.config import Settings
 from app.core.database import Base, Database
+from app.modules.identity import models as identity_models  # noqa: F401
+from app.modules.tasks import models as task_models  # noqa: F401
 
-# Import future module models here so autogenerate can discover their metadata.
+# Import module models above so autogenerate discovers their metadata.
 target_metadata = Base.metadata
 
 
@@ -38,4 +41,6 @@ async def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(run_migrations_online())
