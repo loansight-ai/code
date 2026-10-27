@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
-- 현재 상태: 설계·협업 문서 단계. 실행 가능한 애플리케이션과 재현 가능한 실행 환경은 아직 없습니다.
+- 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반 구현. 실제 재무 분석과 프론트엔드는 후속 구현입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
 
 ## 서비스 범위
@@ -38,7 +38,36 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
-코드가 추가되면 의존성·버전·설정·실행 명령과 검증 결과를 이 문서에 기록합니다. 현재는 실행할 프로그램이 없습니다.
+백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 사용자·세션과 작업 기반 API는 구현했으며, 프론트엔드와 실제 재무 분석은 후속 구현입니다.
+
+Docker Desktop 실행 후 저장소 루트에서 `docker compose -f deploy/compose.yaml up -d --build --wait`로 API·PostgreSQL·RabbitMQ·Worker·Relay를 함께 시작합니다. 마이그레이션은 별도 초기화 서비스가 적용합니다. 자세한 접속·종료·포트 설정은 [Compose 실행 안내](backend/README.md#api와-db-함께-실행-권장)를 참고합니다.
+
+### Windows 시작·종료 스크립트
+
+PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트를 실행합니다. Windows PowerShell 5.1과 Docker Desktop이 필요합니다. Docker Desktop은 먼저 실행해 둡니다.
+
+| 명령 | 동작 |
+|---|---|
+| `.\start.cmd` | 백엔드와 프론트엔드 시작 |
+| `.\start.cmd --backend` | 백엔드 5개 서비스 시작 |
+| `.\start.cmd --frontend` | 프론트엔드만 시작 |
+| `.\start.cmd --restart` | 양쪽 재시작 |
+| `.\start.cmd --backend --restart` | 백엔드 5개 서비스 재시작 |
+| `.\start.cmd --frontend --restart` | 프론트엔드만 재시작 |
+| `.\stop.cmd` | 양쪽 종료 |
+| `.\stop.cmd --backend` | 백엔드 5개 서비스 종료 |
+| `.\stop.cmd --frontend` | 프론트엔드만 종료 |
+| `.\start.cmd --help` / `.\stop.cmd --help` | 도움말 |
+
+`--backend`와 `--frontend`는 상호 배타적입니다. 선택하지 않으면 양쪽을 대상으로 합니다. `--restart`는 시작 스크립트에서만 사용할 수 있습니다. 실행 중인 대상은 알림만 출력하며, `--restart`를 지정하면 재시작합니다. 종료된 대상을 다시 종료하면 이미 종료되었다고 안내합니다. 한쪽 실행 실패 시 다른 쪽도 처리하고 종료 코드 1을 반환합니다.
+
+백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행합니다. 프론트엔드가 추가되면 Node.js·pnpm을 설치하고 `frontend/`에서 `pnpm install`을 먼저 수행해야 합니다. **현재 프론트엔드는 아직 없어 미구현 안내 후 건너뜁니다.** 백엔드 실행은 계속됩니다.
+
+기본 주소는 API `http://localhost:8000/docs`, 프론트엔드 `http://localhost:5173`입니다. PowerShell의 `$env:LOANSIGHT_API_PORT = '8001'`, `$env:LOANSIGHT_FRONTEND_PORT = '5174'`로 포트를 바꿀 수 있습니다. 이미 실행 중인 대상의 포트를 바꾸려면 `--restart`를 함께 사용합니다.
+
+프론트엔드는 숨겨진 백그라운드 프로세스로 실행하며 로그와 프로세스 정보는 Git에서 제외한 `.run/`에 저장합니다. 종료 시 이 스크립트가 시작한 프로세스와 자식들만 종료합니다. 별도 터미널에서 실행한 프론트엔드나 다른 프로그램이 포트를 사용하면 자동 종료하지 않고 충돌을 안내합니다. `.ps1` 진입점도 제공하며, 실행 정책에 막히면 위 `.cmd` 진입점을 사용합니다. `.cmd`는 해당 프로세스에만 실행 정책을 적용합니다.
+
+스크립트 검증은 루트에서 `backend\.venv\Scripts\python.exe -m unittest discover -s scripts/tests -v`로 실행합니다. 격리된 테스트 폴더와 HTTP 서버로 옵션·프론트엔드 프로세스 관리를 검증하며 실제 프론트엔드 앱 검증은 아닙니다. 실제 Compose 백엔드의 시작·중복 실행·재시작·종료와 readiness HTTP 200도 별도로 확인했습니다.
 
 ## 협업
 

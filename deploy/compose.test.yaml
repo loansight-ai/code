@@ -1,0 +1,30 @@
+# Isolated integration-test infrastructure; never uses the development DB volume.
+name: loansight-tests
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: loansight_test
+      POSTGRES_USER: loansight_test
+      POSTGRES_PASSWORD: test-only
+    ports:
+      - "127.0.0.1:15432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "loansight_test", "-d", "loansight_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  rabbitmq:
+    image: rabbitmq:4-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: loansight_test
+      RABBITMQ_DEFAULT_PASS: test-only
+    ports:
+      - "127.0.0.1:15673:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 30

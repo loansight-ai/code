@@ -19,6 +19,8 @@
 | POST/GET | `/api/v1/me/manual-inputs` | 직접 입력 revision 생성·내 입력 목록, 출처·재무 기준일·자동값 충돌 병기 |
 | POST/GET | `/api/v1/me/industry-overrides` | 업종 변경 revision 생성·이력, 변경 사유·근거·권한 검증 |
 | POST | `/api/v1/analyses` | 분석 요청 또는 기존 실행 재사용 |
+| POST | `/api/v1/me/tasks/diagnostics` | 현재 구현의 전달 경로 점검 작업. 실제 재무 분석은 수행하지 않음 |
+| GET | `/api/v1/me/tasks/{taskId}` | 세션 소유 범위의 작업 상세·결과 조회 |
 | GET | `/api/v1/analyses/{id}` | 실행 메타데이터 및 상태 |
 | GET | `/api/v1/analyses/{id}/financials` | 재무지표·산식 |
 | GET | `/api/v1/analyses/{id}/benchmarks` | 업종 비교 |
@@ -147,6 +149,8 @@ POST /analyses
 - 같은 브라우저의 로컬 저장소는 최근 분석 링크의 편의 기능으로만 사용할 수 있다. 서버에서 내 작업 목록을 복원하거나 여러 기기에서 동기화하려면 사용자·Workspace 식별이 필요하다([식별·접근 범위](05_project-and-deployment.md#identity)).
 
 ## 기술 동작 참고
+
+현재 구현 범위·요청 예시·설정은 [백엔드 실행 안내](../../backend/README.md#사용자작업-api), 실제 검증 결과는 [검증 기록](../reviews/02_sessions-and-pipeline-validation.md)을 참조한다. 위 분석·검토 API 목록 전체가 구현 완료된 것은 아니다.
 
 - [RabbitMQ ACK·publisher confirms](https://www.rabbitmq.com/docs/confirms), [Consumer 설정](https://www.rabbitmq.com/docs/consumers)
 - [PostgreSQL LISTEN](https://www.postgresql.org/docs/current/sql-listen.html), [NOTIFY](https://www.postgresql.org/docs/current/sql-notify.html)
