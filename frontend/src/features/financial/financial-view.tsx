@@ -74,7 +74,11 @@ export function FinancialView() {
           name: '매출액',
           type: 'bar',
           barWidth: 38,
-          data: financialRows[0].y2023 ? [1080, 1190, 1250] : [],
+          data: [
+            financialRows[0].y2023,
+            financialRows[0].y2024,
+            financialRows[0].y2025,
+          ],
         },
         {
           name: '영업이익',
@@ -112,7 +116,7 @@ export function FinancialView() {
           <span className="muted">단위: 억원 · 가상 예시</span>
         </div>
         <div className="table-scroll">
-          <table>
+          <table aria-label="주요 재무 계정">
             <thead>
               {table.getHeaderGroups().map((group) => (
                 <tr key={group.id}>

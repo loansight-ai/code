@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+﻿import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -7,6 +7,7 @@ import { CompanyPage } from '../pages/company-page'
 import { AnalysisPage } from '../pages/analysis-page'
 import * as companySearch from '../features/company/company-search'
 import { companies } from '../features/company/demo-data'
+import { readDrafts } from '../features/review/review-store'
 
 vi.mock('../features/financial/financial-view', () => ({
   FinancialView: () => <div>재무 차트</div>,
@@ -62,14 +63,26 @@ it('shows an empty result and allows resetting search', async () => {
 it('keeps evidence confirmation disabled until the example source is opened and acknowledged', async () => {
   const user = userEvent.setup()
   mount('/analyses/demo-manufacturing/evidence')
-  expect(screen.getByRole('checkbox')).toBeDisabled()
+  expect(
+    await screen.findByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    }),
+  ).toBeDisabled()
   await user.click(screen.getByRole('button', { name: '예시 원문 열기' }))
   expect(screen.getByRole('dialog')).toBeVisible()
   await user.click(
     screen.getByRole('button', { name: '예시 원문 확인 후 닫기' }),
   )
-  await user.click(screen.getByRole('checkbox'))
-  expect(screen.getByRole('checkbox')).toBeChecked()
+  await user.click(
+    screen.getByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    }),
+  )
+  expect(
+    screen.getByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    }),
+  ).toBeChecked()
 })
 
 it('isolates local demo memos by company, report and accounting scope', async () => {
@@ -77,10 +90,17 @@ it('isolates local demo memos by company, report and accounting scope', async ()
   const router = mount(
     '/analyses/demo-manufacturing/review?report=2025&scope=CFS',
   )
-  await user.type(screen.getByLabelText('검토 메모'), '추가 확인 필요')
+  await user.type(await screen.findByLabelText('검토 메모'), '추가 확인 필요')
   await user.click(screen.getByRole('button', { name: '브라우저에 저장' }))
   expect(
-    localStorage.getItem('loansight.demo.memo.demo-manufacturing.2025.CFS'),
+    readDrafts({
+      companyId: 'demo-manufacturing',
+      companyName: '한빛정밀',
+      industry: '제조',
+      report: '2025',
+      scope: 'CFS',
+      lease: 'include',
+    }).at(-1)?.value.opinion,
   ).toBe('추가 확인 필요')
   await act(() =>
     router.navigate(

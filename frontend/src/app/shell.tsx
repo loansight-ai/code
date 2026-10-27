@@ -46,7 +46,7 @@ export function Shell() {
   const location = useLocation()
   const company = findCompany(analysisId)
   const searchPath = company
-    ? `/?${new URLSearchParams({ company: company.id, report: new URLSearchParams(location.search).get('report') ?? '2025', scope: new URLSearchParams(location.search).get('scope') ?? 'CFS' })}`
+    ? `/?${new URLSearchParams({ company: company.id, report: new URLSearchParams(location.search).get('report') ?? '2025', scope: new URLSearchParams(location.search).get('scope') ?? 'CFS', lease: new URLSearchParams(location.search).get('lease') ?? 'include' })}`
     : '/'
   const [tasksOpen, setTasksOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)

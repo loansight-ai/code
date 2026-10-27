@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+﻿import { expect, test } from '@playwright/test'
 
 test('company selection, analysis navigation, source confirmation and local memo restore', async ({
   page,
@@ -18,7 +18,9 @@ test('company selection, analysis navigation, source confirmation and local memo
   await page.getByRole('radio', { name: /별도/ }).check()
   await page.getByRole('button', { name: '예시 분석 열기' }).click()
   await expect(page).toHaveURL(/summary\?report=2024&scope=OFS/)
-  await expect(page.getByRole('table')).toBeVisible()
+  await expect(
+    page.getByRole('table', { name: '주요 재무 계정' }),
+  ).toBeVisible()
   await page.getByRole('link', { name: '기업 다시 선택' }).click()
   await expect(page.getByRole('button', { name: /한빛정밀/ })).toHaveAttribute(
     'aria-pressed',
@@ -40,14 +42,26 @@ test('company selection, analysis navigation, source confirmation and local memo
   })
   await page.getByRole('link', { name: /주석·위험징후/ }).click()
   await expect(page).toHaveURL(/evidence\?report=2024&scope=OFS/)
-  await expect(page.getByRole('checkbox')).toBeDisabled()
+  await expect(
+    page.getByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    }),
+  ).toBeDisabled()
   await page.getByRole('button', { name: '예시 원문 열기' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('checkbox')).toBeDisabled()
+  await expect(
+    page.getByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    }),
+  ).toBeDisabled()
   await page.getByRole('button', { name: '예시 원문 열기' }).click()
   await page.getByRole('button', { name: '예시 원문 확인 후 닫기' }).click()
-  await page.getByRole('checkbox').check()
+  await page
+    .getByRole('checkbox', {
+      name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
+    })
+    .check()
   await page.getByRole('link', { name: /담당자 검토/ }).click()
   await page.getByLabel('검토 메모').fill('추가 확인할 사항을 기록합니다.')
   await page.getByRole('button', { name: '브라우저에 저장' }).click()

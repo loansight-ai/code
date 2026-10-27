@@ -45,7 +45,9 @@ export function CompanyPage() {
   const selected = params.get('company') ?? ''
   const report = params.get('report') ?? '2025'
   const scope = params.get('scope') ?? 'CFS'
+  const lease = params.get('lease') ?? 'include'
   const invalidCriteria =
+    !['include', 'exclude'].includes(lease) ||
     !['2025', '2024', '2023'].includes(report) ||
     !['CFS', 'OFS'].includes(scope) ||
     (selected !== '' &&
@@ -86,7 +88,8 @@ export function CompanyPage() {
   function resetCriteria() {
     setParams(
       (previous) => {
-        for (const key of ['company', 'report', 'scope']) previous.delete(key)
+        for (const key of ['company', 'report', 'scope', 'lease'])
+          previous.delete(key)
         return previous
       },
       { replace: true },
@@ -247,7 +250,7 @@ export function CompanyPage() {
           className="panel selection-panel"
           onSubmit={form.handleSubmit((value) =>
             navigate(
-              `/analyses/${value.company}/summary?report=${value.report}&scope=${value.scope}`,
+              `/analyses/${value.company}/summary?report=${value.report}&scope=${value.scope}${params.has('lease') ? `&lease=${lease}` : ''}`,
             ),
           )}
         >
