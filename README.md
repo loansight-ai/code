@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
-- 현재 상태: 설계·협업 문서 단계. 실행 가능한 애플리케이션과 재현 가능한 실행 환경은 아직 없습니다.
+- 현재 상태: 백엔드 실행 기반 구현 시작. FastAPI·DB 연결·상태 확인 API를 제공하며 업무 기능은 아직 구현하지 않았습니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
 
 ## 서비스 범위
@@ -38,7 +38,9 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
-코드가 추가되면 의존성·버전·설정·실행 명령과 검증 결과를 이 문서에 기록합니다. 현재는 실행할 프로그램이 없습니다.
+백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 프론트엔드와 분석 파이프라인은 후속 구현입니다.
+
+Docker Desktop 실행 후 저장소 루트에서 `docker compose -f deploy/compose.yaml up -d --build --wait`로 API와 PostgreSQL을 함께 시작합니다. 자세한 접속·종료·포트 설정은 [Compose 실행 안내](backend/README.md#api와-db-함께-실행-권장)를 참고합니다.
 
 ## 협업
 

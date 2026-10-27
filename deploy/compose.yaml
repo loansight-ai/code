@@ -1,0 +1,43 @@
+# Local development only. Credentials below are examples, not production secrets.
+name: loansight
+
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: loansight
+      POSTGRES_USER: loansight
+      POSTGRES_PASSWORD: local-example
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "loansight", "-d", "loansight"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  api:
+    build:
+      context: ../backend
+    environment:
+      LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
+      LOANSIGHT_DATABASE_TIMEOUT_SECONDS: "3"
+    ports:
+      - "127.0.0.1:${LOANSIGHT_API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - /app/.venv/bin/python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=4).close()"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  postgres-data:
