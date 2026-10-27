@@ -1,5 +1,64 @@
 @import 'tailwindcss';
 
+.session-form,
+.task-list {
+  display: grid;
+  gap: 16px;
+  margin: 18px 0;
+}
+.session-form input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  width: 100%;
+}
+.session-buttons,
+.task-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+.task-heading {
+  justify-content: space-between;
+}
+.task-list {
+  list-style: none;
+  padding: 0;
+}
+.task-list li,
+.task-detail {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.task-count,
+.task-time {
+  font-size: 12px;
+}
+.session-message {
+  max-width: 240px;
+  font-size: 12px;
+}
+.task-detail {
+  overflow-wrap: anywhere;
+}
+.task-detail pre {
+  overflow: auto;
+  white-space: pre-wrap;
+}
+@media (max-width: 900px) {
+  .session-message {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .task-count {
+    display: none;
+  }
+}
+
 :root {
   font-family: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   color: #15181d;

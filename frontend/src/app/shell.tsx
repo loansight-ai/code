@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useParams } from 'react-router'
 import {
   ArrowUpRight,
-  Bell,
   Building2,
   ChartNoAxesCombined,
   ChevronRight,
@@ -14,9 +13,9 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { findCompany } from '../features/company/demo-data'
-import { Button } from '../shared/components/button'
 import { Modal } from '../shared/components/modal'
-import { StatePanel } from '../shared/components/state-panel'
+import { SessionControls } from '../features/session/session-controls'
+import { TaskControls } from '../features/tasks/task-controls'
 
 const menus = [
   {
@@ -48,7 +47,6 @@ export function Shell() {
   const searchPath = company
     ? `/?${new URLSearchParams({ company: company.id, report: new URLSearchParams(location.search).get('report') ?? '2025', scope: new URLSearchParams(location.search).get('scope') ?? 'CFS', lease: new URLSearchParams(location.search).get('lease') ?? 'include' })}`
     : '/'
-  const [tasksOpen, setTasksOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   return (
     <div className="app-shell">
@@ -66,12 +64,9 @@ export function Shell() {
         </NavLink>
         <span className="brand-description">기업 여신 검토 워크스페이스</span>
         <div className="top-actions">
-          <span className="demo-label">프론트엔드 미리보기</span>
-          <Button variant="ghost" onClick={() => setTasksOpen(true)}>
-            <Bell size={17} />내 분석 작업
-          </Button>
-          <span className="avatar">DE</span>
-          <span className="guest">데모 사용자</span>
+          <span className="demo-label">기업 분석은 예시 데이터</span>
+          <TaskControls />
+          <SessionControls />
         </div>
       </header>
       <aside className="sidebar">
@@ -142,18 +137,6 @@ export function Shell() {
         <Outlet />
       </div>
       <Modal
-        title="내 분석 작업"
-        description="서버 연결 후 사용자 세션에 연결된 작업을 표시합니다."
-        open={tasksOpen}
-        onOpenChange={setTasksOpen}
-      >
-        <StatePanel
-          state="empty"
-          title="연결된 분석 작업이 없습니다"
-          description="미리보기에서는 수집이나 분석 작업을 실행하지 않습니다."
-        />
-      </Modal>
-      <Modal
         title="LoanSight AI 이용 안내"
         description="공시 기반 기업 여신 검토를 지원하는 도구입니다."
         open={helpOpen}
@@ -167,8 +150,8 @@ export function Shell() {
           </li>
         </ol>
         <p className="notice">
-          현재는 가상 기업과 예시 데이터로 구성된 프론트엔드입니다. 코드
-          발급·서버 세션·공시 수집·모델 추론은 연결되지 않았습니다.
+          사용자 코드·서버 세션·작업 알림은 서버에 연결됩니다. 기업 분석은 가상
+          기업과 예시 데이터이며 공시 수집·모델 추론은 연결되지 않았습니다.
         </p>
       </Modal>
     </div>

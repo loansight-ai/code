@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
-- 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반 및 프론트엔드 예시 기능 구현. 기업 선택·재무/주석 화면·브라우저 검토 초안을 확인할 수 있으며, 프론트엔드의 API 연동과 실제 재무 분석은 후속 구현입니다.
+- 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반, 프론트 코드 접속·세션 복원·작업 알림 연동 및 예시 분석 화면 구현. 실제 공시 수집·재무 분석과 검토 내용의 서버 저장은 후속 구현입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
 
 ## 서비스 범위
@@ -38,7 +38,7 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
-백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 사용자·세션과 작업 기반 API는 구현했으며, 실제 재무 분석과 프론트엔드의 API 연동은 후속 구현입니다.
+백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 프론트의 사용자·세션·작업 API 연동은 [프론트엔드 안내](frontend/README.md#서버-세션작업-연동)를 참고합니다. 실제 재무 분석은 후속 구현입니다.
 
 Docker Desktop 실행 후 저장소 루트에서 `docker compose -f deploy/compose.yaml up -d --build --wait`로 API·PostgreSQL·RabbitMQ·Worker·Relay를 함께 시작합니다. 마이그레이션은 별도 초기화 서비스가 적용합니다. 자세한 접속·종료·포트 설정은 [Compose 실행 안내](backend/README.md#api와-db-함께-실행-권장)를 참고합니다.
 
@@ -62,7 +62,7 @@ PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트�
 
 `--backend`와 `--frontend`는 상호 배타적입니다. 선택하지 않으면 양쪽을 대상으로 합니다. `--restart`는 시작 스크립트에서만 사용할 수 있습니다. 실행 중인 대상은 알림만 출력하며, `--restart`를 지정하면 재시작합니다. 종료된 대상을 다시 종료하면 이미 종료되었다고 안내합니다. 한쪽 실행 실패 시 다른 쪽도 처리하고 종료 코드 1을 반환합니다.
 
-백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 실행합니다. 시작 스크립트는 `.tools/`의 프로젝트 전용 Node.js·pnpm을 우선 사용하고, 없으면 PATH의 도구를 확인합니다. 도구가 없거나 버전이 맞지 않으면 `.\setup-frontend.cmd`를 안내합니다. 현재 프론트엔드는 가상 데이터로 실행하며 백엔드 API에 연결되지 않습니다.
+백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 실행합니다. 시작 스크립트는 `.tools/`의 프로젝트 전용 Node.js·pnpm을 우선 사용하고, 없으면 PATH의 도구를 확인합니다. 도구가 없거나 버전이 맞지 않으면 `.\setup-frontend.cmd`를 안내합니다. 프론트의 코드 접속·작업 알림은 백엔드에 연결되며 기업 분석 화면은 예시 데이터를 사용합니다.
 
 기본 주소는 API `http://localhost:8000/docs`, 프론트엔드 `http://localhost:5173`입니다. PowerShell의 `$env:LOANSIGHT_API_PORT = '8001'`, `$env:LOANSIGHT_FRONTEND_PORT = '5174'`로 포트를 바꿀 수 있습니다. 이미 실행 중인 대상의 포트를 바꾸려면 `--restart`를 함께 사용합니다.
 

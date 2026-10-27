@@ -87,7 +87,7 @@ docker compose -f deploy/compose.yaml down
 
 현재 지원 작업은 `PIPELINE_CHECK`뿐입니다. 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 결과는 `financial_analysis_performed:false`를 명시합니다. 실제 `/analyses` API와 재무 분석 핸들러는 다음 단계에서 원천 revision·옵션 계약과 함께 구현합니다.
 
-SSE는 내장 FastAPI SSE와 API 프로세스별 전용 PostgreSQL LISTEN 연결을 사용합니다. cursor는 Workspace 스트림 ID·커밋 순번이며 권한 증명이 아닙니다. `Last-Event-ID`가 `after`보다 우선합니다. 잘못된·다른 사용자 cursor나 재생 한도(`LOANSIGHT_EVENT_BATCH_SIZE`, 기본 100건) 초과 시 `reset`을 보내며 작업 목록을 다시 조회해야 합니다. 현재 이벤트는 삭제하지 않고 보존합니다. 자동 삭제·운영 보존 기간은 후속 정책 결정 사항입니다. 프론트엔드의 GNB/SSE 연결 UI는 이번 범위에 포함하지 않습니다.
+SSE는 내장 FastAPI SSE와 API 프로세스별 전용 PostgreSQL LISTEN 연결을 사용합니다. 연결 시작 시 주석을 즉시 전송하여 유휴 스트림도 프록시를 거쳐 연결을 확정합니다. cursor는 Workspace 스트림 ID·커밋 순번이며 권한 증명이 아닙니다. `Last-Event-ID`가 `after`보다 우선합니다. 잘못된·다른 사용자 cursor나 재생 한도(`LOANSIGHT_EVENT_BATCH_SIZE`, 기본 100건) 초과 시 `reset`을 보내며 작업 목록을 다시 조회해야 합니다. 현재 이벤트는 삭제하지 않고 보존합니다. 자동 삭제·운영 보존 기간은 후속 정책 결정 사항입니다. 프론트엔드 연결 UI는 [프론트엔드 안내](../frontend/README.md#서버-세션작업-연동)를 참고합니다.
 
 Relay는 DB Outbox를 잠금 선점하고 persistent 메시지를 mandatory·publisher confirm으로 발행합니다. Worker는 generation·임대 소유권을 검사하고 결과·상태·이벤트 커밋 후 ACK합니다. 임대 만료는 Relay가 회수하며 새 generation의 Outbox를 생성합니다. 종료된 이전 Worker의 결과는 저장하지 않습니다. 재시도는 지연 Outbox로 예약하며 계약 오류·복구 불가 실패는 DLQ에 격리합니다. Worker·Relay healthcheck는 이벤트 루프가 동작하면서 DB·MQ에 연결되어 있는지 확인합니다.
 

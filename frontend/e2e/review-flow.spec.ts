@@ -73,7 +73,7 @@ test('company selection, analysis navigation, source confirmation and local memo
   await expect(page.getByText('예측 보류')).toBeVisible()
   await page.getByRole('button', { name: '내 분석 작업' }).click()
   await expect(page.getByRole('dialog')).toContainText(
-    '연결된 분석 작업이 없습니다',
+    '코드 발급 또는 재접속 후 내 작업을 확인할 수 있습니다.',
   )
   expect(errors).toEqual([])
   expect(

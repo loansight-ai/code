@@ -71,6 +71,8 @@ async def acknowledge(
 async def event_stream(request: Request, identity: Identity, after: str):
     database, settings = request.app.state.database, request.app.state.settings
     hub = request.app.state.notifications
+    # Send the first bytes immediately so proxies flush headers for idle streams.
+    yield ServerSentEvent(comment="connected")
     while not await request.is_disconnected():
         version = hub.version
         try:

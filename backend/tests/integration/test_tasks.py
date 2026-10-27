@@ -222,6 +222,7 @@ async def test_replay_foreign_cursor_reset_and_logout_closes_stream(client, envi
         receive=receive,
     )
     stream = event_stream(request, identity, before)
+    assert (await anext(stream)).comment == "connected"
     assert (await anext(stream)).event == "task.created"
     with_header = Request(
         {
@@ -275,6 +276,7 @@ async def test_listener_reconnect_replays_events_from_the_disconnect_gap(client,
     )
     stream = event_stream(request, identity, before)
     async with asyncio.timeout(5):
+        assert (await anext(stream)).comment == "connected"
         event = await anext(stream)
         assert event.event == "task.created" and event.data["task_id"] == item["task_id"]
     await stream.aclose()
