@@ -1064,6 +1064,114 @@ blockquote {
   font-size: 11px;
   padding: 0 23px;
 }
+.preparation-panel {
+  margin-top: 24px;
+}
+.preparation-content {
+  padding: 0 24px 24px;
+}
+.preparation-note {
+  margin: 12px 0 18px;
+  color: #667156;
+  font-size: 12px;
+}
+.preparation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.preparation-form .notice {
+  margin: 0;
+}
+.preparation-form .check-row {
+  margin: 0;
+  align-items: flex-start;
+  line-height: 1.8;
+}
+.preparation-form .check-row input {
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.preparation-form input:not([type='checkbox']) {
+  border: 1px solid #dbe0d2;
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 12px;
+  width: 100%;
+  background: white;
+}
+.preparation-form [aria-invalid='true'] {
+  border-color: var(--warning);
+}
+.preparation-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.form-error {
+  color: var(--warning);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.manual-comparison,
+.draft-industry {
+  border-top: 1px solid var(--border);
+  padding-top: 22px;
+  margin-top: 22px;
+}
+.manual-comparison h3 {
+  margin-bottom: 10px;
+}
+.manual-comparison .table-scroll {
+  margin-top: 15px;
+}
+.draft-industry p {
+  color: #667156;
+  font-size: 12px;
+  margin-top: 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.draft-history {
+  margin-top: 22px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+  font-size: 12px;
+}
+.draft-history summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.draft-history > p {
+  margin-top: 15px;
+  color: #737d67;
+}
+.draft-history ol {
+  padding-left: 24px;
+}
+.draft-history li {
+  margin: 18px 0;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.draft-history li > span {
+  display: block;
+  font-size: 10px;
+  color: #737d67;
+}
+.draft-history li p {
+  white-space: pre-wrap;
+  font-size: 11px;
+  color: #667156;
+}
+@media (max-width: 600px) {
+  .preparation-fields {
+    grid-template-columns: 1fr;
+  }
+  .preparation-content {
+    padding: 0 18px 20px;
+  }
+}
 @media (min-width: 1600px) {
   .page {
     padding-top: 48px;

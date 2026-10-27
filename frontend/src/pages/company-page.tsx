@@ -21,6 +21,7 @@ import { searchDemoCompanies } from '../features/company/company-search'
 import { Button } from '../shared/components/button'
 import { StatePanel } from '../shared/components/state-panel'
 import { StatusBadge } from '../shared/components/status-badge'
+import { CompanyPreparation } from '../features/company/company-preparation'
 
 const selectionSchema = z.object({
   company: z
@@ -363,6 +364,14 @@ export function CompanyPage() {
           <span className="secure-note">수집 요청 없이 화면만 확인합니다.</span>
         </form>
       </div>
+      {company && !invalidCriteria && (
+        <CompanyPreparation
+          key={`${company.id}.${report}.${scope}`}
+          company={company}
+          report={report}
+          scope={scope}
+        />
+      )}
       <section className="how-it-works">
         <div>
           <span className="page-eyebrow">YOUR REVIEW, CONNECTED</span>
