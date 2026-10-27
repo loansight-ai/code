@@ -6,20 +6,14 @@ x-backend: &backend
   build:
     context: ../backend
   restart: unless-stopped
+  env_file:
+    - path: ./backend.defaults.env
+    - path: ../backend/.env
+      required: false
   environment:
+    # Keep Compose-internal endpoints even when the native .env uses localhost.
     LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
-    LOANSIGHT_DATABASE_TIMEOUT_SECONDS: "3"
     LOANSIGHT_RABBITMQ_URL: amqp://loansight:local-example@rabbitmq:5672/
-    # Local development examples, not approved production policies.
-    LOANSIGHT_SESSION_TTL_SECONDS: "86400"
-    LOANSIGHT_ENTRY_WINDOW_SECONDS: "60"
-    LOANSIGHT_ENTRY_IP_LIMIT: "30"
-    LOANSIGHT_ENTRY_CODE_LIMIT: "10"
-    LOANSIGHT_ENTRY_GLOBAL_LIMIT: "100"
-    LOANSIGHT_JOB_MAX_ATTEMPTS: "3"
-    LOANSIGHT_COOKIE_SECURE: "false"
-    LOANSIGHT_TASK_EVENTS_ENABLED: "true"
-    LOANSIGHT_ALLOWED_ORIGINS: '["http://localhost:${LOANSIGHT_API_PORT:-8000}","http://127.0.0.1:${LOANSIGHT_API_PORT:-8000}","http://localhost:${LOANSIGHT_FRONTEND_PORT:-5173}","http://127.0.0.1:${LOANSIGHT_FRONTEND_PORT:-5173}"]'
 
 services:
   db:
