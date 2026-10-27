@@ -136,7 +136,9 @@ function TaskPanel() {
                     <strong>
                       {task.task_type === 'PIPELINE_CHECK'
                         ? '연결 점검'
-                        : task.task_type}
+                        : task.task_type === 'NOTE_STRUCTURE'
+                          ? '주석 구조화'
+                          : task.task_type}
                     </strong>
                     <span>{statusLabels[task.status] ?? task.status}</span>
                   </div>

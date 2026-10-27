@@ -14,6 +14,7 @@ x-backend: &backend
     # Keep Compose-internal endpoints even when the native .env uses localhost.
     LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
     LOANSIGHT_RABBITMQ_URL: amqp://loansight:local-example@rabbitmq:5672/
+    LOANSIGHT_ARTIFACT_ROOT: /data/artifacts
 
 services:
   db:
@@ -55,6 +56,8 @@ services:
 
   api:
     <<: *backend
+    volumes:
+      - source-artifacts:/data/artifacts
     ports:
       - "127.0.0.1:${LOANSIGHT_API_PORT:-8000}:8000"
     depends_on:
@@ -75,6 +78,8 @@ services:
 
   worker:
     <<: *backend
+    volumes:
+      - source-artifacts:/data/artifacts
     command: ["/app/.venv/bin/python", "-m", "app.worker.main"]
     stop_grace_period: 15s
     depends_on:
@@ -106,5 +111,6 @@ services:
       start_period: 15s
 
 volumes:
+  source-artifacts:
   postgres-data:
   rabbitmq-data:

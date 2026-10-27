@@ -4,19 +4,19 @@
 
 Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. 실제 DART 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
-로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4가 추가됐습니다. 설치 후 Python API·CLI를 사용할 수 있으며 FastAPI 라우터, Worker 작업, DB 저장, 프론트 원문 뷰어에는 아직 연결하지 않았습니다.
+로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 프론트 원문 뷰어와 사실 추출·검수는 후속 작업입니다.
 
 <a id="note-hierarchy"></a>
 
 ## 재무제표 주석 구조화 모듈
 
-패키지의 기능·출력 스키마·설정·한계는 [v0.8.4 사용방법](app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)에서 관리합니다. 배포 패키지명은 `dart-note-hierarchy`, Python import명은 `note_hierarchy`, CLI는 `note-hierarchy`입니다. PyPI에는 게시되지 않았으므로 로컬 wheel 경로를 지정합니다. pip가 준비된 활성 가상환경에서 `backend/` 기준으로 설치합니다.
+패키지의 기능·출력 스키마·설정·한계는 [v0.8.4 사용방법](app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)에서 관리합니다. 배포 패키지명은 `dart-note-hierarchy`, Python import명은 `note_hierarchy`, CLI는 `note-hierarchy`입니다. 이 저장소에서는 로컬 wheel 경로와 해시를 `pyproject.toml`·`uv.lock`에 등록했으므로 `backend/`에서 다음처럼 준비합니다.
 
 ```powershell
 cd backend
-python -m pip install ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl
-python -m note_hierarchy --version
-python -m note_hierarchy input/notes.html --profile dart --link-periods --document-id company_2025_separate --period 2025.12 --kind 별도 --output ../.run/note-hierarchy-review
+uv sync --frozen
+uv run --frozen python -m note_hierarchy --version
+uv run --frozen python -m note_hierarchy input/notes.html --profile dart --link-periods --document-id company_2025_separate --period 2025.12 --kind 별도 --output ../.run/note-hierarchy-review
 ```
 
 `input/notes.html`은 사용자가 준비한 연결·별도 주석 HTML입니다. 출력의 `review.html`을 브라우저에서 확인하며 패키지는 수집이나 OpenDART API 호출을 하지 않습니다. Python에서는 설치 위치와 관계없이 `from note_hierarchy import DocumentProcessor`를 사용합니다. CLI가 PATH에 있으면 `note-hierarchy`도 같은 인자를 받습니다.
@@ -38,13 +38,43 @@ result = DocumentProcessor("dart", link_periods=True).process_html(
 result.write("../.run/note-hierarchy-demo")
 ```
 
-uv 관리 환경에서 일회성으로 실행하려면 `backend/`에서 `uv run --frozen --with ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl python -m note_hierarchy --version`을 사용할 수 있습니다. `uv run`은 프로젝트 의존성을 동기화하므로 수동 pip 설치를 서비스 의존성 등록으로 간주하지 않습니다. 현재 `pyproject.toml`·`uv.lock`·Dockerfile에는 wheel을 반영하지 않았으며 기본 Compose 이미지가 이 패키지를 설치하지도 않습니다. 서비스 통합 시 wheel 경로·이미지 빌드 복사 순서·lockfile 반영이 필요합니다.
+다른 pip 환경에서는 `python -m pip install ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl`로 설치할 수 있습니다(`backend/` 기준). PyPI에는 게시하지 않았으므로 wheel 경로를 지정합니다. Dockerfile은 `uv sync` 전에 wheel을 복사하며 API·Worker·Relay가 같은 버전의 이미지를 사용합니다.
 
 wheel에는 테스트·평가 workflows·기업 데이터·수집기·API 키가 포함되지 않습니다. 전체 회귀 테스트와 데이터셋 평가는 패키지 원본 저장소에서 수행해야 합니다. 후속 근거 저장·검수 연동은 [주석 구조화 경계](../docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
 
 2026-10-27 문서 검증에서는 분리 가상환경의 pip 설치와 `pip check`, `note-hierarchy`·`python -m note_hierarchy` 버전 조회, 위 uv 일회성 실행을 확인했습니다. v0.8.4 Python API와 패키지 내 가상 예제로 JSON·검토 HTML 생성, 원문 해시·초안 상태 보존, 다른 작업 디렉터리에서의 CLI 실행도 확인했습니다. 전체 회귀 테스트·실제 기업 정확도·서비스 연동 검증은 실행하지 않았습니다.
 
 이후 DART API로 받은 뉴트리 사업보고서(2025.12)의 연결·별도 주석 HTML에 대해서도 실행·원문 보존·Chrome 표시를 확인했습니다. 미확정 계층과 검증 한계, 실제 수치는 [실제 보고서 실행 검증 기록](../docs/reviews/05_note-hierarchy-real-report-validation.md)에서 관리합니다.
+
+<a id="note-import-api"></a>
+
+## 주석 HTML 접수와 원문 구간 저장
+
+| 메서드·경로 | 동작 |
+| --- | --- |
+| `POST /api/v1/me/note-imports` | `text/html` 원문 바이트와 query 문서 정보를 받아 작업·Outbox를 접수(202) |
+| `GET /api/v1/me/note-imports/{structure_id}` | 작업 상태, 출처/해시·파서/설정 버전, 완료 후 계층·검토 상태 조회 |
+| `GET /api/v1/me/note-imports/{structure_id}/segments` | 원문 구간을 문서 순서로 조회. `after=-1`, `limit=100` 기본, 최대 500개 |
+| `GET /api/v1/me/note-imports/{structure_id}/segments/{segment_id}` | 같은 결과에 속한 구간의 원문 위치·내용·표 문맥 조회 |
+
+접수 query는 `corp_code`(8자리), `receipt_no`(14자리), `scope=CFS|OFS`, `period=YYYY.MM`이 필수입니다. `encoding=utf-8|euc-kr`(기본 UTF-8), `link_periods=true|false`(기본 true)를 선택할 수 있습니다. 연결·별도 주석을 분리한 HTML을 준비해야 하며 이 API가 전체 보고서를 수집하거나 주석 영역을 자동 분리하지는 않습니다. 문서 정보는 사용자가 제출한 값이며 DART 원천 진위를 승인한 정보로 간주하지 않습니다.
+
+로그인 쿠키와 허용된 Origin이 필요하며 결과는 현재 Workspace에 격리합니다. 동일 사용자·문서 정보·원문·파서/규칙/옵션/저장 어댑터 버전의 재접수는 기존 작업과 결과를 반환합니다. 입력·옵션·버전 변경은 별도 구조화 revision입니다. 미완료 결과의 구간 목록은 409, 다른 사용자 결과와 잘못된 구간 ID는 404입니다. 페이지의 `next_after`가 null이면 마지막 페이지입니다.
+
+Compose 서버를 시작한 뒤 `backend/`에서 아래 예시처럼 접수합니다. query 문서 정보는 실제 입력 파일에 맞춰 지정합니다. 쿠키 파일은 Git 제외 경로에 둡니다.
+
+```powershell
+curl.exe -c ../.run/note-cookies.txt -H "Origin: http://localhost:8000" -X POST http://localhost:8000/api/v1/users
+curl.exe -b ../.run/note-cookies.txt -H "Origin: http://localhost:8000" -H "Content-Type: text/html" --data-binary "@input/notes.html" "http://localhost:8000/api/v1/me/note-imports?corp_code=01214248&receipt_no=20260320001416&scope=CFS&period=2025.12"
+```
+
+접수 응답의 `task_id`는 기존 작업/SSE API에서, `structure_id`는 위 조회 API에서 사용합니다. `NOTE_STRUCTURE` 완료는 구조화 저장 완료이며 사실 검수 완료가 아닙니다. 결과는 `rule_based_draft_not_gold`, `evidence_verified=false`를 유지합니다. 원문 HTML은 아직 브라우저 응답으로 제공하지 않고 표 HTML도 JSON 문자열로만 반환합니다. 뷰어 연결 전 원문 정제·열람 기록 처리가 필요합니다.
+
+원본은 `LOANSIGHT_ARTIFACT_ROOT` 아래 SHA-256 기반 불변 파일로 저장하고, PostgreSQL에는 `source_artifact`·`note_structure`·`source_segment`를 저장합니다. Native API/Worker는 같은 디렉터리를 사용해야 하며 기본값은 실행 디렉터리 기준 `.run/artifacts`입니다. Compose는 두 프로세스에 `/data/artifacts`와 `source-artifacts` named volume을 공유합니다. DB와 이 볼륨을 함께 보존해야 합니다. `LOANSIGHT_NOTE_IMPORT_MAX_BYTES`는 요청당 기술적 크기 제한이며 기본 20 MiB입니다.
+
+Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구조 검사를 확인합니다. 구간 저장과 작업 완료·SSE 이벤트는 실행 임대/소유권 확인 후 같은 DB 트랜잭션으로 확정합니다. 재전달이나 이전 Worker의 늦은 결과로 구간이 중복 확정되지 않습니다. 파일 저장과 DB는 별도이므로 접수 실패 시 미참조 파일이 남을 수 있으며 자동 삭제/보관 정책은 아직 없습니다.
+
+설계 매핑은 [원문 구간 저장 계약](../docs/design/01_data-and-analysis.md#note-storage), 실행 결과는 [저장 연동 검증 기록](../docs/reviews/06_note-source-storage-validation.md)을 따릅니다.
 
 ## 로컬 실행
 
@@ -159,7 +189,7 @@ docker compose -f deploy/compose.yaml down
 
 세션 TTL·진입 제한·최대 작업 시도 횟수는 운영 정책이 미정이므로 코드에 기본값을 두지 않았습니다. `.env.example`과 Compose의 수치는 **로컬 개발 예시**이며 운영 정책 확정을 뜻하지 않습니다. 설정이 빠진 기능은 503으로 거부합니다. 허용 Origin도 명시적으로 설정하며 프록시의 임의 헤더로 IP나 권한을 신뢰하지 않습니다.
 
-현재 지원 작업은 `PIPELINE_CHECK`뿐입니다. 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 결과는 `financial_analysis_performed:false`를 명시합니다. 실제 `/analyses` API와 재무 분석 핸들러는 다음 단계에서 원천 revision·옵션 계약과 함께 구현합니다.
+현재 지원 작업은 연결 점검 `PIPELINE_CHECK`와 주석 구조화 `NOTE_STRUCTURE`입니다. 연결 점검 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 주석 접수는 [별도 API](#note-import-api)를 사용하고 Workspace별로 격리합니다. 두 작업 모두 결과에 `financial_analysis_performed:false`를 명시합니다. 실제 `/analyses` API와 재무 분석 핸들러는 후속 구현입니다.
 
 SSE는 내장 FastAPI SSE와 API 프로세스별 전용 PostgreSQL LISTEN 연결을 사용합니다. 연결 시작 시 주석을 즉시 전송하여 유휴 스트림도 프록시를 거쳐 연결을 확정합니다. cursor는 Workspace 스트림 ID·커밋 순번이며 권한 증명이 아닙니다. `Last-Event-ID`가 `after`보다 우선합니다. 잘못된·다른 사용자 cursor나 재생 한도(`LOANSIGHT_EVENT_BATCH_SIZE`, 기본 100건) 초과 시 `reset`을 보내며 작업 목록을 다시 조회해야 합니다. 현재 이벤트는 삭제하지 않고 보존합니다. 자동 삭제·운영 보존 기간은 후속 정책 결정 사항입니다. 프론트엔드 연결 UI는 [프론트엔드 안내](../frontend/README.md#서버-세션작업-연동)를 참고합니다.
 

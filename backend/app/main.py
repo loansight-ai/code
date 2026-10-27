@@ -10,6 +10,7 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.health import router as health_router
 from app.messaging.notifications import NotificationHub
+from app.modules.evidence.router import router as evidence_router
 from app.modules.identity.router import router as identity_router
 from app.modules.tasks.router import router as tasks_router
 
@@ -39,6 +40,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(identity_router)
     app.include_router(tasks_router)
+    app.include_router(evidence_router)
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request, exc):

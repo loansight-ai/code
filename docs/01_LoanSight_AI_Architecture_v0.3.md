@@ -106,6 +106,6 @@ API·Worker·Relay는 같은 Backend 이미지의 실행 명령을 구분한다.
 
 실제 기업의 사업보고서 한 건을 수집 → 정규화 → 재무지표 → 주석 근거 → 규칙 판정 → 화면 조회까지 연결하는 수직 기능부터 구현한다. 상세 단계와 아직 결정할 정책은 [개발·검증 계획](design/06_delivery-and-validation.md#roadmap)을 따른다.
 
-주석 HTML의 로컬 구조화 기반으로 [`dart-note-hierarchy` v0.8.4](../backend/app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)를 wheel로 제공한다. 설치 후 `note_hierarchy` API·CLI를 사용한다. 현재 서비스 API·Worker·DB·화면과의 연결은 후속 작업이며, 구조화 결과와 검수된 업무 근거의 구분은 [주석 구조화 경계](design/01_data-and-analysis.md#note-hierarchy)를 따른다.
+주석 HTML의 구조화 기반으로 [`dart-note-hierarchy` v0.8.4](../backend/app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)를 wheel로 설치한다. 준비된 주석 HTML을 API로 접수하고 Worker에서 처리해 원문·구조화 결과·원문 구간을 저장하는 흐름은 구현됐다. 자동 수집·프론트 뷰어·사실 검수는 후속 작업이며, [원문 구간 저장 계약](design/01_data-and-analysis.md#note-storage)을 따른다.
 
 [기능 명세서 v0.0.4](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md)와 [화면설계서](<02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>)를 참조한다. 외부 문서의 모델 개발 항목은 이 저장소의 구현 범위에 포함하지 않는다. PDF의 파일명/표지 버전 차이와 원본 해시는 검토 기록에 남긴다.

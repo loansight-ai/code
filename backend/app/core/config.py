@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
@@ -15,6 +17,8 @@ class Settings(BaseSettings):
 
     database_url: SecretStr
     database_timeout_seconds: float = Field(default=3, gt=0, le=60)
+    artifact_root: Path = Path(".run/artifacts")
+    note_import_max_bytes: int = Field(default=20 * 1024 * 1024, gt=0)
     open_dart_api_key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices("LOANSIGHT_OPEN_DART_API_KEY", "open_dart_api_key"),

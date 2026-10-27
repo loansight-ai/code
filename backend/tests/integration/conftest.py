@@ -12,7 +12,7 @@ from app.main import create_app
 
 
 @pytest.fixture
-async def environment():
+async def environment(tmp_path):
     url = os.environ.get("LOANSIGHT_TEST_DATABASE_URL")
     if not url:
         pytest.skip("Set LOANSIGHT_TEST_DATABASE_URL to run PostgreSQL integration tests")
@@ -27,6 +27,7 @@ async def environment():
     settings = Settings(
         _env_file=None,
         database_url=scoped_url.render_as_string(hide_password=False),
+        artifact_root=tmp_path / "artifacts",
         session_ttl_seconds=300,
         entry_window_seconds=60,
         entry_ip_limit=1000,

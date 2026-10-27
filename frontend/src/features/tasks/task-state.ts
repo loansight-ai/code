@@ -58,6 +58,7 @@ export const statusLabels: Record<string, string> = {
 export const stageLabels: Record<string, string> = {
   QUEUED: '전달 대기',
   DISPATCH: '연결 점검 중',
+  NOTE_STRUCTURE: '주석 구조화 중',
   RETRY_WAIT: '재시도 대기',
   COMPLETED: '처리 완료',
   FAILED: '처리 실패',

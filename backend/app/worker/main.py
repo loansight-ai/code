@@ -3,22 +3,30 @@ from contextlib import suppress
 
 import structlog
 from pydantic import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import Settings
 from app.core.database import Database
 from app.core.runtime import process_health, run
 from app.integrations.messaging.rabbitmq import JobMessage, channel_and_queue, connect
+from app.modules.evidence import service as evidence
+from app.modules.evidence.parser import PreparedNotes
 from app.modules.tasks import service
 from app.modules.tasks.models import Job
 
 logger = structlog.get_logger()
 
 
-async def execute(database: Database, job_id) -> dict:
+async def execute(
+    database: Database, job_id, settings: Settings | None = None
+) -> dict | PreparedNotes:
     async with database.transaction() as db:
         job = await db.get(Job, job_id)
-        if job.task_type != "PIPELINE_CHECK":
-            raise ValueError("unsupported_task_type")
+        task_type = job.task_type
+    if task_type == "NOTE_STRUCTURE" and settings is not None:
+        return await evidence.prepare(database, settings, job_id)
+    if task_type != "PIPELINE_CHECK":
+        raise ValueError("unsupported_task_type")
     # Real financial analysis handlers will be added in the next implementation stage.
     return {
         "kind": "PIPELINE_CHECK",
@@ -41,9 +49,12 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
 
     keeper = asyncio.create_task(maintain_lease())
     try:
-        result = await execute(database, message.job_id)
-        await service.finish(database, message.job_id, owner, result)
-    except (ConnectionError, TimeoutError):
+        result = await execute(database, message.job_id, settings)
+        if isinstance(result, PreparedNotes):
+            await evidence.complete(database, message.job_id, owner, result)
+        else:
+            await service.finish(database, message.job_id, owner, result)
+    except (ConnectionError, TimeoutError, OSError, SQLAlchemyError):
         await service.fail(database, settings, message.job_id, owner, "temporary_failure", True)
     except Exception:
         await service.fail(database, settings, message.job_id, owner, "handler_failed", False)

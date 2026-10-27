@@ -53,7 +53,9 @@ async def emit(
         tasks = list((await db.scalars(select(UserTask).where(UserTask.job_id == job.id))).all())
     # Every path locks Job -> Workspace, and multiple Workspaces in UUID order.
     for task in sorted(tasks, key=lambda item: str(item.workspace_id)):
-        workspace = await db.get(Workspace, task.workspace_id, with_for_update=True)
+        # Serialize cursor updates without conflicting with concurrent foreign
+        # key inserts that hold KEY SHARE on this same Workspace row.
+        workspace = await db.get(Workspace, task.workspace_id, with_for_update={"key_share": True})
         workspace.event_seq += 1
         payload = task_payload(task, job)
         payload["occurred_at"] = datetime.now(UTC).isoformat()
@@ -196,7 +198,8 @@ async def claim(
         now = await db.scalar(select(func.now()))
         job.owner_token = uuid4()
         job.attempt += 1
-        job.status, job.stage = "RUNNING", "DISPATCH"
+        job.status = "RUNNING"
+        job.stage = "NOTE_STRUCTURE" if job.task_type == "NOTE_STRUCTURE" else "DISPATCH"
         job.state_version += 1
         job.updated_at, job.heartbeat_at = now, now
         job.lease_until = now + timedelta(seconds=settings.job_lease_seconds)
@@ -221,13 +224,18 @@ async def finish(database: Database, job_id: UUID, owner: UUID, result: dict) ->
         now = await db.scalar(select(func.now()))
         if not job or job.owner_token != owner or job.status != "RUNNING" or job.lease_until <= now:
             return False
-        job.status, job.stage = "SUCCEEDED", "COMPLETED"
-        job.result, job.error_code = result, None
-        job.owner_token, job.lease_until = None, None
-        job.state_version += 1
-        job.updated_at = now
-        await emit(db, job, "task.completed")
+        await complete_job(db, job, result)
         return True
+
+
+async def complete_job(db: AsyncSession, job: Job, result: dict) -> None:
+    """Caller must hold the Job lock and validate the active execution lease."""
+    job.status, job.stage = "SUCCEEDED", "COMPLETED"
+    job.result, job.error_code = result, None
+    job.owner_token, job.lease_until = None, None
+    job.state_version += 1
+    job.updated_at = await db.scalar(select(func.now()))
+    await emit(db, job, "task.completed")
 
 
 async def retry_or_fail(
