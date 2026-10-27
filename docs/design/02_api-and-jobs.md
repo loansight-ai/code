@@ -10,6 +10,10 @@
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
+| POST | `/api/v1/users` | 새 사용자·기본 Workspace·5자리 코드 자동 발급 및 세션 시작 |
+| POST | `/api/v1/session` | 요청 본문의 5자리 코드로 기존 사용자 세션 시작·전환 |
+| GET | `/api/v1/session` | 현재 세션의 사용자 코드·기본 Workspace 조회, 미식별/만료는 401 |
+| DELETE | `/api/v1/session` | 현재 세션 폐기·쿠키 삭제 |
 | GET | `/api/v1/companies` | 기업 검색 |
 | GET | `/api/v1/companies/{corpCode}/disclosures` | 공시 목록 |
 | POST/GET | `/api/v1/me/manual-inputs` | 직접 입력 revision 생성·내 입력 목록, 출처·재무 기준일·자동값 충돌 병기 |
@@ -35,7 +39,7 @@
 
 **원칙:** 프론트엔드가 화면마다 전체 분석을 재요청하지 않고, 저장된 `analysis_run_id`에 대응하는 필요한 데이터만 조회한다.
 
-`/me`는 서버가 인증·세션에서 확인한 사용자와 현재 Workspace를 의미한다. 요청 파라미터의 사용자 ID만으로 접근을 허용하지 않는다. 사용자 범위의 SSE 하나로 GNB와 상세 화면을 함께 갱신하며 분석별 SSE는 초기 필수 API에 포함하지 않는다.
+`/me`는 5자리 코드 진입 후 발급된 서버 세션의 사용자·기본 Workspace를 의미한다. 코드·사용자 ID를 매 요청의 인증값으로 보내지 않고 동일 출처 쿠키를 REST·SSE에 적용한다. 미등록/비활성 코드의 진입 실패 응답은 동일하게 처리하고 시도 제한 시 429를 반환한다. 요청 파라미터의 사용자 ID만으로 접근을 허용하지 않는다. 사용자 범위의 SSE 하나로 GNB와 상세 화면을 함께 갱신한다. 발급·전환·만료와 접근 경계는 [사용자 식별](05_project-and-deployment.md#identity)을 따른다.
 
 분석 생성 요청은 공시 또는 직접 입력의 기준 revision, 적용 업종 override·계산 옵션을 명시한다. 개인 입력·검토·원문 열람·초안·내부 검증 API는 모두 서버 측 소유/역할 범위를 검증한다. 원문 구간 ID나 review ID를 안다는 이유만으로 접근을 허용하지 않는다. 업무별 요청·응답 규칙은 [데이터·분석](01_data-and-analysis.md#input), [AI 연동](03_ai-integration.md#prediction), [화면·검토](04_ui-and-review.md#review) 설계를 따른다.
 

@@ -32,6 +32,6 @@ React·FastAPI·Worker·PostgreSQL·RabbitMQ·SSE 구조로 필요한 기능을 
 
 기능 41개의 담당 모듈·API/산출물·화면·검수 기준은 [기능 연결표](../design/06_delivery-and-validation.md#traceability) 한 곳에서 관리한다. 모델 개발 항목은 이 저장소의 누락/완료 의무로 처리하지 않는다. N-F12는 보완, N-F28~29는 확장으로 유지한다.
 
-임계값·세부분류/복합 비중·산식 근사·17항목 원자료·최소 비교 표본·사용자 식별/권한·검수 승인 등 원문에서도 미정인 항목은 [결정 목록](../design/06_delivery-and-validation.md#pending)을 따른다. 숫자나 승인 상태를 임의로 확정하지 않는다.
+초기 사용자 식별은 사용자 지시에 따라 [5자리 숫자 코드+서버 세션](../design/05_project-and-deployment.md#identity)으로 정했다. 임계값·세부분류/복합 비중·산식 근사·17항목 원자료·최소 비교 표본·세부 권한/보존·검수 승인 등 남은 미정은 [결정 목록](../design/06_delivery-and-validation.md#pending)을 따른다. 숫자나 승인 상태를 임의로 확정하지 않는다.
 
 코드·데이터 수집·외부 모델 품질·화면 실행 검증은 별도 수행 대상이다. 원본 기능 명세와 PDF는 수정하지 않았다.

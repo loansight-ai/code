@@ -201,6 +201,9 @@ flowchart TD
 
 | 테이블(안) | 역할 |
 |---|---|
+| `app_user` | 불변 user_id, 유일한 5자리 user_code 문자열, 활성 상태·생성 시각 |
+| `workspace` | 기본 작업공간과 owner_user_id. 초기에는 사용자당 하나 |
+| `user_session` | 세션 토큰 해시·사용자/Workspace·만료/폐기 상태. 상세 규칙은 [사용자 식별](05_project-and-deployment.md#identity) 참조 |
 | `company` | 기업고유번호, 기업명, 시장, 업종 |
 | `disclosure` | 접수번호, 보고서 종류, 사업연도, 접수일, 정정 관계 |
 | `source_artifact` | 원문 파일 위치, 해시, 수집 시각 |
@@ -215,7 +218,7 @@ flowchart TD
 | `metric_result` | 계산 지표, 상태, 산식 버전 및 근거 |
 | `risk_signal` | 규칙 ID/버전, 판정 단계, 근거 |
 | `prediction_result` | 모델·특징·사건 정의 버전, 기준일·12개월 예측 기간, 확률 또는 미제공 상태·사유, 검증 상태 |
-| `review_item`, `review_draft` | 체크리스트, 사용자가 수정한 메모 (**사용자별 분리 정책 보류**) |
+| `review_item`, `review_draft` | 사용자/Workspace·분석에 속한 체크리스트와 검토 메모 |
 | `audit_event` | 분석 조건·수동 변경·검토 내용의 변경 기록 |
 
 기능 명세를 충족하기 위해 다음 논리 데이터를 추가한다. 구현 시 저장 단위를 합칠 수 있으며 모든 개념을 독립 테이블로 강제하지 않는다.
