@@ -106,6 +106,8 @@ API 연동은 [API·작업 설계](../docs/design/02_api-and-jobs.md), 화면·�
 
 Vite는 상대 경로 `/api`를 `http://127.0.0.1:8000`으로 프록시합니다. `LOANSIGHT_API_PORT`로 백엔드 포트를 변경할 수 있습니다. Origin을 그대로 전달하므로 프론트 주소를 백엔드 `LOANSIGHT_ALLOWED_ORIGINS`에 등록해야 합니다(기본 Compose에 localhost/127.0.0.1 프론트 주소 포함). 프론트 접속 호스트를 바꾸면 쿠키가 분리됩니다. 운영 배포에서도 같은 출처의 `/api` 프록시, SSE 버퍼링 해제와 HTTPS 쿠키 설정이 필요합니다. `pnpm preview`와 운영 프록시 구성은 이번 범위에 포함하지 않습니다.
 
+개발중, Cloudflare Named Tunnel의 공개 주소는 `https://kb-bridge.sjw-project.site`이며, 같은 Windows에서 실행하는 터널의 서비스 대상은 `http://127.0.0.1:5173`입니다. Vite는 해당 호스트를 명시적으로 허용합니다. Compose 기본 허용 출처에도 공개 주소를 포함하며, `backend/.env`에 `LOANSIGHT_ALLOWED_ORIGINS`가 있으면 기본값을 덮어쓰므로 해당 목록에도 공개 주소를 추가해야 합니다. 백엔드 환경변수 변경은 API 컨테이너를 재생성해야 반영됩니다.
+
 현재 연동 검증은 [세션·작업 UI 검증 기록](../docs/reviews/04_frontend-session-task-validation.md)에서 관리합니다. EventSource 재연결·Last-Event-ID 동작은 [HTML 표준](https://html.spec.whatwg.org/multipage/server-sent-events.html)을 따릅니다.
 
 ## 예시 화면 초기 검증 기록 · 2026-10-27
