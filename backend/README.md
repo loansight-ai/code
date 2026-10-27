@@ -42,7 +42,7 @@ uv run --frozen alembic upgrade head
 
 ## API와 DB 함께 실행 (권장)
 
-Docker Desktop을 실행한 다음 **저장소 루트**에서 아래 명령을 실행합니다. PostgreSQL·RabbitMQ·API·Worker·Relay를 함께 만들고 5개 서비스가 healthy가 될 때까지 기다립니다. 별도 `migrate` 서비스가 DB 준비 후 마이그레이션을 단발 적용하고 API·Worker·Relay는 성공을 확인한 뒤 시작합니다. `backend/.env`는 필요 없으며 Compose에서 설정을 전달합니다.
+Docker Desktop을 실행한 다음 **저장소 루트**에서 아래 명령을 실행합니다. PostgreSQL·RabbitMQ·API·Worker·Relay를 함께 만들고 5개 서비스가 healthy가 될 때까지 기다립니다. 별도 `migrate` 서비스가 DB 준비 후 마이그레이션을 단발 적용하고 API·Worker·Relay는 성공을 확인한 뒤 시작합니다. Compose는 개발 기본값과 선택적인 `backend/.env`를 읽습니다([설정 우선순위](#dotenv-compose)).
 
 ```powershell
 docker compose -f deploy/compose.yaml up -d --build --wait
@@ -52,6 +52,38 @@ curl.exe http://localhost:8000/api/v1/health/ready
 성공 응답은 HTTP 200과 `{"status":"ok"}`입니다. API는 `http://localhost:8000/docs`에서 확인합니다. DB가 준비된 후 API가 시작되도록 구성했습니다([Docker 시작 순서 문서](https://docs.docker.com/compose/how-tos/startup-order/)).
 
 API 컨테이너는 DB 서비스 이름인 `db:5432`로 접속합니다. 컨테이너 안의 `localhost`는 해당 컨테이너 자신이므로 DB 주소로 사용하지 않습니다. DB 포트는 호스트에 공개하지 않으며 API는 로컬 호스트에만 공개합니다. 기본 DB 계정·비밀번호는 로컬 개발 예시이며 운영 배포용 설정은 별도로 준비해야 합니다.
+
+<a id="dotenv-compose"></a>
+
+### backend/.env 적용과 API 키
+
+Compose 2.24 이상이 필요합니다. API·Worker·Relay·마이그레이션에 다음 순서로 설정을 전달합니다.
+
+1. `deploy/backend.defaults.env`: 기존 로컬 개발 기본값입니다. 운영 정책 확정을 뜻하지 않습니다.
+2. `backend/.env`: 있으면 기본값을 덮어씁니다. 없어도 기존 개발 기본값으로 기동합니다.
+3. `compose.yaml`의 `environment`: DB·RabbitMQ 주소만 컨테이너 내부 주소로 고정합니다. 네이티브 실행용 `.env`의 `localhost`가 Compose 연결을 깨뜨리지 않도록 유지합니다.
+
+DB·MQ를 외부 서비스로 바꾸려면 Compose 연결 설정도 명시적으로 변경해야 합니다. `backend/.env`에 `LOANSIGHT_ALLOWED_ORIGINS`를 지정한 경우 해당 목록을 우선하므로 개발 포트를 바꾸면 허용 Origin도 함께 수정합니다. 지정하지 않으면 기본 파일에서 현재 API·프론트엔드 포트를 반영합니다.
+
+외부 API 키는 다음 두 이름을 지원합니다. 같은 입력원에 둘 다 있으면 `LOANSIGHT_` 이름을 우선하므로 한 형식으로 작성합니다.
+
+| 설정 필드 | 권장 환경변수 | 기존 지원 이름 |
+| --- | --- | --- |
+| `open_dart_api_key` | `LOANSIGHT_OPEN_DART_API_KEY` | `open_dart_api_key` |
+| `ecos_api_key` | `LOANSIGHT_ECOS_API_KEY` | `ecos_api_key` |
+| `open_data_api_key` | `LOANSIGHT_OPEN_DATA_API_KEY` | `open_data_api_key` |
+
+키는 선택 항목이며 빈 값·공백은 미설정으로 취급합니다. `SecretStr`로 보관해 설정 객체의 repr/JSON 출력에서 값을 가립니다. 이번 구현은 키 로딩까지이며 실제 OpenDART·ECOS·공공데이터 호출·유효성 검증은 후속 연동 범위입니다. `.env`는 Git과 Docker 빌드 컨텍스트에서 제외하고 런타임에만 주입합니다.
+
+`.env`를 수정해도 실행 중인 컨테이너 환경이 즉시 바뀌지는 않습니다. 이미 DB·MQ가 실행 중이면 아래 명령으로 API·Worker·Relay만 재생성할 수 있습니다. **환경값 변경만으로 이미지 재빌드는 필요하지 않습니다.**
+
+```powershell
+docker compose -f deploy/compose.yaml up -d --no-build --no-deps --force-recreate --wait api worker outbox-relay
+```
+
+`start.cmd --backend --restart`도 적용할 수 있으나 현재 스크립트는 백엔드 전체 재생성과 `--build`를 수행합니다. 설정 코드·의존성이 같으면 빌드 캐시를 재사용합니다. 일반 `start.cmd`는 이미 healthy이면 건너뛰므로 환경값 변경 후에는 `--restart`가 필요합니다. 단순 `docker compose restart`는 바뀐 환경변수를 반영하지 않습니다. 네이티브 실행은 `backend/`에서 시작해야 `.env`를 읽으며 변경 후 프로세스를 다시 시작해야 합니다.
+
+`docker compose config`나 컨테이너 환경 전체 출력에는 키 값이 포함될 수 있으므로 검증 시 실제 값 대신 설정 여부·일치 여부만 확인합니다. [Compose 환경파일 안내](https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/), [restart 동작](https://docs.docker.com/reference/cli/docker/compose/restart/).
 
 기존 단독 API가 8000 포트를 사용 중이면 해당 컨테이너를 중지한 뒤 실행합니다. 기존 서비스를 유지하려면 PowerShell에서 `$env:LOANSIGHT_API_PORT = '8001'`을 설정하고 같은 명령을 실행합니다. 이후 접근 주소도 8001을 사용합니다.
 
