@@ -98,3 +98,5 @@ Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 현재 화면의 기업·수�
 | 2026-10-28 | 최신 기획·OFS·개별/복합 위험·주석 연결과 내부 관리 분리. 설계 v0.4, 실제 Figma v0.0.2는 편집 한도로 미완료 |
 
 팀 품질관리 자료는 [별도 Notion 페이지](https://app.notion.com/p/40680be201ba81ddb717d75d409cde98)에서 관리한다. 설계 목표의 갱신이며 위 실제 구현 상태를 바꾸지 않는다.
+
+문서 개정 Issue·PR: https://github.com/loansight-ai/code/issues/15 · https://github.com/loansight-ai/code/pull/16
