@@ -2,7 +2,7 @@
 
 - 작업 전 Git 상태를 확인하고 사용자의 기존 변경을 보존한다.
 - 프로젝트 소개와 현재 상태는 [README](README.md)를 확인한다.
-- 설계는 [전체 아키텍처](docs/01_LoanSight_AI_Architecture_v0.3.md)에서 시작하고, 연결된 상세 문서 중 작업에 필요한 내용만 찾아본다.
+- 설계는 [전체 아키텍처](docs/01_LoanSight_AI_Architecture_v0.4.md)에서 시작하고, 연결된 상세 문서 중 작업에 필요한 내용만 찾아본다.
 - Git 협업 규칙은 [CONTRIBUTING](CONTRIBUTING.md)을 따른다.
 - AI 모델 학습은 이 저장소의 범위 밖이다. 외부 모델 연동·추론만 다룬다.
 - 미정인 정책·수치·범위를 임의로 확정하지 않는다.

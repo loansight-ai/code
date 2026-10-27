@@ -3,15 +3,15 @@
 기업 여신 검토를 지원하는 공시 기반 재무·주석·위험징후 분석 서비스 **LoanSight AI**의 실행 코드와 운영 환경을 관리하는 저장소입니다.
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
-- 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
+- 기획 기준: 기획안 v2.2 · 요구사항 v0.0.6 · PRD/기능명세서 v0.0.5 · WBS v1.3
 - 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반, 프론트 코드 접속·세션 복원·작업 알림 연동 및 예시 분석 화면 구현. 실제 공시 수집·재무 분석과 검토 내용의 서버 저장은 후속 구현입니다.
-- 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
+- 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
 ## 서비스 범위
 
 기업·보고서 선택 → 수집/직접 입력 → 재무·주석 분석 → 현재 위험징후·외부 모델 예측 → 담당자 체크·검토 메모로 이어집니다. 제조·건설·도소매·부동산 임대 4개 업종을 대상으로 합니다.
 
-**AI 모델 학습은 이 저장소에서 진행하지 않습니다.** 외부 모델 파일/추론 API와 제공된 검증 결과를 연동합니다. 예측 조건이 충족되지 않으면 확률을 보류하고, 최종 여신 판단은 담당자가 수행합니다.
+**AI 모델 학습은 이 저장소에서 진행하지 않습니다.** 외부 모델 파일/추론 API와 사용 가능 상태를 연동합니다. 예측 조건이 충족되지 않으면 확률을 보류하고, 최종 여신 판단은 담당자가 수행합니다.
 
 초기 사용자는 서버가 발급한 **5자리 숫자 코드**로 구분하고 서버 세션으로 작업·메모를 복원합니다. 향후 정식 로그인은 기존 사용자 ID에 연결합니다. 코드만으로 진입하는 초기 사용 범위와 세부 규칙은 [사용자 식별 설계](docs/design/05_project-and-deployment.md#identity)를 따릅니다.
 
@@ -21,16 +21,16 @@
 
 | 문서 | 내용 |
 |---|---|
-| [전체 아키텍처](docs/01_LoanSight_AI_Architecture_v0.3.md) | 시스템 목적·구성·주요 결정·상세 설계 안내 |
+| [전체 아키텍처](docs/01_LoanSight_AI_Architecture_v0.4.md) | 시스템 목적·구성·주요 결정·상세 설계 안내 |
 | [데이터·분석](docs/design/01_data-and-analysis.md) | 입력·원천·재무/위험규칙·비교·주석·논리 모델 |
 | [API·작업 처리](docs/design/02_api-and-jobs.md) | API·캐시·RabbitMQ·Outbox·SSE·GNB 복구 |
 | [AI 연동](docs/design/03_ai-integration.md) | LLM 요약·외부 모델 인수·추론·결과 표시 |
 | [화면·검토](docs/design/04_ui-and-review.md) | 공통 UI·원문 열람·담당자 체크·초안 편집/재생성 |
 | [프로젝트 구조·배포](docs/design/05_project-and-deployment.md) | 코드 구조·Compose/k3s·사용자 식별·운영 |
-| [개발·검증 계획](docs/design/06_delivery-and-validation.md) | 구현 순서·기능 41개 연결·검수·미정 항목 |
-| [커버리지 검토](docs/reviews/01_architecture-coverage-v0.3.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
+| [개발·제공 동작 계획](docs/design/06_delivery-and-validation.md) | 구현 순서·현행 기능 37개 연결·검수·미정 항목 |
+| [커버리지 검토](docs/reviews/01_architecture-coverage-v0.4.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
 
-기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.1](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
+기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.3](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
 
 ## 구현·실행
 
@@ -95,3 +95,6 @@ Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 현재 화면의 기업·수�
 | 2026-10-22 | LoanSight AI 소개 |
 | 2026-10-24 | 기획안 v2.0·요구사항 v0.0.4·WBS v1.1 반영 |
 | 2026-10-27 | 아키텍처 v0.3·MQ/SSE·외부 모델 경계 반영, 주제별 설계 문서로 분리 |
+| 2026-10-28 | 최신 기획·OFS·개별/복합 위험·주석 연결과 내부 관리 분리. 설계 v0.4, 실제 Figma v0.0.2는 편집 한도로 미완료 |
+
+팀 품질관리 자료는 [별도 Notion 페이지](https://app.notion.com/p/40680be201ba81ddb717d75d409cde98)에서 관리한다. 설계 목표의 갱신이며 위 실제 구현 상태를 바꾸지 않는다.

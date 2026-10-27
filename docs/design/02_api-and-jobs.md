@@ -1,8 +1,10 @@
 # LoanSight AI — API·작업 처리 설계
 
-> v0.3 · 2026-10-27 · 설계 초안
+> v0.4 · 2026-10-28 · 설계 초안
 
-[전체 아키텍처](../01_LoanSight_AI_Architecture_v0.3.md) / REST·분석 재사용·RabbitMQ·SSE·GNB 진행 알림
+이번 변경은 설계 목표의 개정이다. 실행 코드·DB 마이그레이션·실제 화면 구현 완료를 뜻하지 않는다.
+
+[전체 아키텍처](../01_LoanSight_AI_Architecture_v0.4.md) / REST·분석 재사용·RabbitMQ·SSE·GNB 진행 알림
 
 <a id="api"></a>
 
@@ -27,8 +29,8 @@
 | GET | `/api/v1/analyses/{id}/evidences` | 주석 근거 |
 | GET | `/api/v1/analyses/{id}/source-segments/{segmentId}` | 근거가 연결된 원문 구간·하이라이트·교차참조 |
 | GET | `/api/v1/analyses/{id}/signals` | 규칙 기반 징후 |
-| GET | `/api/v1/analyses/{id}/prediction` | 기준/결합 결과·검증/입력 보류·영향·평가 비교·원문 |
-| GET | `/api/v1/analyses/{id}/review-context` | 해당 분석의 규칙 제안·17항목·원문 열람/담당자 확인 상태 |
+| GET | `/api/v1/analyses/{id}/prediction` | 제공 모델 결과·입력/제공 보류·영향·원문·추가 질문 |
+| GET | `/api/v1/analyses/{id}/review-context` | 해당 분석의 규칙 제안·23개 RISK 후보·원문 열람/담당자 확인 상태 |
 | POST | `/api/v1/reviews` | 사용자·분석별 검토 생성 또는 기존 검토 반환 |
 | GET | `/api/v1/me/tasks` | 내 진행 중·미확인 완료/실패 작업 스냅샷과 event_cursor |
 | GET | `/api/v1/me/task-events` | 내 작업 변경 SSE, 최초 `after` cursor 및 재연결 `Last-Event-ID` 지원 |
@@ -37,7 +39,6 @@
 | PUT | `/api/v1/reviews/{reviewId}/items/{itemId}` | 체크/해제, 경고 선행 열람 검증·revision 충돌 처리 |
 | GET/PUT | `/api/v1/reviews/{reviewId}/draft` | 초안 조회·기반 revision 검증 후 편집 저장 |
 | POST | `/api/v1/reviews/{reviewId}/draft-regenerations` | 수정 문단 유지/전체 재생성 선택, 비동기 생성·저장 충돌 검증 |
-| GET | `/api/v1/validation/...` | 정답지·계정 확보·추출 품질·외부 모델 검증 보고서·사용자 실험 기록(내부 접근 범위) |
 
 **원칙:** 프론트엔드가 화면마다 전체 분석을 재요청하지 않고, 저장된 `analysis_run_id`에 대응하는 필요한 데이터만 조회한다.
 
@@ -155,3 +156,10 @@ POST /analyses
 - [RabbitMQ ACK·publisher confirms](https://www.rabbitmq.com/docs/confirms), [Consumer 설정](https://www.rabbitmq.com/docs/consumers)
 - [PostgreSQL LISTEN](https://www.postgresql.org/docs/current/sql-listen.html), [NOTIFY](https://www.postgresql.org/docs/current/sql-notify.html)
 - [HTML Standard: Server-sent events](https://html.spec.whatwg.org/multipage/server-sent-events.html)
+
+## 개정 이력
+
+| 버전 | 개정일 | 변경 |
+|---|---|---|
+| v0.3 | 2026.10.27 | 이전 설계 기준, Git 이력 보존 |
+| v0.4 | 2026.10.28 | 최신 기획 연결·내부 관리 분리·기존 동작 계약 보존 |
