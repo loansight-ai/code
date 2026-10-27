@@ -110,8 +110,10 @@ class DevScriptsTest(unittest.TestCase):
         bin_directory.mkdir()
         # A small HTTP server stands in for pnpm/Vite, including its child process tree.
         (bin_directory / "pnpm.cmd").write_text(
-            f'@echo off\n"{sys.executable}" -u -m http.server %6 --bind 127.0.0.1\n'
+            '@echo off\nif "%~1"=="--version" (echo 10.34.9& exit /b 0)\n'
+            f'"{sys.executable}" -u -m http.server %6 --bind 127.0.0.1\n'
         )
+        (bin_directory / "node.cmd").write_text('@echo off\necho v24.22.1\n')
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
@@ -184,6 +186,47 @@ class DevScriptsTest(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+
+    def test_07_missing_tools_explain_local_setup(self):
+        previous_path = self.env["PATH"]
+        try:
+            self.env["PATH"] = str(Path(POWERSHELL).parent) + os.pathsep + str(Path(os.environ["SystemRoot"]) / "System32")
+            result = self.run_script("start.ps1", "--frontend")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("setup-frontend.cmd", result.stdout)
+            self.assertFalse((self.root / ".run/frontend.json").exists())
+        finally:
+            self.env["PATH"] = previous_path
+
+    def test_08_project_local_pnpm_is_found_without_pnpm_on_path(self):
+        local_pnpm = self.root / ".tools/pnpm"
+        local_pnpm.mkdir(parents=True)
+        shutil.copy2(self.root / "bin/pnpm.cmd", local_pnpm / "pnpm.cmd")
+        node_bin = self.root / "node only"
+        node_bin.mkdir()
+        shutil.copy2(self.root / "bin/node.cmd", node_bin / "node.cmd")
+        package_path = self.root / "frontend/package.json"
+        package_path.write_text(json.dumps({"scripts": {"dev": "test fixture"}, "packageManager": "pnpm@10.34.9"}))
+        previous_path = self.env["PATH"]
+        try:
+            self.env["PATH"] = str(node_bin) + os.pathsep + str(Path(POWERSHELL).parent) + os.pathsep + str(Path(os.environ["SystemRoot"]) / "System32")
+            result = self.run_script("start.ps1", "--frontend")
+            self.assertEqual(result.returncode, 0, result.stdout)
+            self.assertIn("Ready:", result.stdout)
+            result = self.run_script("stop.ps1", "--frontend")
+            self.assertEqual(result.returncode, 0, result.stdout)
+            (node_bin / "node.cmd").write_text('@echo off\necho v22.0.0\n')
+            result = self.run_script("start.ps1", "--frontend")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("Node.js 24 is required", result.stdout)
+            (node_bin / "node.cmd").write_text('@echo off\necho v24.22.1\n')
+            (local_pnpm / "pnpm.cmd").write_text('@echo off\necho 11.0.0\n')
+            result = self.run_script("start.ps1", "--frontend")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            self.assertIn("pnpm 10.34.9 is required", result.stdout)
+        finally:
+            self.run_script("stop.ps1", "--frontend")
+            self.env["PATH"] = previous_path
 
 
 if __name__ == "__main__":

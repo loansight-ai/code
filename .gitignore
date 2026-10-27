@@ -13,6 +13,7 @@ __pycache__/
 .cache/
 *.egg-info/
 .run/
+.tools/
 # JavaScript dependencies and build output
 node_modules/
 .pnpm-store/

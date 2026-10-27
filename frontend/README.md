@@ -6,6 +6,19 @@ React + Vite + TypeScript로 구현한 첫 번째 화면 골격입니다. 백엔
 
 Node.js **24.22.1**과 pnpm **10.34.9**를 사용합니다. 의존성은 `package.json`과 `pnpm-lock.yaml`에 고정했습니다.
 
+Windows에서는 저장소 루트에서 한 번 준비한 뒤 시작할 수 있습니다.
+
+```bat
+setup-frontend.cmd
+start.cmd --frontend
+```
+
+`setup-frontend.cmd`는 `.node-version`에 고정된 Node.js 공식 ZIP을 SHA-256 대조 후 `.tools/`에 풀고, npm으로 `packageManager`에 고정된 pnpm을 같은 디렉터리에 설치합니다. 이어 `pnpm install --frozen-lockfile`을 수행합니다. 최초 준비에는 인터넷 연결과 64비트 Windows(x64/ARM64)가 필요합니다. 사용자/시스템 PATH는 변경하지 않으며 도구 파일은 Git에서 제외합니다. 준비 명령은 다시 실행할 수 있습니다.
+
+`start.cmd`는 프로젝트 전용 도구를 우선 탐색하고, 없으면 PATH의 도구를 사용합니다. Node.js 주 버전과 pnpm 고정 버전을 확인하여 잘못된 버전으로 실행하지 않습니다. 숨겨진 실행 프로세스에도 선택한 도구 경로를 전달합니다. `stop.cmd --frontend`로 종료하고 `start.cmd --frontend --restart`로 재시작합니다. 백엔드도 실행하려면 Docker Desktop을 켠 뒤 `start.cmd`를 사용합니다. 준비 중에는 기존 서버를 종료하지 않으며, 다른 프로그램이 포트를 사용 중이면 시작 시 충돌을 안내합니다.
+
+Node.js와 pnpm을 PATH에 직접 설치한 환경에서는 다음 명령도 사용할 수 있습니다. `.tools/`에만 도구를 준비한 경우 일반 터미널의 `pnpm` 명령은 추가되지 않으므로 위 시작·종료 스크립트를 사용합니다.
+
 ```sh
 cd frontend
 pnpm install --frozen-lockfile
