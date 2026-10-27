@@ -12,6 +12,7 @@ __pycache__/
 .ruff_cache/
 .cache/
 *.egg-info/
+.run/
 # JavaScript dependencies and build output
 node_modules/
 dist/
