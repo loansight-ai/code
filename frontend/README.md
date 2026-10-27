@@ -1,0 +1,57 @@
+# LoanSight AI 프론트엔드
+
+React + Vite + TypeScript로 구현한 첫 번째 화면 골격입니다. 백엔드 없이 **가상 기업과 공통 예시 수치**로 실행하며, 실제 분석 결과를 제공하지 않습니다.
+
+## 실행
+
+Node.js **24.22.1**과 pnpm **10.34.9**를 사용합니다. 의존성은 `package.json`과 `pnpm-lock.yaml`에 고정했습니다.
+
+```sh
+cd frontend
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+개발 주소는 `http://127.0.0.1:5173`입니다. PowerShell 실행 정책으로 `pnpm.ps1`이 차단되는 환경에서는 `pnpm.cmd`로 실행합니다.
+
+```sh
+pnpm build
+pnpm preview
+pnpm lint
+pnpm format:check
+pnpm test
+pnpm test:e2e
+```
+
+브라우저 테스트는 설치된 Google Chrome을 사용합니다. Chrome이 없다면 설치하거나 `playwright.config.ts`의 브라우저 설정을 개발 환경에 맞게 변경합니다. 빌드 산출물은 `dist/`이며, 운영 서버에서는 SPA 경로를 `index.html`로 fallback해야 합니다. 운영 배포 설정은 이번 범위에 포함하지 않았습니다.
+
+## 구현 범위
+
+| 화면                | 현재 동작                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| 기업 검색           | 가상 기업 4개, 검색·업종 필터, 보고서·연결/별도 선택, 기업 미선택 시 진입 차단        |
+| 공통 셸             | KB 색상 토큰, 반응형 메뉴, 선택 전 분석 메뉴 비활성, 출처/예시 표시, 작업 안내 Dialog |
+| 재무 요약·실적 변동 | ECharts 추세와 정렬 가능한 TanStack Table, 재무 화면 지연 로딩                        |
+| 주석·위험징후       | 가상 원문 Dialog, 예시 원문 확인 전 체크 비활성                                       |
+| 위험 예측           | 외부 모델·입력 계약·검증 결과 미연동에 따른 보류 표시, 확률 미표시                    |
+| 담당자 검토         | 기업·보고서·회계 범위별 브라우저 메모 저장·복원, 예시/분석 기준을 포함한 복사         |
+
+검색 조건은 URL의 `q`·`industry`, 분석 선택은 `/analyses/{demo-id}/{section}?report={year}&scope={CFS|OFS}`로 유지합니다. 연도 선택지는 레이아웃 확인을 위한 예시이며 실제 제공 기간을 확정한 정책이 아닙니다. 모든 기업·보고서·회계 범위에서 같은 2023~2025 재무 예시를 사용하므로 선택 조건별 실제 결과로 해석하지 않습니다.
+
+브라우저 메모는 `loansight.demo.memo.*` 키로만 저장합니다. 서버 사용자 식별·권한·업무 검토 저장과는 별개이며 브라우저 데이터를 지우면 삭제됩니다. 저장하지 않은 편집은 페이지를 벗어나면 유지되지 않습니다. 원문 체크도 데모 화면의 상태이며 서버 열람 기록이나 담당자의 실제 업무 확인을 의미하지 않습니다.
+
+## 다음 연동 범위
+
+5자리 코드 발급/진입·서버 세션, 실제 기업/공시 검색, 수집·분석 요청, 사용자 작업 복원·SSE, 원문 근거 revision, 17항목 원자료, 초안 생성/충돌 처리와 서버 저장은 아직 연결하지 않았습니다. 직접 입력과 업종 수동 변경도 미구현입니다. 뉴스·검증 기록·PDF 확장 화면은 이번 범위에서 제외했습니다. 미정 업무 기준이나 모델 확률을 프론트엔드에서 생성하지 않습니다.
+
+API 연동은 [API·작업 설계](../docs/design/02_api-and-jobs.md), 화면·검토 규칙은 [담당 설계](../docs/design/04_ui-and-review.md)를 따릅니다. 서버 응답 본문의 세부 스키마가 확정되기 전까지 임의 API 응답 계약을 추가하지 않았습니다.
+
+## 검증 기록 · 2026-10-27
+
+- `pnpm build`: TypeScript 검사와 프로덕션 빌드 성공. 기본 500kB를 넘는 번들 안내가 있으며, ECharts 화면은 별도 청크로 지연 로딩합니다.
+- `pnpm lint`, `pnpm format:check`: 정적 검사·형식 검사 성공.
+- `pnpm test`: 5개 통과. 검색/선택 조건 보존, 검색 결과 없음, 예시 원문 체크 게이트, 메모 기준별 분리, 예측 보류/잘못된 분석 경로를 검증합니다.
+- `pnpm test:e2e`: Chrome PC(1440×1000)·태블릿(820×1180) 2개 통과. 화면 이동, 실제 차트/표 표시, 원문 Dialog, 메모 새로고침 복원, 예측 보류, 작업 Dialog와 페이지 오류/가로 넘침을 확인합니다. 화면 캡처는 `test-results/`에 생성되며 Git에서는 제외합니다.
+- 백엔드·실제 공시·모델·서버 세션·SSE 검사는 실행하지 않았습니다.
+
+도구 구성은 [Vite](https://vite.dev/guide/), [shadcn/ui Vite 안내](https://ui.shadcn.com/docs/installation/vite), [React Router](https://reactrouter.com/start/declarative/installation)를 확인했습니다. 공통 Button은 shadcn/ui의 Slot/CVA 구성을 KB 토큰에 맞췄으며, Dialog는 Radix의 초점 관리·Escape·접근성 동작을 사용합니다.

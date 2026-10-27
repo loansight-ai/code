@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
-- 현재 상태: 설계·협업 문서 단계. 실행 가능한 애플리케이션과 재현 가능한 실행 환경은 아직 없습니다.
+- 현재 상태: 프론트엔드 첫 구현. 가상 데이터로 기업 선택·재무 화면·예시 원문·브라우저 메모를 확인할 수 있습니다. 백엔드와 실제 분석은 미연동입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
 
 ## 서비스 범위
@@ -38,7 +38,15 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
-코드가 추가되면 의존성·버전·설정·실행 명령과 검증 결과를 이 문서에 기록합니다. 현재는 실행할 프로그램이 없습니다.
+프론트엔드 실행 방법·고정 버전·구현 범위·검증 결과는 [frontend/README.md](frontend/README.md)에서 관리합니다.
+
+```sh
+cd frontend
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 현재 화면의 기업·수치는 가상 예시이며, 실제 공시 수집·서버 세션·위험 판정·모델 추론은 연결되지 않았습니다.
 
 ## 협업
 

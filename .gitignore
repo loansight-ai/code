@@ -11,7 +11,11 @@ __pycache__/
 .pytest_cache/
 # JavaScript dependencies and build output
 node_modules/
+.pnpm-store/
 dist/
+*.tsbuildinfo
+test-results/
+playwright-report/
 # Editors and OS
 .vscode/
 .idea/
