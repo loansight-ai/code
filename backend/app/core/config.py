@@ -1,4 +1,4 @@
-from pydantic import Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -15,6 +15,18 @@ class Settings(BaseSettings):
 
     database_url: SecretStr
     database_timeout_seconds: float = Field(default=3, gt=0, le=60)
+    open_dart_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LOANSIGHT_OPEN_DART_API_KEY", "open_dart_api_key"),
+    )
+    ecos_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LOANSIGHT_ECOS_API_KEY", "ecos_api_key"),
+    )
+    open_data_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("LOANSIGHT_OPEN_DATA_API_KEY", "open_data_api_key"),
+    )
     # Business policies have no defaults; deployments must supply explicit values.
     session_ttl_seconds: int | None = Field(default=None, gt=0)
     entry_window_seconds: int | None = Field(default=None, gt=0)
@@ -32,6 +44,15 @@ class Settings(BaseSettings):
     relay_interval_seconds: float = Field(default=1, gt=0)
     event_batch_size: int = Field(default=100, gt=0, le=1000)
     sse_heartbeat_seconds: float = Field(default=10, gt=0)
+
+    @field_validator("open_dart_api_key", "ecos_api_key", "open_data_api_key", mode="before")
+    @classmethod
+    def normalize_api_key(cls, value):
+        if isinstance(value, SecretStr):
+            value = value.get_secret_value()
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
 
     @field_validator("database_url")
     @classmethod
