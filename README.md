@@ -44,10 +44,11 @@ Docker Desktop 실행 후 저장소 루트에서 `docker compose -f deploy/compo
 
 ### Windows 시작·종료 스크립트
 
-PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트를 실행합니다. Windows PowerShell 5.1과 Docker Desktop이 필요합니다. Docker Desktop은 먼저 실행해 둡니다.
+PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트를 실행합니다. Windows PowerShell 5.1이 필요하며, 백엔드를 실행할 때는 Docker Desktop을 먼저 실행해 둡니다. 프론트엔드 최초 준비는 `.\setup-frontend.cmd`로 진행합니다([상세 안내](frontend/README.md#실행)).
 
 | 명령 | 동작 |
 |---|---|
+| `.\setup-frontend.cmd` | 프론트엔드용 고정 Node.js·pnpm 및 lockfile 기준 의존성을 `.tools/`에 준비 |
 | `.\start.cmd` | 백엔드와 프론트엔드 시작 |
 | `.\start.cmd --backend` | 백엔드 5개 서비스 시작 |
 | `.\start.cmd --frontend` | 프론트엔드만 시작 |
@@ -61,13 +62,14 @@ PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트�
 
 `--backend`와 `--frontend`는 상호 배타적입니다. 선택하지 않으면 양쪽을 대상으로 합니다. `--restart`는 시작 스크립트에서만 사용할 수 있습니다. 실행 중인 대상은 알림만 출력하며, `--restart`를 지정하면 재시작합니다. 종료된 대상을 다시 종료하면 이미 종료되었다고 안내합니다. 한쪽 실행 실패 시 다른 쪽도 처리하고 종료 코드 1을 반환합니다.
 
-백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행합니다. Node.js·pnpm을 설치하고 `frontend/`에서 `pnpm install --frozen-lockfile`을 먼저 수행해야 합니다. 현재 프론트엔드는 가상 데이터로 실행하며 백엔드 API에 연결되지 않습니다.
+백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 실행합니다. 시작 스크립트는 `.tools/`의 프로젝트 전용 Node.js·pnpm을 우선 사용하고, 없으면 PATH의 도구를 확인합니다. 도구가 없거나 버전이 맞지 않으면 `.\setup-frontend.cmd`를 안내합니다. 현재 프론트엔드는 가상 데이터로 실행하며 백엔드 API에 연결되지 않습니다.
 
 기본 주소는 API `http://localhost:8000/docs`, 프론트엔드 `http://localhost:5173`입니다. PowerShell의 `$env:LOANSIGHT_API_PORT = '8001'`, `$env:LOANSIGHT_FRONTEND_PORT = '5174'`로 포트를 바꿀 수 있습니다. 이미 실행 중인 대상의 포트를 바꾸려면 `--restart`를 함께 사용합니다.
 
 프론트엔드는 숨겨진 백그라운드 프로세스로 실행하며 로그와 프로세스 정보는 Git에서 제외한 `.run/`에 저장합니다. 종료 시 이 스크립트가 시작한 프로세스와 자식들만 종료합니다. 별도 터미널에서 실행한 프론트엔드나 다른 프로그램이 포트를 사용하면 자동 종료하지 않고 충돌을 안내합니다. `.ps1` 진입점도 제공하며, 실행 정책에 막히면 위 `.cmd` 진입점을 사용합니다. `.cmd`는 해당 프로세스에만 실행 정책을 적용합니다.
 
-스크립트 검증은 루트에서 `backend\.venv\Scripts\python.exe -m unittest discover -s scripts/tests -v`로 실행합니다. 격리된 테스트 폴더와 HTTP 서버로 옵션·프론트엔드 프로세스 관리를 검증하며 실제 프론트엔드 앱 검증은 아닙니다. 실제 Compose 백엔드의 시작·중복 실행·재시작·종료와 readiness HTTP 200도 별도로 확인했습니다.
+스크립트 검증은 Python 환경에서 루트의 `python -m unittest discover -s scripts/tests -v`로 실행합니다. 격리된 테스트 폴더와 HTTP 서버로 옵션·도구 탐색·프로세스 관리를 검증합니다. 프로젝트 전용 도구로 실제 Vite 시작·재시작·종료와 HTTP 200을 확인한 결과는 [프론트엔드 시작 검증](docs/reviews/03_frontend-startup-toolchain-validation.md)을 참고합니다. Compose 백엔드 검증은 [백엔드 검증 기록](docs/reviews/02_sessions-and-pipeline-validation.md)을 따릅니다.
+
 ### 프론트엔드 실행
 
 프론트엔드 실행 방법·고정 버전·구현 범위·검증 결과는 [frontend/README.md](frontend/README.md)에서 관리합니다.

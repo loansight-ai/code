@@ -80,6 +80,55 @@ function Test-LocalPort {
     } catch { return $false } finally { $client.Dispose() }
 }
 
+function Get-NodeArchitecture {
+    $architecture = $env:PROCESSOR_ARCHITECTURE
+    if ($env:PROCESSOR_ARCHITEW6432) { $architecture = $env:PROCESSOR_ARCHITEW6432 }
+    switch ($architecture) {
+        'AMD64' { return 'x64' }
+        'ARM64' { return 'arm64' }
+        default { throw 'Frontend setup requires 64-bit Windows (x64 or ARM64).' }
+    }
+}
+
+function Resolve-FrontendTools {
+    param([string]$ProjectRoot, $Package)
+    $nodePath = $null
+    $versionPath = Join-Path $ProjectRoot 'frontend/.node-version'
+    if (Test-Path -LiteralPath $versionPath) {
+        $version = (Get-Content -LiteralPath $versionPath -Raw).Trim()
+        if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid frontend/.node-version.' }
+        $localNode = Join-Path $ProjectRoot ".tools/node-v$version-win-$(Get-NodeArchitecture)/node.exe"
+        if (Test-Path -LiteralPath $localNode) { $nodePath = $localNode }
+    }
+    if (-not $nodePath) {
+        $nodeCommand = Get-Command node -CommandType Application -ErrorAction SilentlyContinue
+        if ($nodeCommand) { $nodePath = $nodeCommand.Source }
+    }
+    $pnpmPath = Join-Path $ProjectRoot '.tools/pnpm/pnpm.cmd'
+    if (-not (Test-Path -LiteralPath $pnpmPath)) {
+        $pnpmCommand = Get-Command pnpm.cmd -CommandType Application -ErrorAction SilentlyContinue
+        $pnpmPath = $null
+        if ($pnpmCommand) { $pnpmPath = $pnpmCommand.Source }
+    }
+    if (-not $nodePath -or -not $pnpmPath) {
+        throw 'Node.js or pnpm.cmd was not found. Run .\setup-frontend.cmd once, then retry .\start.cmd --frontend.'
+    }
+    $previousPath = $env:Path
+    try {
+        $env:Path = "$(Split-Path $nodePath -Parent);$(Split-Path $pnpmPath -Parent);$env:Path"
+        $nodeVersion = & $nodePath --version
+        if ($LASTEXITCODE -ne 0 -or $nodeVersion -notmatch '^v24\.') {
+            throw 'Node.js 24 is required. Run .\setup-frontend.cmd to prepare the pinned local version.'
+        }
+        $pnpmVersion = & $pnpmPath --version
+        if ($LASTEXITCODE -ne 0) { throw 'pnpm could not start. Run .\setup-frontend.cmd to repair the local tools.' }
+        if ($Package.packageManager -match '^pnpm@(.+)$' -and $pnpmVersion -ne $Matches[1]) {
+            throw "pnpm $($Matches[1]) is required (found $pnpmVersion). Run .\setup-frontend.cmd."
+        }
+    } finally { $env:Path = $previousPath }
+    return [PSCustomObject]@{ NodePath = $nodePath; PnpmPath = $pnpmPath }
+}
+
 function Get-FrontendProcess {
     param([string]$ProjectRoot)
     $statePath = Join-Path $ProjectRoot '.run/frontend.json'
@@ -130,10 +179,9 @@ function Invoke-Frontend {
     }
     $package = Get-Content -LiteralPath $packagePath -Raw | ConvertFrom-Json
     if (-not $package.scripts.dev) { throw 'frontend/package.json must define a dev script (Vite).' }
-    $pnpm = Get-Command pnpm.cmd -ErrorAction SilentlyContinue
-    if (-not $pnpm) { throw 'pnpm.cmd is not installed or not on PATH.' }
+    $tools = Resolve-FrontendTools -ProjectRoot $ProjectRoot -Package $package
     if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot 'frontend/node_modules'))) {
-        throw 'Frontend dependencies are missing. Run pnpm install in frontend/ first.'
+        throw 'Frontend dependencies are missing. Run .\setup-frontend.cmd once, then retry.'
     }
     if ($null -ne $managed) { Stop-Frontend $ProjectRoot $managed }
     if (Test-LocalPort $port) {
@@ -144,7 +192,7 @@ function Invoke-Frontend {
     $process = Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @(
         '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
         '-File', "`"$runner`"", '-ProjectRoot', "`"$ProjectRoot`"",
-        '-PnpmPath', "`"$($pnpm.Source)`"", '-Port', $port
+        '-PnpmPath', "`"$($tools.PnpmPath)`"", '-NodePath', "`"$($tools.NodePath)`"", '-Port', $port
     ) -WorkingDirectory $ProjectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (
         Join-Path $runDirectory 'frontend.stdout.log'
     ) -RedirectStandardError (Join-Path $runDirectory 'frontend.stderr.log')
