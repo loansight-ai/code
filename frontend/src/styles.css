@@ -430,7 +430,7 @@ hr {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
-  padding: 18px 24px 27px;
+  padding: 18px 24px 12px;
 }
 .industry-filters button {
   border: 1px solid var(--border);
@@ -897,14 +897,116 @@ th button {
   color: inherit;
   padding: 0;
 }
-.status-tag {
+.status-badge {
   display: inline-block;
   padding: 5px 9px;
-  border: 1px solid #e2d3ae;
-  background: #fff8e8;
-  color: var(--caution);
+  border: 1px solid #d6dbcf;
+  background: #f4f5f1;
+  color: var(--gray);
   font-size: 11px;
   border-radius: 3px;
+  white-space: nowrap;
+}
+.status-badge-warning {
+  color: var(--warning);
+  background: #fff1ef;
+  border-color: #efcbc5;
+}
+.status-badge-caution {
+  color: var(--caution);
+  background: #fff8e8;
+  border-color: #e2d3ae;
+}
+.status-badge-observation {
+  color: var(--observation);
+  background: #eff5fb;
+  border-color: #c7d6e7;
+}
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 45px 24px;
+  text-align: center;
+  color: #68735e;
+  font-size: 12px;
+}
+.state-panel p {
+  max-width: 580px;
+}
+.state-panel h3 {
+  color: #3f4936;
+  font-size: 14px;
+}
+.state-panel-error > svg,
+.state-panel-error h3 {
+  color: var(--warning);
+}
+.loading-spinner {
+  animation: state-spin 1.2s linear infinite;
+}
+@keyframes state-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+}
+.excluded-industries {
+  color: #737d67;
+  font-size: 10px;
+  padding: 0 24px 20px;
+  line-height: 1.8;
+}
+.company-classification {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 7px;
+}
+.company-classification .status-badge {
+  font-size: 10px;
+  padding: 3px 7px;
+}
+.company-row:disabled {
+  background: #f5f6f2;
+  color: #7a8271;
+}
+.company-row:disabled .company-avatar {
+  background: #e9ece3;
+}
+.classification-detail {
+  margin: 0 23px 22px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.classification-detail > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+.classification-detail p {
+  font-size: 11px;
+  color: #737d67;
+  margin-top: 12px;
+}
+.classification-detail > span {
+  display: block;
+  font-size: 10px;
+  line-height: 1.8;
+  color: #737d67;
+  margin-top: 10px;
+}
+.selection-reset {
+  margin: -17px 23px 14px;
+  text-align: right;
 }
 .evidence-body {
   padding: 26px;

@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { CompanyPage } from '../pages/company-page'
 import { AnalysisPage } from '../pages/analysis-page'
+import * as companySearch from '../features/company/company-search'
+import { companies } from '../features/company/demo-data'
 
 vi.mock('../features/financial/financial-view', () => ({
   FinancialView: () => <div>재무 차트</div>,
@@ -97,3 +99,84 @@ it('withholds probabilities when the model is unavailable and rejects unknown an
     await screen.findByRole('heading', { name: '분석 기준을 확인해 주세요' }),
   ).toBeVisible()
 })
+
+it('keeps excluded companies unselectable and unresolved industries out of analysis', async () => {
+  const user = userEvent.setup()
+  mount()
+  expect(await screen.findByRole('button', { name: /누리렌탈/ })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: /다온산업/ }))
+  expect(screen.getByRole('button', { name: /예시 분석 열기/ })).toBeDisabled()
+  expect(
+    screen.getByRole('region', { name: '업종 판정 정보' }),
+  ).toHaveTextContent('부문별 매출 근거')
+  await user.click(screen.getByRole('button', { name: /여울개발/ }))
+  expect(
+    screen.getByRole('region', { name: '업종 판정 정보' }),
+  ).toHaveTextContent('미분류 상태를 유지')
+  expect(screen.getByRole('button', { name: /예시 분석 열기/ })).toBeDisabled()
+})
+
+it('restores company/report/scope from the URL and keeps selection explicit when filtered out', async () => {
+  const user = userEvent.setup()
+  mount('/?company=demo-construction&report=2024&scope=OFS')
+  expect(
+    await screen.findByRole('button', { name: /새움건설/ }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByLabelText('보고서')).toHaveValue('2024')
+  expect(screen.getByRole('radio', { name: /별도/ })).toBeChecked()
+  await user.click(screen.getByRole('button', { name: '제조' }))
+  expect(await screen.findByText(/현재 검색 조건에서는 숨겨져/)).toBeVisible()
+  await user.click(screen.getByRole('button', { name: '기업 선택 해제' }))
+  expect(screen.getByRole('button', { name: /예시 분석 열기/ })).toBeDisabled()
+})
+
+it('shows loading without a false zero count, and exposes query failure with a working retry', async () => {
+  let rejectQuery!: (reason: Error) => void
+  const search = vi
+    .spyOn(companySearch, 'searchDemoCompanies')
+    .mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectQuery = reject
+        }),
+    )
+    .mockResolvedValueOnce(companies)
+  const user = userEvent.setup()
+  mount()
+  expect(screen.getByRole('status')).toHaveTextContent(
+    '기업을 불러오는 중입니다.',
+  )
+  expect(screen.getByText('조회 중')).toBeVisible()
+  expect(screen.queryByText('0', { exact: true })).not.toBeInTheDocument()
+  await act(async () => rejectQuery(new Error('조회 실패 예시')))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '기업 목록을 불러오지 못했습니다.',
+  )
+  expect(screen.queryByText('0', { exact: true })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: '다시 시도' }))
+  expect(await screen.findByRole('button', { name: /한빛정밀/ })).toBeVisible()
+  expect(search).toHaveBeenCalledTimes(2)
+})
+
+it('requires resetting invalid URL criteria instead of silently applying another accounting scope', async () => {
+  const user = userEvent.setup()
+  const router = mount('/?company=demo-manufacturing&report=2025&scope=INVALID')
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '분석 기준을 확인해 주세요',
+  )
+  expect(screen.getByRole('button', { name: /예시 분석 열기/ })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: '분석 기준 초기화' }))
+  expect(router.state.location.pathname).toBe('/')
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /예시 분석 열기/ })).toBeDisabled()
+})
+
+it.each(['demo-mixed', 'demo-unclassified', 'demo-excluded'])(
+  'does not expose an analysis through a direct URL for %s',
+  async (id) => {
+    mount(`/analyses/${id}/summary`)
+    expect(
+      screen.getByRole('heading', { name: '분석 기준을 확인해 주세요' }),
+    ).toBeVisible()
+  },
+)

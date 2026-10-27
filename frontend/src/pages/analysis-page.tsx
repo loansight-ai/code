@@ -4,6 +4,8 @@ import { ArrowLeft, Copy, FileText, Save, ShieldAlert } from 'lucide-react'
 import { findCompany } from '../features/company/demo-data'
 import { Button } from '../shared/components/button'
 import { Modal } from '../shared/components/modal'
+import { StatePanel } from '../shared/components/state-panel'
+import { StatusBadge } from '../shared/components/status-badge'
 
 const FinancialView = lazy(() =>
   import('../features/financial/financial-view').then((module) => ({
@@ -39,7 +41,10 @@ export function AnalysisPage() {
     )
   return (
     <main id="main" className="page">
-      <Link to="/" className="back-link">
+      <Link
+        to={`/?${new URLSearchParams({ company: company.id, report, scope })}`}
+        className="back-link"
+      >
         <ArrowLeft size={14} />
         기업 다시 선택
       </Link>
@@ -95,7 +100,12 @@ export function AnalysisPage() {
             ))}
           </div>
           <Suspense
-            fallback={<p role="status">재무 화면을 불러오는 중입니다.</p>}
+            fallback={
+              <StatePanel
+                state="loading"
+                title="재무 화면을 불러오는 중입니다."
+              />
+            }
           >
             <FinancialView />
           </Suspense>
@@ -103,7 +113,11 @@ export function AnalysisPage() {
       )}
       {section === 'cashflow' && (
         <>
-          <Suspense fallback={<p role="status">추세를 불러오는 중입니다.</p>}>
+          <Suspense
+            fallback={
+              <StatePanel state="loading" title="추세를 불러오는 중입니다." />
+            }
+          >
             <FinancialView />
           </Suspense>
           <div className="notice">
@@ -114,26 +128,25 @@ export function AnalysisPage() {
       )}
       {section === 'evidence' && <EvidencePreview />}
       {section === 'prediction' && (
-        <section className="panel empty-state">
-          <ShieldAlert size={32} />
-          <span className="status-tag">예측 보류</span>
-          <h2>외부 모델과 검증 결과가 연결되지 않았습니다</h2>
-          <p>
-            모델·입력 계약·검증 보고서 확인 후 확률을 표시합니다.
-            <br />
-            현재 위험징후와 미래 12개월 위험 사건 예측은 별도로 확인합니다.
-          </p>
-          <div className="pending-grid">
-            <div>
-              기준 모델<strong>미연동</strong>
+        <section className="panel">
+          <StatePanel
+            state="pending"
+            title="외부 모델과 검증 결과가 연결되지 않았습니다"
+            description="모델·입력 계약·검증 보고서 확인 후 확률을 표시합니다. 현재 위험징후와 미래 12개월 위험 사건 예측은 별도로 확인합니다."
+          >
+            <StatusBadge tone="caution">예측 보류</StatusBadge>
+            <div className="pending-grid">
+              <div>
+                기준 모델<strong>미연동</strong>
+              </div>
+              <div>
+                결합 모델<strong>미연동</strong>
+              </div>
+              <div>
+                예측 공시일<strong>미확보</strong>
+              </div>
             </div>
-            <div>
-              결합 모델<strong>미연동</strong>
-            </div>
-            <div>
-              예측 공시일<strong>미확보</strong>
-            </div>
-          </div>
+          </StatePanel>
         </section>
       )}
       {section === 'review' && (
@@ -155,7 +168,7 @@ function EvidencePreview() {
     <section className="panel">
       <div className="panel-heading">
         <h2>주석 근거 확인 흐름</h2>
-        <span className="status-tag">검수 전 · 예시</span>
+        <StatusBadge tone="caution">검수 전 · 예시</StatusBadge>
       </div>
       <div className="evidence-body">
         <h3>차입 약정 관련 문구 · 가상 예시</h3>
@@ -288,7 +301,7 @@ function ReviewPreview({
           17항목의 원자료와 승인 기준이 확정되지 않았습니다. 연결 후 시스템
           제안과 담당자 확인 상태를 구분해 표시합니다.
         </p>
-        <span className="status-tag">원자료 연결 대기</span>
+        <StatusBadge>원자료 연결 대기</StatusBadge>
         <hr />
         <h3>검토 기준</h3>
         <p>{context}</p>

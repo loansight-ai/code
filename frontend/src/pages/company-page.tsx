@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,11 +11,27 @@ import {
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { companies, industries, reports } from '../features/company/demo-data'
+import {
+  companies,
+  industries,
+  isAnalysisReady,
+  reports,
+} from '../features/company/demo-data'
+import { searchDemoCompanies } from '../features/company/company-search'
 import { Button } from '../shared/components/button'
+import { StatePanel } from '../shared/components/state-panel'
+import { StatusBadge } from '../shared/components/status-badge'
 
 const selectionSchema = z.object({
-  company: z.string().min(1, '기업을 선택해 주세요.'),
+  company: z
+    .string()
+    .refine(
+      (id) =>
+        companies.some(
+          (company) => company.id === id && isAnalysisReady(company),
+        ),
+      '적용 업종이 확인된 대상 기업을 선택해 주세요.',
+    ),
   report: z.enum(['2025', '2024', '2023']),
   scope: z.enum(['CFS', 'OFS']),
 })
@@ -26,11 +41,25 @@ export function CompanyPage() {
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const industry = params.get('industry') ?? '전체'
-  const [selected, setSelected] = useState('')
+  const selected = params.get('company') ?? ''
+  const report = params.get('report') ?? '2025'
+  const scope = params.get('scope') ?? 'CFS'
+  const invalidCriteria =
+    !['2025', '2024', '2023'].includes(report) ||
+    !['CFS', 'OFS'].includes(scope) ||
+    (selected !== '' &&
+      !companies.some(
+        (company) =>
+          company.id === selected && company.classification !== '제외',
+      ))
   const navigate = useNavigate()
   const form = useForm<Selection>({
     resolver: zodResolver(selectionSchema),
-    defaultValues: { company: '', report: '2025', scope: 'CFS' },
+    values: {
+      company: selected,
+      report: selectionSchema.shape.report.safeParse(report).data ?? '2025',
+      scope: selectionSchema.shape.scope.safeParse(scope).data ?? 'CFS',
+    },
   })
   const {
     data = [],
@@ -39,12 +68,8 @@ export function CompanyPage() {
     refetch,
   } = useQuery({
     queryKey: ['demo', 'companies', query, industry],
-    queryFn: async () =>
-      companies.filter(
-        (company) =>
-          (industry === '전체' || company.industry === industry) &&
-          `${company.name} ${company.code}`.includes(query.trim()),
-      ),
+    queryFn: () => searchDemoCompanies(query, industry),
+    retry: false,
   })
   function filter(key: string, value: string) {
     setParams(
@@ -56,6 +81,16 @@ export function CompanyPage() {
     )
   }
   const company = companies.find((item) => item.id === selected)
+  const canAnalyze = !!company && isAnalysisReady(company) && !invalidCriteria
+  function resetCriteria() {
+    setParams(
+      (previous) => {
+        for (const key of ['company', 'report', 'scope']) previous.delete(key)
+        return previous
+      },
+      { replace: true },
+    )
+  }
   return (
     <main id="main" className="page">
       <div className="page-eyebrow">COMPANY EXPLORER</div>
@@ -107,30 +142,55 @@ export function CompanyPage() {
               </button>
             ))}
           </div>
+          <p className="excluded-industries">
+            장비·물품 렌탈, 운수·창고, 금융·보험, 지주·스팩, 부동산 관리·중개는
+            대상에서 제외됩니다.
+          </p>
           <div className="results-heading">
             <span>
-              기업 목록 <b>{data.length}</b>
+              기업 목록{' '}
+              <b>
+                {isPending ? '조회 중' : isError ? '조회 실패' : data.length}
+              </b>
             </span>
             <span>가상 기업 · 화면 확인용</span>
           </div>
           {isPending ? (
-            <p role="status" className="empty-state">
-              기업을 불러오는 중입니다.
-            </p>
+            <StatePanel
+              state="loading"
+              title="기업을 불러오는 중입니다."
+              description="선택한 검색 조건으로 조회합니다."
+            />
           ) : isError ? (
-            <div role="alert" className="empty-state">
-              기업 목록을 불러오지 못했습니다.
-              <Button onClick={() => refetch()}>다시 시도</Button>
-            </div>
+            <StatePanel
+              state="error"
+              title="기업 목록을 불러오지 못했습니다."
+              description="조회 실패는 검색 결과 없음과 다릅니다. 다시 시도해 주세요."
+              action={{
+                label: '다시 시도',
+                onClick: () => {
+                  void refetch()
+                },
+              }}
+            />
           ) : data.length === 0 ? (
-            <div className="empty-state">
-              <Search size={28} />
-              <h3>검색 결과가 없습니다</h3>
-              <p>기업명이나 업종 조건을 바꿔 주세요.</p>
-              <Button variant="outline" onClick={() => setParams({})}>
-                검색 조건 초기화
-              </Button>
-            </div>
+            <StatePanel
+              state="empty"
+              title="검색 결과가 없습니다"
+              description="기업명이나 업종 조건을 바꿔 주세요."
+              action={{
+                label: '검색 조건 초기화',
+                onClick: () =>
+                  setParams(
+                    (previous) => {
+                      previous.delete('q')
+                      previous.delete('industry')
+                      return previous
+                    },
+                    { replace: true },
+                  ),
+              }}
+            />
           ) : (
             <div className="company-list">
               {data.map((item) => (
@@ -138,10 +198,8 @@ export function CompanyPage() {
                   key={item.id}
                   className={`company-row ${selected === item.id ? 'selected' : ''}`}
                   aria-pressed={selected === item.id}
-                  onClick={() => {
-                    setSelected(item.id)
-                    form.setValue('company', item.id, { shouldValidate: true })
-                  }}
+                  disabled={item.classification === '제외'}
+                  onClick={() => filter('company', item.id)}
                 >
                   <span className="company-avatar">
                     <Building2 size={23} />
@@ -154,8 +212,25 @@ export function CompanyPage() {
                     <small>
                       {item.code} <span>·</span> {item.description}
                     </small>
+                    {item.classification === '제외' && (
+                      <small>{item.classificationReason}</small>
+                    )}
                   </span>
-                  <span className="industry-tag">{item.industry}</span>
+                  <span className="company-classification">
+                    <span className="industry-tag">
+                      {item.industry ?? '업종 미확정'}
+                    </span>
+                    <StatusBadge
+                      tone={
+                        item.classification === '복합' ||
+                        item.classification === '미분류'
+                          ? 'caution'
+                          : 'neutral'
+                      }
+                    >
+                      {item.classification}
+                    </StatusBadge>
+                  </span>
                   <span className="selection-circle">
                     {selected === item.id && <Check size={14} />}
                   </span>
@@ -184,10 +259,58 @@ export function CompanyPage() {
             <strong>{company?.name ?? '기업을 선택해 주세요'}</strong>
             <span>
               {company
-                ? `${company.industry} · ${company.code}`
+                ? `${company.industry ?? '업종 미확정'} · ${company.code}`
                 : '왼쪽 목록에서 기업을 선택하세요.'}
             </span>
           </div>
+          {selected && (
+            <div className="selection-reset">
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={() => filter('company', '')}
+              >
+                기업 선택 해제
+              </Button>
+            </div>
+          )}
+          {company &&
+            !isPending &&
+            !isError &&
+            !data.some((item) => item.id === company.id) && (
+              <p className="selection-note">
+                선택한 기업이 현재 검색 조건에서는 숨겨져 있습니다. 선택은
+                유지되며, 위에서 해제할 수 있습니다.
+              </p>
+            )}
+          {invalidCriteria && (
+            <StatePanel
+              state="error"
+              title="분석 기준을 확인해 주세요"
+              description="주소의 기업·보고서 또는 회계 범위를 확인할 수 없습니다."
+              action={{ label: '분석 기준 초기화', onClick: resetCriteria }}
+            />
+          )}
+          {company && !invalidCriteria && (
+            <section
+              className="classification-detail"
+              aria-label="업종 판정 정보"
+            >
+              <div>
+                <strong>업종 판정</strong>
+                <StatusBadge
+                  tone={isAnalysisReady(company) ? 'neutral' : 'caution'}
+                >
+                  {company.classification}
+                </StatusBadge>
+              </div>
+              <p>{company.classificationReason}</p>
+              <span>판정 근거·매핑 버전: 예시 데이터 / 실제 규칙 미연동</span>
+              {!isAnalysisReady(company) && (
+                <p>적용 업종 확인 전에는 이 예시 분석을 열 수 없습니다.</p>
+              )}
+            </section>
+          )}
           <input type="hidden" {...form.register('company')} />
           {form.formState.errors.company && (
             <p role="alert" className="error-text">
@@ -196,7 +319,11 @@ export function CompanyPage() {
           )}
           <label className="form-field">
             보고서
-            <select {...form.register('report')}>
+            <select
+              {...form.register('report', {
+                onChange: (event) => filter('report', event.target.value),
+              })}
+            >
               {reports.map((report, index) => (
                 <option key={report} value={String(2025 - index)}>
                   {report} · 예시
@@ -215,7 +342,9 @@ export function CompanyPage() {
                   <input
                     type="radio"
                     value={value}
-                    {...form.register('scope')}
+                    {...form.register('scope', {
+                      onChange: (event) => filter('scope', event.target.value),
+                    })}
                   />
                   {label}
                   <small>{value}</small>
@@ -227,7 +356,7 @@ export function CompanyPage() {
             선택한 기준은 분석 화면 전체에 동일하게 적용됩니다. 보고서와 회계
             범위별 실제 데이터는 아직 연결되지 않았습니다.
           </p>
-          <Button type="submit" className="w-full" disabled={!company}>
+          <Button type="submit" className="w-full" disabled={!canAnalyze}>
             예시 분석 열기
             <ArrowRight size={17} />
           </Button>

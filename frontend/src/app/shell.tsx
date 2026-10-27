@@ -16,6 +16,7 @@ import {
 import { findCompany } from '../features/company/demo-data'
 import { Button } from '../shared/components/button'
 import { Modal } from '../shared/components/modal'
+import { StatePanel } from '../shared/components/state-panel'
 
 const menus = [
   {
@@ -44,6 +45,9 @@ export function Shell() {
   const { analysisId } = useParams()
   const location = useLocation()
   const company = findCompany(analysisId)
+  const searchPath = company
+    ? `/?${new URLSearchParams({ company: company.id, report: new URLSearchParams(location.search).get('report') ?? '2025', scope: new URLSearchParams(location.search).get('scope') ?? 'CFS' })}`
+    : '/'
   const [tasksOpen, setTasksOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   return (
@@ -73,7 +77,7 @@ export function Shell() {
       <aside className="sidebar">
         <div className="workspace-label">WORKSPACE</div>
         <NavLink
-          to="/"
+          to={searchPath}
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
           end
         >
@@ -143,11 +147,11 @@ export function Shell() {
         open={tasksOpen}
         onOpenChange={setTasksOpen}
       >
-        <div className="empty-state">
-          <Bell size={28} />
-          <h3>연결된 분석 작업이 없습니다</h3>
-          <p>미리보기에서는 수집이나 분석 작업을 실행하지 않습니다.</p>
-        </div>
+        <StatePanel
+          state="empty"
+          title="연결된 분석 작업이 없습니다"
+          description="미리보기에서는 수집이나 분석 작업을 실행하지 않습니다."
+        />
       </Modal>
       <Modal
         title="LoanSight AI 이용 안내"
