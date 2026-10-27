@@ -5,7 +5,7 @@
 - 확정 프로젝트명: **LoanSight AI** (2026-10-22)
 - 팀: KB Bridge 4조참치
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1 · README 갱신: 2026-10-27
-- 구현 기준: [전체 시스템 아키텍처 v0.3](LoanSight_AI_Architecture_v0.3.md) — React SPA·FastAPI·Worker·RabbitMQ·SSE
+- 구현 기준: [전체 시스템 아키텍처 v0.3](docs/LoanSight_AI_Architecture_v0.3.md) — React SPA·FastAPI·Worker·RabbitMQ·SSE
 - 저장소 상태: 설계·협업 문서 단계이며 애플리케이션 골격은 아직 생성되지 않았습니다. 실행·데이터 적재·학습·검증 완료를 의미하지 않습니다.
 - [기획·설계·수행일지·발표 문서](https://github.com/loansight-ai/docs)
 - [조직 Overview](https://github.com/loansight-ai)
@@ -57,9 +57,11 @@ code/
 │   ├── compose.yaml      # Self-hosted / 로컬 운영
 │   └── k8s/              # k3s 기본 구성·SaaS overlay
 ├── scripts/              # 설치·업그레이드·백업·복구
-├── docs/                 # 코드에 종속된 산식·규칙·데이터·API 계약
+├── docs/                 # 설계·검토 기록, 코드에 종속된 산식·규칙·데이터·API 계약
+│   ├── LoanSight_AI_Architecture_v0.3.md
+│   ├── LoanSight AI_화면설계서_v0.0.2_261026.pdf
+│   └── reviews/
 ├── .env.example
-├── LoanSight_AI_Architecture_v0.3.md
 └── README.md
 ```
 
@@ -82,4 +84,4 @@ code/
 
 [협업 규칙·Issue/PR/커밋 제목 예시](CONTRIBUTING.md)를 먼저 확인합니다.
 개발 할 일과 오류는 이 저장소의 Issues에서 관리하고, 구현 변경은 PR로 검토합니다.
-기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리하며 중복 편집하지 않습니다. 이 저장소의 `docs/`는 코드와 함께 변경되는 산식·규칙·데이터·API 계약을 관리할 목표 경로입니다.
+기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리하며 중복 편집하지 않습니다. 이 저장소의 `docs/`는 구현 기준 설계·검토 기록·참조 화면설계서와 코드에 종속된 산식·규칙·데이터·API 계약을 관리합니다.
