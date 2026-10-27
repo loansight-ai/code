@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.0 · 요구사항/PRD/기능명세서 v0.0.4 · WBS v1.1
-- 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반, 프론트 코드 접속·세션 복원·작업 알림 연동 및 예시 분석 화면 구현. 실제 공시 수집·재무 분석과 검토 내용의 서버 저장은 후속 구현입니다.
+- 현재 상태: 백엔드 사용자·세션과 Outbox→RabbitMQ→Worker→DB→SSE 작업 기반, 프론트 코드 접속·세션 복원·작업 알림 연동 및 예시 분석 화면 구현. 로컬 재무제표 주석 HTML 구조화 모듈이 추가됐으며, 실제 공시 수집·분석 파이프라인 연결과 검토 내용의 서버 저장은 후속 구현입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.3](docs/01_LoanSight_AI_Architecture_v0.3.md)
 
 ## 서비스 범위
@@ -39,6 +39,8 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
 백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 프론트의 사용자·세션·작업 API 연동은 [프론트엔드 안내](frontend/README.md#서버-세션작업-연동)를 참고합니다. 실제 재무 분석은 후속 구현입니다.
+
+[재무제표 주석 구조화 패키지 사용방법](backend/app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)의 v0.8.4 wheel을 pip로 설치할 수 있습니다. 연결·별도 주석 HTML의 번호 계층·본문·표 문맥과 선택적 당기·전기 표 연결을 제공합니다. 저장소 내 설치·실행은 [백엔드 안내](backend/README.md#note-hierarchy), 서비스 근거 데이터로 연결할 때의 경계는 [주석 설계](docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
 
 Docker Desktop 실행 후 저장소 루트에서 `docker compose -f deploy/compose.yaml up -d --build --wait`로 API·PostgreSQL·RabbitMQ·Worker·Relay를 함께 시작합니다. 마이그레이션은 별도 초기화 서비스가 적용합니다. 자세한 접속·종료·포트 설정은 [Compose 실행 안내](backend/README.md#api와-db-함께-실행-권장)를 참고합니다.
 
@@ -80,7 +82,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 현재 화면의 기업·수치는 가상 예시이며, 실제 공시 수집·서버 세션·위험 판정·모델 추론은 연결되지 않았습니다.
+Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 현재 화면의 기업·수치는 가상 예시이며, 서버 세션·작업 알림은 연결됐습니다. 실제 공시 수집·주석 구조화 결과의 화면 조회·위험 판정·모델 추론은 후속 구현입니다.
 
 ## 협업
 

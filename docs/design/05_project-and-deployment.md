@@ -56,6 +56,8 @@ loansight-ai/
 │   │   │   ├── company/             # 기업 검색, 업종 판정·override 이력
 │   │   │   ├── disclosure/          # 보고서/공시 메타데이터
 │   │   │   ├── financial/           # 직접 입력 revision, 재무 정규화·산식·지표
+│   │   │   ├── dart_note_hierarchy-0.8.4-py3-none-any.whl # 설치용 주석 구조화 배포본
+│   │   │   ├── 사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md # 배포본 사용 안내
 │   │   │   ├── evidence/            # 주석 추출, 근거 위치, 사실 검증
 │   │   │   ├── risk/                # 규칙 기반 현재 위험징후
 │   │   │   ├── prediction/          # 미래 사건 예측 비즈니스 로직
@@ -125,7 +127,7 @@ loansight-ai/
 
 ## 백엔드 라이브러리 구성
 
-아래 구성을 구현 기준으로 채택한다. 현재 사용하는 패키지와 고정 버전은 `backend/pyproject.toml`·`backend/uv.lock`에서 관리하며, 후속 기능의 의존성은 해당 기능 구현 시 추가한다.
+아래 구성을 구현 기준으로 채택한다. 현재 서비스가 사용하는 패키지와 고정 버전은 `backend/pyproject.toml`·`backend/uv.lock`에서 관리하며, 후속 기능의 의존성은 해당 기능 구현 시 추가한다. 별도 제공된 `dart-note-hierarchy` wheel은 설치 메타데이터에 실행 의존성을 선언하며 현재 서비스 의존성/lockfile에는 미등록이다.
 
 | 용도 | 라이브러리·도구 | 적용 범위 |
 |---|---|---|
@@ -147,6 +149,8 @@ loansight-ai/
 FastAPI는 내장 SSE를 지원하는 버전을 선택한다. SQLAlchemy의 요청·작업별 세션과 Psycopg의 전용 LISTEN 연결은 분리한다. MQ 클라이언트의 재연결과 별개로 작업의 멱등성·임대·이벤트 재생은 [API·작업 처리 계약](02_api-and-jobs.md#mq)에 따라 구현한다. Tenacity는 재시도해도 안전한 외부 호출의 일시 오류에만 적용하고 분석 작업 전체의 재시도는 DB·Outbox로 관리한다.
 
 금액·재무 계산은 표준 라이브러리 `Decimal`을 사용한다. `pandas`·`openpyxl`은 데이터 가공·엑셀 입출력 요구가 생길 때 추가한다. LLM 공급자 SDK와 모델 추론 런타임은 [외부 연동 계약](03_ai-integration.md)에 맞춰 선택하며 모델 학습용 의존성은 기본 구성에 포함하지 않는다.
+
+`dart-note-hierarchy`는 설치 후 `note_hierarchy`로 import하는 로컬 HTML 처리 라이브러리다. `backend/app/modules/`에는 현재 소스 폴더 대신 wheel과 사용 안내를 보관한다. 패키지 내부 `adapters/`는 HTML 문서 프로필 규칙이며 `integrations/dart`의 네트워크 수집기를 대체하지 않는다. `rendering/`의 HTML도 별도 로컬 검토 산출물이다. 공개 API·설정·구성은 [패키지 사용방법](../../backend/app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md), 설치·실행과 현재 서비스 의존성 경계는 [백엔드 안내](../../backend/README.md#note-hierarchy)를 참조한다. 서비스 통합 시 uv/이미지 의존성 반영과 Worker 조합, 원천·산출물 저장 및 조회를 연결한다. 업무 근거의 책임 경계는 [주석 설계](01_data-and-analysis.md#note-hierarchy)에 둔다.
 
 <a id="deployment"></a>
 

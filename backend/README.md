@@ -4,6 +4,48 @@
 
 Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. 실제 DART 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
+로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4가 추가됐습니다. 설치 후 Python API·CLI를 사용할 수 있으며 FastAPI 라우터, Worker 작업, DB 저장, 프론트 원문 뷰어에는 아직 연결하지 않았습니다.
+
+<a id="note-hierarchy"></a>
+
+## 재무제표 주석 구조화 모듈
+
+패키지의 기능·출력 스키마·설정·한계는 [v0.8.4 사용방법](app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)에서 관리합니다. 배포 패키지명은 `dart-note-hierarchy`, Python import명은 `note_hierarchy`, CLI는 `note-hierarchy`입니다. PyPI에는 게시되지 않았으므로 로컬 wheel 경로를 지정합니다. pip가 준비된 활성 가상환경에서 `backend/` 기준으로 설치합니다.
+
+```powershell
+cd backend
+python -m pip install ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl
+python -m note_hierarchy --version
+python -m note_hierarchy input/notes.html --profile dart --link-periods --document-id company_2025_separate --period 2025.12 --kind 별도 --output ../.run/note-hierarchy-review
+```
+
+`input/notes.html`은 사용자가 준비한 연결·별도 주석 HTML입니다. 출력의 `review.html`을 브라우저에서 확인하며 패키지는 수집이나 OpenDART API 호출을 하지 않습니다. Python에서는 설치 위치와 관계없이 `from note_hierarchy import DocumentProcessor`를 사용합니다. CLI가 PATH에 있으면 `note-hierarchy`도 같은 인자를 받습니다.
+
+wheel은 `lxml>=5,<7`을 설치 의존성으로 선언하고 기본 JSON 설정·문서·가상 예제를 포함합니다. 설치 시 pip가 의존성을 함께 준비합니다. 별도 소스 복사나 `PYTHONPATH` 지정은 필요하지 않습니다. 동봉 예제는 작업 디렉터리의 `note_hierarchy/examples/` 경로가 아니라 설치 패키지 리소스로 읽습니다.
+
+설치 후 가상 예제로 Python API를 확인하는 예시입니다(`backend/` 기준).
+
+```python
+from importlib.resources import files
+from note_hierarchy import DocumentProcessor
+
+source = files("note_hierarchy").joinpath("examples/dart_notes.html").read_bytes()
+result = DocumentProcessor("dart", link_periods=True).process_html(
+    source,
+    document_id="demo",
+    metadata={"period": "2025.12", "kind": "별도"},
+)
+result.write("../.run/note-hierarchy-demo")
+```
+
+uv 관리 환경에서 일회성으로 실행하려면 `backend/`에서 `uv run --frozen --with ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl python -m note_hierarchy --version`을 사용할 수 있습니다. `uv run`은 프로젝트 의존성을 동기화하므로 수동 pip 설치를 서비스 의존성 등록으로 간주하지 않습니다. 현재 `pyproject.toml`·`uv.lock`·Dockerfile에는 wheel을 반영하지 않았으며 기본 Compose 이미지가 이 패키지를 설치하지도 않습니다. 서비스 통합 시 wheel 경로·이미지 빌드 복사 순서·lockfile 반영이 필요합니다.
+
+wheel에는 테스트·평가 workflows·기업 데이터·수집기·API 키가 포함되지 않습니다. 전체 회귀 테스트와 데이터셋 평가는 패키지 원본 저장소에서 수행해야 합니다. 후속 근거 저장·검수 연동은 [주석 구조화 경계](../docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
+
+2026-10-27 문서 검증에서는 분리 가상환경의 pip 설치와 `pip check`, `note-hierarchy`·`python -m note_hierarchy` 버전 조회, 위 uv 일회성 실행을 확인했습니다. v0.8.4 Python API와 패키지 내 가상 예제로 JSON·검토 HTML 생성, 원문 해시·초안 상태 보존, 다른 작업 디렉터리에서의 CLI 실행도 확인했습니다. 전체 회귀 테스트·실제 기업 정확도·서비스 연동 검증은 실행하지 않았습니다.
+
+이후 DART API로 받은 뉴트리 사업보고서(2025.12)의 연결·별도 주석 HTML에 대해서도 실행·원문 보존·Chrome 표시를 확인했습니다. 미확정 계층과 검증 한계, 실제 수치는 [실제 보고서 실행 검증 기록](../docs/reviews/05_note-hierarchy-real-report-validation.md)에서 관리합니다.
+
 ## 로컬 실행
 
 저장소 루트에서 PowerShell로 실행합니다. PostgreSQL은 별도로 준비하고 연결 주소를 `backend/.env`에 입력합니다. 예시 비밀번호는 로컬 설명용입니다.
