@@ -60,3 +60,18 @@ class SourceSegment(Base):
     top_note_ids: Mapped[list] = mapped_column(JSONB)
     payload: Mapped[dict] = mapped_column(JSONB)
     table_data: Mapped[dict | None] = mapped_column(JSONB)
+
+
+class NoteSearchRun(Base):
+    __tablename__ = "note_search_run"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "structure_id", "dictionary_version", "tool_version"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspace.id"))
+    structure_id: Mapped[UUID] = mapped_column(ForeignKey("note_structure.id"), index=True)
+    dictionary_version: Mapped[str] = mapped_column(String(40))
+    tool_version: Mapped[str] = mapped_column(String(40))
+    result: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
