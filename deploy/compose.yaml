@@ -19,6 +19,8 @@ x-backend: &backend
 services:
   db:
     image: postgres:17-bookworm
+    ports:
+      - "127.0.0.1:${LOANSIGHT_DB_PORT:-5432}:5432"
     environment:
       POSTGRES_DB: loansight
       POSTGRES_USER: loansight

@@ -123,7 +123,7 @@ curl.exe http://localhost:8000/api/v1/health/ready
 
 성공 응답은 HTTP 200과 `{"status":"ok"}`입니다. API는 `http://localhost:8000/docs`에서 확인합니다. DB가 준비된 후 API가 시작되도록 구성했습니다([Docker 시작 순서 문서](https://docs.docker.com/compose/how-tos/startup-order/)).
 
-API 컨테이너는 DB 서비스 이름인 `db:5432`로 접속합니다. 컨테이너 안의 `localhost`는 해당 컨테이너 자신이므로 DB 주소로 사용하지 않습니다. DB 포트는 호스트에 공개하지 않으며 API는 로컬 호스트에만 공개합니다. 기본 DB 계정·비밀번호는 로컬 개발 예시이며 운영 배포용 설정은 별도로 준비해야 합니다.
+API 컨테이너는 DB 서비스 이름인 `db:5432`로 접속합니다. 컨테이너 안의 `localhost`는 해당 컨테이너 자신이므로 DB 주소로 사용하지 않습니다. 호스트의 DB 도구는 `127.0.0.1:5432`, 데이터베이스/사용자 `loansight`, 비밀번호 `local-example`로 접속합니다. DB·API 포트는 로컬 호스트에만 공개합니다. DB 호스트 포트를 바꾸려면 PowerShell에서 `$env:LOANSIGHT_DB_PORT = '5433'`을 설정한 뒤 Compose를 다시 적용합니다. 기본 DB 계정·비밀번호는 로컬 개발 예시이며 운영 배포용 설정은 별도로 준비해야 합니다.
 
 <a id="dotenv-compose"></a>
 
