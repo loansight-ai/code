@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -41,6 +42,28 @@ type Selection = z.infer<typeof selectionSchema>
 export function CompanyPage() {
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
+  const [searchInput, setSearchInput] = useState({ query, value: query })
+  const [isComposing, setIsComposing] = useState(false)
+  // Restore URL navigation/reset changes without feeding every keystroke through
+  // the router. The input itself must update synchronously to preserve IME/caret.
+  if (searchInput.query !== query) {
+    setSearchInput({ query, value: query })
+  }
+  useEffect(() => {
+    if (isComposing || searchInput.value === query) return
+    const timeout = window.setTimeout(() => {
+      setParams(
+        (previous) => {
+          const next = new URLSearchParams(previous)
+          if (searchInput.value) next.set('q', searchInput.value)
+          else next.delete('q')
+          return next
+        },
+        { replace: true },
+      )
+    }, 300)
+    return () => window.clearTimeout(timeout)
+  }, [isComposing, searchInput.value, query, setParams])
   const industry = params.get('industry') ?? '전체'
   const selected = params.get('company') ?? ''
   const report = params.get('report') ?? '2025'
@@ -129,8 +152,15 @@ export function CompanyPage() {
             <Search size={20} />
             <input
               aria-label="기업명 또는 종목코드"
-              value={query}
-              onChange={(event) => filter('q', event.target.value)}
+              value={searchInput.value}
+              onChange={(event) =>
+                setSearchInput({ query, value: event.target.value })
+              }
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={(event) => {
+                setSearchInput({ query, value: event.currentTarget.value })
+                setIsComposing(false)
+              }}
               placeholder="기업명 또는 종목코드를 입력하세요"
             />
             <span>검색</span>
@@ -184,7 +214,9 @@ export function CompanyPage() {
               description="기업명이나 업종 조건을 바꿔 주세요."
               action={{
                 label: '검색 조건 초기화',
-                onClick: () =>
+                onClick: () => {
+                  setSearchInput({ query: '', value: '' })
+                  setIsComposing(false)
                   setParams(
                     (previous) => {
                       previous.delete('q')
@@ -192,7 +224,8 @@ export function CompanyPage() {
                       return previous
                     },
                     { replace: true },
-                  ),
+                  )
+                },
               }}
             />
           ) : (
