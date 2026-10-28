@@ -10,6 +10,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import Literal
 from zipfile import BadZipFile, ZipFile
 
 from pydantic import BaseModel
@@ -19,6 +20,9 @@ from app.modules.company.profiles import ProfileError, ProfileIndex
 
 MAX_ZIP_BYTES = 30 * 1024 * 1024
 MAX_XML_BYTES = 100 * 1024 * 1024
+Industry = Literal["제조", "건설", "도소매", "부동산 임대"]
+# Search groups from the supplied KSIC11 hierarchy, not service eligibility decisions.
+INDUSTRY_ROOTS = {"제조": "C", "건설": "F", "도소매": "G", "부동산 임대": "6811"}
 
 
 class CatalogUnavailable(Exception):
@@ -146,7 +150,9 @@ class CompanyCatalog:
             self._cache_stamp = self.path.stat().st_mtime_ns
             return companies
 
-    def search(self, query: str, offset: int, limit: int) -> dict:
+    def search(
+        self, query: str, offset: int, limit: int, industry: Industry | None = None
+    ) -> dict:
         needle = "".join(query.split()).casefold()
         companies = self.load()
         matches = [
@@ -180,6 +186,25 @@ class CompanyCatalog:
                 self.profiles.load()
             except ProfileError:
                 raise CatalogUnavailable("company_profiles_unavailable") from None
+            if industry is not None:
+                root = INDUSTRY_ROOTS[industry]
+                ksic = self.profiles.ksic
+                matching_codes = set()
+                if ksic:
+                    for code in ksic.codes:
+                        ancestor = code
+                        while ancestor:
+                            if ancestor == root:
+                                matching_codes.add(code)
+                                break
+                            ancestor = ksic.codes[ancestor]["parent"]
+                matches = [
+                    company
+                    for company in matches
+                    if (fields := self.profiles.fields(company.corp_code))["ksic11_status"]
+                    == "matched"
+                    and fields["ksic11_code"] in matching_codes
+                ]
             items = [
                 company.model_copy(update=self.profiles.fields(company.corp_code))
                 for company in matches[offset : offset + limit]

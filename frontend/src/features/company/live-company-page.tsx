@@ -2,14 +2,16 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { Building2, Search } from 'lucide-react'
-import { searchCompanies, type DartCompany } from './api'
+import { COMPANY_PAGE_SIZE, searchCompanies, type DartCompany } from './api'
 import { Button } from '../../shared/components/button'
 import { StatePanel } from '../../shared/components/state-panel'
 import { ApiError } from '../session/api'
+import { industries } from './industries'
 
 export function LiveCompanyPage() {
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
+  const industry = industries.find((item) => item === params.get('industry'))
   const rawOffset = Number(params.get('offset') ?? '0')
   const offset =
     Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0
@@ -34,8 +36,8 @@ export function LiveCompanyPage() {
     return () => window.clearTimeout(timeout)
   }, [composing, input.value, query, setParams])
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['dart', 'companies', query, offset],
-    queryFn: ({ signal }) => searchCompanies(query, offset, signal),
+    queryKey: ['dart', 'companies', query, offset, industry],
+    queryFn: ({ signal }) => searchCompanies(query, offset, signal, industry),
     retry: false,
   })
   function page(nextOffset: number) {
@@ -84,6 +86,26 @@ export function LiveCompanyPage() {
               }}
             />
           </label>
+          <div className="industry-filters" aria-label="업종 필터">
+            {['전체', ...industries].map((item) => (
+              <button
+                key={item}
+                aria-pressed={(industry ?? '전체') === item}
+                onClick={() => {
+                  setSelected(null)
+                  setParams((previous) => {
+                    const next = new URLSearchParams(previous)
+                    if (item === '전체') next.delete('industry')
+                    else next.set('industry', item)
+                    next.delete('offset')
+                    return next
+                  })
+                }}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
           <div className="results-heading">
             <span>
               기업 목록{' '}
@@ -123,7 +145,7 @@ export function LiveCompanyPage() {
             <StatePanel
               state="empty"
               title="검색 결과가 없습니다"
-              description="기업명이나 코드를 확인해 주세요."
+              description="기업명·코드나 업종 조건을 확인해 주세요."
               action={{
                 label: '검색 조건 초기화',
                 onClick: () => {
@@ -170,7 +192,7 @@ export function LiveCompanyPage() {
               <Button
                 variant="ghost"
                 disabled={offset === 0}
-                onClick={() => page(Math.max(0, offset - 30))}
+                onClick={() => page(Math.max(0, offset - COMPANY_PAGE_SIZE))}
               >
                 이전
               </Button>
@@ -182,14 +204,15 @@ export function LiveCompanyPage() {
               <Button
                 variant="ghost"
                 disabled={offset + data.items.length >= data.total}
-                onClick={() => page(offset + 30)}
+                onClick={() => page(offset + COMPANY_PAGE_SIZE)}
               >
                 다음
               </Button>
             </div>
           )}
           <p className="panel-footnote">
-            KSIC11 매칭이 없는 기업의 업종을 임의로 추정하지 않습니다.
+            업종 필터는 확인된 KSIC11 분류 기준입니다. 미매칭·재검토 기업은
+            전체에서 확인할 수 있으며, 서비스 대상 최종 판정과는 다릅니다.
           </p>
         </section>
         <section

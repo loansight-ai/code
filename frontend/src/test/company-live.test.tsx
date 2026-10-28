@@ -19,8 +19,10 @@ const company = {
   corp_cls: 'Y',
   acc_mt: '12',
 }
-function mount() {
-  const router = createMemoryRouter([{ path: '/', element: <CompanyPage /> }])
+function mount(initialEntry = '/') {
+  const router = createMemoryRouter([{ path: '/', element: <CompanyPage /> }], {
+    initialEntries: [initialEntry],
+  })
   render(
     <QueryClientProvider
       client={
@@ -40,7 +42,7 @@ it('searches the server, preserves IME composition and selects a real company wi
         items: [company],
         total: 1,
         offset: 0,
-        limit: 30,
+        limit: 10,
       }),
       { status: 200 },
     ),
@@ -62,9 +64,64 @@ it('searches the server, preserves IME composition and selects a real company wi
   expect(router.state.location.search).toBe('')
   fireEvent.compositionEnd(input, { data: '삼성' })
   await vi.waitFor(() => expect(router.state.location.search).toContain('q='))
-  expect(fetcher).toHaveBeenLastCalledWith(
-    expect.stringContaining('q=%EC%82%BC%EC%84%B1'),
-    expect.objectContaining({ signal: expect.any(AbortSignal) }),
+  await vi.waitFor(() =>
+    expect(fetcher).toHaveBeenLastCalledWith(
+      expect.stringContaining('q=%EC%82%BC%EC%84%B1'),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    ),
+  )
+})
+
+it('restores all four industry filters, resets pagination and preserves the search', async () => {
+  const fetcher = vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(async (input) => {
+      const url = new URL(String(input), 'http://localhost')
+      return new Response(
+        JSON.stringify({
+          items: [company],
+          total: 100,
+          offset: Number(url.searchParams.get('offset')),
+          limit: 10,
+        }),
+        { status: 200 },
+      )
+    })
+  const user = userEvent.setup()
+  const router = mount('/?q=삼성&offset=30')
+  await screen.findByRole('button', { name: /삼성전자/ })
+  for (const industry of ['제조', '건설', '도소매', '부동산 임대']) {
+    await user.click(screen.getByRole('button', { name: industry }))
+    await vi.waitFor(() => {
+      const url = new URL(
+        String(fetcher.mock.lastCall?.[0]),
+        'http://localhost',
+      )
+      expect(url.searchParams.get('industry')).toBe(industry)
+      expect(url.searchParams.get('offset')).toBe('0')
+      expect(url.searchParams.get('limit')).toBe('10')
+      expect(url.searchParams.get('q')).toBe('삼성')
+    })
+    expect(screen.getByRole('button', { name: industry })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  }
+  await user.click(screen.getByRole('button', { name: '다음' }))
+  expect(
+    new URLSearchParams(router.state.location.search).get('industry'),
+  ).toBe('부동산 임대')
+  expect(new URLSearchParams(router.state.location.search).get('offset')).toBe(
+    '10',
+  )
+  await user.click(screen.getByRole('button', { name: '전체' }))
+  await vi.waitFor(() =>
+    expect(
+      new URL(
+        String(fetcher.mock.lastCall?.[0]),
+        'http://localhost',
+      ).searchParams.has('industry'),
+    ).toBe(false),
   )
 })
 
@@ -78,7 +135,7 @@ it('distinguishes request failure from no results and retries successfully', asy
     )
     .mockResolvedValueOnce(
       new Response(
-        JSON.stringify({ items: [], total: 0, offset: 0, limit: 30 }),
+        JSON.stringify({ items: [], total: 0, offset: 0, limit: 10 }),
         { status: 200 },
       ),
     )

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { request } from '../session/api'
+import type { Industry } from './industries'
 
 const dartCompanySchema = z.object({
   corp_code: z.string().regex(/^[0-9]{8}$/),
@@ -18,6 +19,7 @@ const dartCompanySchema = z.object({
   acc_mt: z.string().nullable().default(null),
 })
 export type DartCompany = z.infer<typeof dartCompanySchema>
+export const COMPANY_PAGE_SIZE = 10
 
 const resultsSchema = z.object({
   items: z.array(dartCompanySchema),
@@ -30,11 +32,13 @@ export async function searchCompanies(
   query: string,
   offset: number,
   signal: AbortSignal,
+  industry?: Industry,
 ) {
   const params = new URLSearchParams({
     q: query,
     offset: String(offset),
-    limit: '30',
+    limit: String(COMPANY_PAGE_SIZE),
   })
+  if (industry) params.set('industry', industry)
   return resultsSchema.parse(await request(`/companies?${params}`, { signal }))
 }

@@ -99,7 +99,7 @@ Windows에서는 Psycopg가 Selector 이벤트 루프를 요구하므로 위 `py
 | `GET /api/v1/health/ready` | DB `SELECT 1` 성공 시 200, 연결 오류·시간 초과 시 503 |
 | `/docs` | 현재 구현 API의 OpenAPI 문서 |
 
-Readiness는 현재 DB 연결만 확인합니다. 업무 스키마·MQ·분석 처리 준비 여부를 보장하지 않습니다. API 시작 시 DB 연결이나 마이그레이션을 실행하지 않으므로 DB 장애에도 liveness는 응답합니다.
+Readiness는 현재 DB 연결만 확인합니다. 업무 스키마·MQ·기업 원장 적재·분석 처리 준비 여부를 보장하지 않습니다. API 시작 시 기업 원장을 백그라운드에서 적재하지만 서버 시작을 막지 않으므로 DB 장애에도 liveness는 응답합니다. 마이그레이션은 별도로 적용합니다.
 
 ## 마이그레이션
 
@@ -149,9 +149,19 @@ DB·MQ를 외부 서비스로 바꾸려면 Compose 연결 설정도 명시적으
 
 ## 기업 검색
 
-`GET /api/v1/companies?q=삼성&offset=0&limit=30`으로 기업명·영문명·종목코드·DART 고유번호를 부분 검색합니다. 공백과 영문 대소문자를 구분하지 않으며 정확히 일치하는 이름/코드를 우선 표시합니다. 응답은 `items`, `total`, `offset`, `limit`이고 `items`에는 `corp_code`, `corp_name`, `corp_eng_name`, `stock_code`, `modify_date`, `ksic11_code`, `ksic11_name`, `ksic11_level`, `ksic11_status`, `induty_code`, `corp_cls`, `acc_mt`가 있습니다. 고유번호와 종목코드는 앞자리 0을 보존하는 문자열이며 영문 종목코드도 허용합니다. 미확보 값은 `null`입니다. `limit`은 1–100, `offset`은 0 이상입니다.
+기업 검색은 PostgreSQL의 `company` 테이블을 조회합니다. API 시작 시 `company_import` 체크포인트가 없으면 전체 원장과 KSIC11 기업정보를 한 트랜잭션으로 최초 적재합니다. 재시작 시 체크포인트가 있으면 기존 DB를 사용하며 원장을 다시 읽지 않습니다. 여러 API 프로세스가 동시에 시작해도 PostgreSQL advisory lock과 `corp_code` 기본키로 중복 적재를 막습니다. 초기 적재 중 첫 검색은 적재 완료를 기다리며, 실패하면 체크포인트와 부분 데이터가 남지 않고 재시도합니다.
 
-원천은 [OpenDART 고유번호 API](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019018)의 ZIP/XML입니다. 인증키는 서버에서만 사용합니다. 최초 검색 시 다운로드하고 검증한 원본 ZIP을 `LOANSIGHT_ARTIFACT_ROOT/company/CORPCODE.zip`에 보관합니다. Native 기본 경로는 backend에서 실행할 때 `backend/.run/artifacts/company/CORPCODE.zip`, Compose는 `source-artifacts` 볼륨의 `/data/artifacts/company/CORPCODE.zip`입니다. 두 실행 방식의 캐시는 별개입니다. 캐시가 있으면 인증키·외부 요청 없이 검색합니다. 공개 기업 식별정보 원본은 Git에 포함하지 않습니다. 서비스 이용은 OpenDART 이용 조건과 호출 제한을 따릅니다.
+검색어·업종 조건·전체 건수·정렬·`OFFSET`/`LIMIT`은 모두 DB에서 처리하고 요청한 페이지만 응답합니다. 검색 요청마다 ZIP/CSV를 읽거나 전체 기업 목록을 애플리케이션 메모리에 올리지 않습니다. 원본 파일은 아래 수집·이력 보존 경로로 유지합니다. 적재 후에는 원본 파일이나 DART 인증키가 없어도 기존 DB 검색이 가능합니다.
+
+백그라운드 적재 작업은 60초마다 입력 변경 여부를 확인합니다. 주간 원장·기업정보 스냅샷·코드표가 변경된 경우에만 DB를 동기화하고 변경 없는 행은 갱신하지 않습니다. 최신 원장에서 빠진 기업은 삭제 대신 `active=false`로 보존하고 검색에서 제외하며 다시 나타나면 활성화합니다. 동기화가 실패하면 이전 적재 데이터와 체크포인트를 유지합니다. 현재 적재 여부·건수는 `company_import.company_count`, `imported_at`으로 확인합니다.
+
+DB 적재·검색·마이그레이션 검증 결과는 [기업 원장 PostgreSQL 적재 검증](../docs/reviews/09_company-database-validation.md)을 참고합니다.
+
+선택 항목 `industry`는 `제조`, `건설`, `도소매`, `부동산 임대`를 받습니다. 제공된 KSIC11 코드표의 계층에서 각각 `C`, `F`, `G`, `6811`과 그 하위 분류를 검색하며, 검색어와 함께 적용한 뒤 전체 건수와 페이지를 계산합니다. `부동산 임대`는 개발·공급(`6812`)과 관리·중개를 포함하지 않습니다. 더 넓은 부동산 분류만 확보한 기업의 세부 업종은 추정하지 않습니다. `matched`인 기업만 업종별 검색에 포함하며 미매칭·재검토 기업은 업종을 지정하지 않은 전체 검색에서 확인할 수 있습니다. 이는 검색용 분류이며 서비스 대상/제외·복합 업종의 최종 판정을 뜻하지 않습니다.
+
+`GET /api/v1/companies?q=삼성&offset=0&limit=10`으로 기업명·영문명·종목코드·DART 고유번호를 부분 검색합니다. 공백과 영문 대소문자를 구분하지 않으며 정확히 일치하는 이름/코드를 우선 표시합니다. 응답은 `items`, `total`, `offset`, `limit`이고 `items`에는 `corp_code`, `corp_name`, `corp_eng_name`, `stock_code`, `modify_date`, `ksic11_code`, `ksic11_name`, `ksic11_level`, `ksic11_status`, `induty_code`, `corp_cls`, `acc_mt`가 있습니다. 고유번호와 종목코드는 앞자리 0을 보존하는 문자열이며 영문 종목코드도 허용합니다. 미확보 값은 `null`입니다. `limit`은 기본 10(허용 범위 1–100), `offset`은 0 이상입니다.
+
+원천은 [OpenDART 고유번호 API](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019018)의 ZIP/XML입니다. 인증키는 서버에서만 사용합니다. 최초 DB 적재 시 기존 원본 ZIP을 우선 사용하고 없으면 다운로드하여 검증한 ZIP을 `LOANSIGHT_ARTIFACT_ROOT/company/CORPCODE.zip`에 보관합니다. Native 기본 경로는 backend에서 실행할 때 `backend/.run/artifacts/company/CORPCODE.zip`, Compose는 `source-artifacts` 볼륨의 `/data/artifacts/company/CORPCODE.zip`입니다. 두 실행 방식의 원본 캐시는 별개입니다. 캐시가 있으면 최초 적재에도 인증키·외부 요청이 필요하지 않습니다. 공개 기업 식별정보 원본은 Git에 포함하지 않습니다. 서비스 이용은 OpenDART 이용 조건과 호출 제한을 따릅니다.
 
 backend 디렉터리에서 미리 준비하거나 명시적으로 갱신합니다.
 

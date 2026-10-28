@@ -1,4 +1,6 @@
+import csv
 import io
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
@@ -8,6 +10,7 @@ from app.core.config import Settings
 from app.main import create_app
 from app.modules.company import catalog as module
 from app.modules.company.catalog import CatalogUnavailable, CompanyCatalog, parse_archive
+from app.modules.company.profiles import FIELDS
 
 
 def archive(rows=None):
@@ -90,9 +93,15 @@ def test_download_cache_reuse_search_and_failed_refresh(tmp_path, monkeypatch):
     assert len(catalog.load()) == 3
 
 
-async def test_endpoint_errors_pagination_and_validation(tmp_path):
+async def test_endpoint_errors_pagination_and_validation(tmp_path, monkeypatch):
     app = create_app(settings(tmp_path))
     async with app.router.lifespan_context(app):
+
+        async def search(*args):
+            return app.state.company_catalog.search(*args)
+
+        # Router contract only; PostgreSQL behavior is covered by integration tests.
+        monkeypatch.setattr(app.state.company_repository, "search", search)
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/v1/companies")
             assert response.status_code == 503
@@ -104,5 +113,50 @@ async def test_endpoint_errors_pagination_and_validation(tmp_path):
             assert response.status_code == 200
             assert response.json()["total"] == 2
             assert len(response.json()["items"]) == 1
-            for params in ({"limit": 101}, {"offset": -1}, {"q": "x" * 201}):
+            for params in ({"limit": 101}, {"offset": -1}, {"q": "x" * 201}, {"industry": "금융"}):
                 assert (await client.get("/api/v1/companies", params=params)).status_code == 422
+
+
+async def test_industry_filters_use_hierarchy_before_pagination(tmp_path, monkeypatch):
+    config = settings(tmp_path)
+    config.ksic11_codes_csv = Path(__file__).parents[1] / "data/company/ksic11_codes.csv"
+    codes = ["C", "264", "F", "41", "G", "46", "6811", "68111", "6812", "682", "77", "68", ""]
+    rows = [(f"{index:08}", f"기업{index:02}", "", "") for index in range(len(codes))]
+    with config.company_seed_csv.open("w", encoding="utf-8-sig", newline="") as output:
+        writer = csv.DictWriter(output, fieldnames=FIELDS)
+        writer.writeheader()
+        for row, code in zip(rows, codes, strict=True):
+            writer.writerow(
+                dict.fromkeys(FIELDS, "")
+                | {"corp_code": row[0], "corp_name": row[1], "ksic11_code": code}
+            )
+    app = create_app(config)
+    async with app.router.lifespan_context(app):
+
+        async def search(*args):
+            return app.state.company_catalog.search(*args)
+
+        monkeypatch.setattr(app.state.company_repository, "search", search)
+        catalog = app.state.company_catalog
+        catalog.path.parent.mkdir(parents=True, exist_ok=True)
+        catalog.path.write_bytes(archive(rows))
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            for industry, expected in (
+                ("제조", [0, 1]),
+                ("건설", [2, 3]),
+                ("도소매", [4, 5]),
+                ("부동산 임대", [6, 7]),
+            ):
+                response = await client.get(
+                    "/api/v1/companies",
+                    params={"industry": industry, "offset": 1, "limit": 1},
+                )
+                assert response.status_code == 200
+                assert response.json()["total"] == 2
+                assert response.json()["items"][0]["corp_code"] == f"{expected[1]:08}"
+                result = catalog.search(f"기업{expected[0]:02}", 0, 30, industry)
+                assert result["total"] == 1
+            assert catalog.search("", 0, 30)["total"] == len(codes)
+            # Preserve a stale classification for review, but exclude it from filtered results.
+            catalog.profiles._states["00000001"] = {"industry_review": True}
+            assert catalog.search("", 0, 30, "제조")["total"] == 1

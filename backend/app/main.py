@@ -12,6 +12,7 @@ from app.core.database import Database
 from app.health import router as health_router
 from app.messaging.notifications import NotificationHub
 from app.modules.company.catalog import CompanyCatalog
+from app.modules.company.repository import CompanyRepository, run_imports
 from app.modules.company.router import router as company_router
 from app.modules.company.sync import CompanySync, run_weekly
 from app.modules.evidence.router import router as evidence_router
@@ -31,18 +32,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         config = settings if settings is not None else Settings()
         app.state.settings = config
         app.state.company_catalog = CompanyCatalog(config)
+        app.state.database = Database(config)
+        app.state.company_repository = CompanyRepository(
+            app.state.database, app.state.company_catalog
+        )
+        import_task = asyncio.create_task(run_imports(app.state.company_repository))
         sync_task = None
         if config.company_sync_enabled and config.open_dart_api_key:
             sync_task = asyncio.create_task(
                 run_weekly(CompanySync(config, app.state.company_catalog))
             )
-        app.state.database = Database(config)
         app.state.notifications = NotificationHub(config)
         if config.task_events_enabled:
             app.state.notifications.start()
         try:
             yield
         finally:
+            import_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await import_task
             if sync_task is not None:
                 sync_task.cancel()
                 with suppress(asyncio.CancelledError):
