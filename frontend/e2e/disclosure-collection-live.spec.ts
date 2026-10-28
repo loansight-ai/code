@@ -44,6 +44,21 @@ test('collects actual DART ZIP/XML and viewer notes then completes the parser jo
     page.getByRole('heading', { name: '주석 구조화 결과', exact: true }),
   ).toBeVisible()
   await expect(page.getByText('내용 검수 전', { exact: true })).toBeVisible()
+  const baseline = page.getByRole('region', { name: '공통 주석 근거 검색' })
+  await baseline.getByRole('button', { name: '6항목 기본 검색' }).click()
+  await expect(
+    baseline.getByRole('group', { name: '검색 항목' }).getByRole('button'),
+  ).toHaveCount(6)
+  await baseline.getByRole('button', { name: /차입 만기·재무약정/ }).click()
+  await expect(
+    baseline.getByRole('button', { name: '원문에서 확인' }),
+  ).toHaveCount(5)
+  await baseline.getByRole('button', { name: '후보 더 보기' }).click()
+  await expect(
+    baseline.getByRole('button', { name: '원문에서 확인' }),
+  ).toHaveCount(10)
+  await baseline.getByRole('button', { name: '원문에서 확인' }).first().click()
+  await expect(page).toHaveURL(/segment=[0-9a-f-]{36}/)
   const original = page.frameLocator('iframe[title="저장된 주석 원문"]')
   await expect(original.locator('body')).toContainText('주석')
   await page.getByRole('checkbox', { name: '표만 보기' }).check()
@@ -56,6 +71,9 @@ test('collects actual DART ZIP/XML and viewer notes then completes the parser jo
   await expect(original.locator('.source-active')).toBeVisible()
   await expect(page).toHaveURL(/segment=[0-9a-f-]{36}/)
   await page.reload()
+  await expect(
+    baseline.getByRole('group', { name: '검색 항목' }).getByRole('button'),
+  ).toHaveCount(6)
   await expect(
     page
       .frameLocator('iframe[title="저장된 주석 원문"]')

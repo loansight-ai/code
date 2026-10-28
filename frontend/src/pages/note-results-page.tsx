@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -12,6 +12,7 @@ import {
   type NoteStructure,
 } from '../features/evidence/live-api'
 import { LiveSourceViewer } from '../features/evidence/live-source-viewer'
+import { BaselineSearchPanel } from '../features/evidence/baseline-search-panel'
 import { SessionContext } from '../features/session/session-context'
 import { ApiError } from '../features/session/api'
 import { Button } from '../shared/components/button'
@@ -145,6 +146,7 @@ function ResultsContent({
   metadata: NoteStructure
 }) {
   const session = useContext(SessionContext)
+  const sourcePanel = useRef<HTMLElement>(null)
   const [params, setParams] = useSearchParams()
   const node = params.get('node') ?? ''
   const q = params.get('q') ?? ''
@@ -264,6 +266,25 @@ function ResultsContent({
         목차와 구간을 정리한 결과입니다. 미확정 구조를 포함하며 재무 분석·주석
         내용 검수가 완료된 상태는 아닙니다.
       </p>
+      <BaselineSearchPanel
+        id={id}
+        workspaceId={workspaceId}
+        hash={metadata.source_sha256}
+        onSelect={(segmentId) => {
+          setParams(
+            (previous) => {
+              const next = new URLSearchParams(previous)
+              next.set('segment', segmentId)
+              return next
+            },
+            { preventScrollReset: true },
+          )
+          sourcePanel.current?.scrollIntoView({
+            block: 'start',
+            behavior: 'smooth',
+          })
+        }}
+      />
       <div className="note-results-grid">
         <nav className="panel note-toc" aria-label="주석 목차">
           <div className="panel-heading">
@@ -424,7 +445,11 @@ function ResultsContent({
               </section>
             )}
           </section>
-          <section className="panel note-original" aria-label="주석 원문">
+          <section
+            ref={sourcePanel}
+            className="panel note-original"
+            aria-label="주석 원문"
+          >
             <div className="panel-heading">
               <h2>저장된 원문</h2>
               <span>{metadata.scope}</span>

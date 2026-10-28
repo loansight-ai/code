@@ -80,7 +80,8 @@ function fixtures() {
         ],
       },
     }
-    if (url.includes('source-view'))
+    if (url.includes('/search/baseline')) data = { run: null }
+    else if (url.includes('source-view'))
       data = {
         structure_id: id,
         source_sha256: 'hash',

@@ -827,6 +827,63 @@ hr {
     max-height: 330px;
   }
 }
+.baseline-search {
+  margin: 20px 0;
+}
+.baseline-body {
+  padding: 20px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.baseline-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.baseline-categories button {
+  border: 1px solid var(--border);
+  background: white;
+  padding: 10px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+.baseline-categories button[aria-pressed='true'] {
+  background: #fff4ce;
+  border-color: #d6af2b;
+}
+.baseline-categories span {
+  display: block;
+  font-size: 11px;
+  color: #666b63;
+}
+.baseline-candidates {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.baseline-candidates li {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+  overflow-wrap: anywhere;
+}
+.baseline-candidates li > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.baseline-candidates p {
+  margin: 8px 0;
+}
+.baseline-candidates small {
+  display: block;
+  margin-bottom: 8px;
+  color: #666b63;
+}
+.note-original {
+  scroll-margin-top: 100px;
+}
 .selection-panel {
   padding-bottom: 24px;
 }
