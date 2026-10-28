@@ -81,6 +81,32 @@ Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구�
 
 설계 매핑은 [원문 구간 저장 계약](../docs/design/01_data-and-analysis.md#note-storage), 실행 결과는 [저장 연동 검증 기록](../docs/reviews/06_note-source-storage-validation.md)을 따릅니다.
 
+<a id="note-search-api"></a>
+
+## 주석 근거 검색 도구와 기본 검색
+
+저장된 재무제표 주석의 목차·문단·표를 PostgreSQL에서 검색합니다. 임베딩·외부 검색 서버·LLM 호출은 사용하지 않습니다. [공통 6항목](../docs/design/01_data-and-analysis.md#evidence)의 초기 검색어 사전을 `common-six-draft-v1`, 도구를 `note-keyword-v1`로 관리합니다. 검색 일치는 사실 검출·위험 발생·검수 완료가 아닙니다.
+
+아래 경로는 `/api/v1/me/note-imports/{structure_id}` 뒤에 붙입니다. 모든 조회는 Workspace 소유권과 완료된 구조화 revision에 제한하며 `no-store`입니다. 다른 사용자 결과는 404, 미완료는 409, 잘못된 도구 인자는 422입니다. POST는 허용된 Origin도 확인합니다.
+
+| 메서드·하위 경로 | 동작 |
+|---|---|
+| `GET /search/sections` | 목차·알려진 부모·검토 상태·직속 구간 수. `parent_id`, `offset`, `limit` |
+| `POST /search/segments` | JSON `terms`, `mode=ANY|ALL`, 선택적 `node_id`, `kind=table|text`, `offset`, `limit`로 검색 |
+| `GET /search/context` | `segment_id`의 앞뒤 본문·표 문맥. `before`, `after`, `text_offset`, `row_offset`, `row_limit` |
+| `POST /search/baseline` | 6항목 기본 검색을 실행하고 저장. 같은 사용자·revision·사전/도구 버전이면 기존 결과 재사용 |
+| `GET /search/baseline` | 저장된 실행을 `run`으로 조회. 미실행이면 null |
+
+검색어와 비교 텍스트의 공백·대소문자를 정규화하며 원문은 변경하지 않습니다. LIKE 와일드카드는 이스케이프해 리터럴로 취급합니다. 본문, 알려진 목차 경로, 표 제목, 저장된 표 문맥을 검색하고 일치 검색어 수 → 목차 일치 여부 → 문서 순서로 정렬합니다. 목차 필터는 명시된 부모 관계로만 하위 내용을 포함합니다. 필터가 없으면 root·비말단·부모 미확정 노드의 직속 내용도 검색합니다. 검색 조건·집계·페이지 제한은 SQL에서 수행하며 전체 구간을 Python 메모리에 적재하지 않습니다. 별도 전문/벡터 인덱스는 아직 없습니다.
+
+응답은 문서 출처·해시·도구 버전, 전체 후보 수, 후보별 구간 ID·목차·정확한 원문 발췌 위치·일치 필드·원문 화면 링크와 `next_offset`·잘림 상태를 반환합니다. 표 문맥은 보존된 파서의 추정 상태를 유지합니다. 표는 원시 행과 rowspan/colspan을 제공하며 `th` 헤더와 앞쪽 행을 따로 반환합니다. `td`를 헤더로 확정하거나 셀의 당기/전기를 추정하지 않습니다. 원문 HTML은 도구 응답에 포함하지 않습니다.
+
+초기 응답 크기 제한은 기술적 기본값이며 업무 판정 기준이 아닙니다. 검색어 최대 20개·각 100자, 검색 페이지 기본 10/최대 30개, 목차 페이지 기본 30/최대 100개, 검색 발췌 600자입니다. 문맥은 앞뒤 각각 기본 2/최대 5개·구간당 4,000자이며 긴 대상 본문은 `next_text_offset`으로 계속 읽습니다. 표 행은 기본 10/최대 30개·행당 최대 40셀·셀당 1,000자, 주변 표 문맥은 최대 12개·각 1,000자입니다. 표 문맥·행/셀 잘림과 원문 링크를 제공하므로 제한된 응답을 전체 표로 해석하지 않습니다. 표 HTML 파싱은 별도 스레드로 실행합니다.
+
+`note_search_run`에 6항목별 검색어·검색 완료 여부·후보 수·상위 5개 후보·추가 조회 위치·미확보 영역·출처/버전을 저장합니다. 같은 실행의 중복 요청은 유일 제약과 충돌 처리로 하나의 결과를 반환합니다. 전체 보고서 검색 범위는 `PARTIAL`, AI는 `NOT_RUN`, 검수는 `PENDING`입니다. 후보가 없으면 `NO_MATCH`이며 ‘공시상 없음’으로 바꾸지 않습니다. 실행 전체가 실패하면 부분 결과를 완료로 저장하지 않습니다. 수동 도구 조회 이력·LLM 탐색 이력 저장은 후속입니다.
+
+향후 공급자 연결은 `NoteSearchTools.owned(...)`로 권한을 확인한 실행 범위를 만든 뒤 `definitions()`의 JSON Schema와 `call(name, arguments)`를 사용합니다. 도구는 `list_note_sections`, `search_note_segments`, `read_note_context`만 허용하며 Workspace·SQL·파일 경로 같은 추가 인자를 거부합니다. `validate_citations()`는 같은 revision의 실제 구간·발췌 일치를 검사하는 내부 함수이며 의미 검수를 대신하지 않습니다. Codex/OpenAI API 실행·시점 기준 예측 검색·사실 추출·검수 저장은 아직 연결하지 않았습니다. [설계](../docs/design/03_ai-integration.md#evidence-search)와 [검증 기록](../docs/reviews/13_note-evidence-search-validation.md)을 참고합니다.
+
 ## DART 원문 자동 수집
 
 코드 접속 후 `POST /api/v1/me/disclosure-collections`에 `corp_code`, `receipt_no`, `scope=CFS|OFS`, 선택 항목 `link_periods`(기본 true)를 JSON으로 제출합니다. 허용된 Origin과 세션 쿠키가 필요합니다. 서버가 해당 기업의 검증된 사업보고서 목록에서 접수번호·결산기간·철회 여부를 확인하므로 임의 문서 URL이나 사용자가 지정한 결산기간을 받지 않습니다.
