@@ -29,6 +29,18 @@ def fingerprint(value: dict) -> str:
 async def submit(
     database: Database, settings: Settings, identity: Identity, source: bytes, context: NoteInput
 ) -> dict:
+    return await submit_for_workspace(database, settings, identity.workspace_id, source, context)
+
+
+async def submit_for_workspace(
+    database: Database,
+    settings: Settings,
+    workspace_id: UUID,
+    source: bytes,
+    context: NoteInput,
+    *,
+    dart_note_id: UUID | None = None,
+) -> dict:
     if settings.job_max_attempts is None:
         raise HTTPException(503, "job_policy_not_configured")
     try:
@@ -40,9 +52,10 @@ async def submit(
     digest = await asyncio.to_thread(LocalArtifactStore(settings.artifact_root).put, source)
     source_key = fingerprint(
         {
-            "workspace": str(identity.workspace_id),
+            "workspace": str(workspace_id),
             "sha256": digest,
             **context.model_dump(exclude={"link_periods"}),
+            **({"dart_note_id": str(dart_note_id)} if dart_note_id else {}),
         }
     )
     parser_version, rules_hash, rules = parser_identity()
@@ -67,9 +80,10 @@ async def submit(
         if artifact is None:
             artifact = SourceArtifact(
                 source_key=source_key,
-                workspace_id=identity.workspace_id,
+                workspace_id=workspace_id,
                 sha256=digest,
                 byte_length=len(source),
+                dart_note_id=dart_note_id,
                 **context.model_dump(exclude={"link_periods"}),
             )
             db.add(artifact)
@@ -91,7 +105,7 @@ async def submit(
             )
             db.add_all([revision, Outbox(job_id=job.id, generation=job.generation)])
             await db.flush()
-            task = UserTask(workspace_id=identity.workspace_id, job_id=job.id)
+            task = UserTask(workspace_id=workspace_id, job_id=job.id)
             db.add(task)
             await db.flush()
             await tasks.emit(db, job, "task.created", [task])
@@ -99,7 +113,7 @@ async def submit(
             revision = await db.scalar(select(NoteStructure).where(NoteStructure.job_id == job.id))
             task = await db.scalar(
                 select(UserTask).where(
-                    UserTask.job_id == job.id, UserTask.workspace_id == identity.workspace_id
+                    UserTask.job_id == job.id, UserTask.workspace_id == workspace_id
                 )
             )
         return {
@@ -185,6 +199,10 @@ def structure_payload(revision: NoteStructure, artifact: SourceArtifact, job: Jo
         "encoding": artifact.encoding,
         "source_sha256": artifact.sha256,
         "source_bytes": artifact.byte_length,
+        "dart_note_id": str(artifact.dart_note_id) if artifact.dart_note_id else None,
+        "input_origin": "dart_viewer_note_html"
+        if artifact.dart_note_id
+        else "user_provided_note_html",
         "parser_version": revision.parser_version,
         "adapter_version": revision.adapter_version,
         "rules_sha256": revision.rules_sha256,

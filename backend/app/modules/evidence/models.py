@@ -22,6 +22,7 @@ class SourceArtifact(Base):
     sha256: Mapped[str] = mapped_column(String(64))
     byte_length: Mapped[int]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    dart_note_id: Mapped[UUID | None] = mapped_column(ForeignKey("dart_note.id"))
 
 
 class NoteStructure(Base):

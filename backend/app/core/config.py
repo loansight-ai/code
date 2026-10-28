@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     company_profile_batch_size: int = Field(default=20, ge=0)
     company_reports_cache_seconds: int = Field(default=3600, ge=0)
     note_import_max_bytes: int = Field(default=20 * 1024 * 1024, gt=0)
+    dart_document_max_bytes: int = Field(default=50 * 1024 * 1024, gt=0)
     open_dart_api_key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices("LOANSIGHT_OPEN_DART_API_KEY", "open_dart_api_key"),

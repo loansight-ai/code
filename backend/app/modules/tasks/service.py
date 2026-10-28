@@ -199,7 +199,9 @@ async def claim(
         job.owner_token = uuid4()
         job.attempt += 1
         job.status = "RUNNING"
-        job.stage = "NOTE_STRUCTURE" if job.task_type == "NOTE_STRUCTURE" else "DISPATCH"
+        job.stage = (
+            job.task_type if job.task_type in {"NOTE_STRUCTURE", "DART_COLLECT"} else "DISPATCH"
+        )
         job.state_version += 1
         job.updated_at, job.heartbeat_at = now, now
         job.lease_until = now + timedelta(seconds=settings.job_lease_seconds)

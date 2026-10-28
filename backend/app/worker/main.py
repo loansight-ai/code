@@ -9,7 +9,9 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.runtime import process_health, run
 from app.integrations.messaging.rabbitmq import JobMessage, channel_and_queue, connect
+from app.modules.evidence import dart_service
 from app.modules.evidence import service as evidence
+from app.modules.evidence.dart_collector import CollectionError
 from app.modules.evidence.parser import PreparedNotes
 from app.modules.tasks import service
 from app.modules.tasks.models import Job
@@ -25,6 +27,8 @@ async def execute(
         task_type = job.task_type
     if task_type == "NOTE_STRUCTURE" and settings is not None:
         return await evidence.prepare(database, settings, job_id)
+    if task_type == "DART_COLLECT" and settings is not None:
+        return await dart_service.prepare(database, settings, job_id, job.owner_token)
     if task_type != "PIPELINE_CHECK":
         raise ValueError("unsupported_task_type")
     # Real financial analysis handlers will be added in the next implementation stage.
@@ -54,6 +58,10 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
             await evidence.complete(database, message.job_id, owner, result)
         else:
             await service.finish(database, message.job_id, owner, result)
+    except CollectionError as failure:
+        await service.fail(
+            database, settings, message.job_id, owner, failure.code, failure.retryable
+        )
     except (ConnectionError, TimeoutError, OSError, SQLAlchemyError):
         await service.fail(database, settings, message.job_id, owner, "temporary_failure", True)
     except Exception:

@@ -76,6 +76,20 @@ Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구�
 
 설계 매핑은 [원문 구간 저장 계약](../docs/design/01_data-and-analysis.md#note-storage), 실행 결과는 [저장 연동 검증 기록](../docs/reviews/06_note-source-storage-validation.md)을 따릅니다.
 
+## DART 원문 자동 수집
+
+코드 접속 후 `POST /api/v1/me/disclosure-collections`에 `corp_code`, `receipt_no`, `scope=CFS|OFS`, 선택 항목 `link_periods`(기본 true)를 JSON으로 제출합니다. 허용된 Origin과 세션 쿠키가 필요합니다. 서버가 해당 기업의 검증된 사업보고서 목록에서 접수번호·결산기간·철회 여부를 확인하므로 임의 문서 URL이나 사용자가 지정한 결산기간을 받지 않습니다.
+
+접수는 `DART_COLLECT` 작업·Workspace 연결·Outbox를 한 트랜잭션으로 등록합니다. Worker는 공식 `document.xml` 원본 ZIP을 보존하고 포함된 XML을 경로 추출 없이 바이트로 보존합니다. 별도로 DART 보고서 목차 HTML을 저장하고, 연결/별도 주석의 정확한 제목과 접수번호·문서 식별자·구간 위치를 확인하여 공개 `report/viewer.do` HTML을 수집합니다. 내려받은 JavaScript를 실행하거나 XML을 임의로 HTML로 변환하지 않습니다. 선택한 범위의 목차가 없거나 중복되면 다른 범위를 대신 사용하지 않고 실패로 기록합니다. 주석 HTML의 제목·표·인코딩도 확인합니다.
+
+파일은 기존 SHA-256 저장소에 불변 바이트로 보존합니다. PostgreSQL `dart_document`는 ZIP·XML 목록·목차 해시·목차 locator·수집 시각, `dart_note`는 접수번호별 회계 범위·HTML 해시/크기·인코딩·locator·수집기 버전을 저장합니다. `dart_collection_request`는 사용자 작업과 요청 기준을 연결합니다. 다른 정정 접수번호는 별도 원본이며, 같은 접수번호·범위는 최초 수집본을 재사용합니다. 목록 캐시의 1시간 갱신이 저장된 원문을 덮어쓰거나 자동 재분석하지 않습니다. 동일 접수번호의 원문 변경 자동 감지와 정정 전후 비교는 아직 제공하지 않습니다.
+
+수집이 끝나면 같은 Workspace의 기존 `NOTE_STRUCTURE` 작업을 자동 등록합니다. 수집과 구조화는 각각 작업/SSE 알림으로 표시합니다. 수집 작업 결과의 `note_task_id`, `structure_id`로 후속 상태와 기존 주석 조회 API를 사용할 수 있습니다. 공개 원본 바이트는 중복을 제거하지만 사용자별 작업·`source_artifact`·구조화 revision과 접근 권한은 분리합니다. 자동 수집 출처는 `dart_note_id`, `input_origin=dart_viewer_note_html`로 추적하며 사용자 제출 HTML과 구분합니다.
+
+`LOANSIGHT_DART_DOCUMENT_MAX_BYTES`(기본 50 MiB)는 ZIP/목차 응답의 기술적 수집 한도입니다. 주석 HTML은 기존 `LOANSIGHT_NOTE_IMPORT_MAX_BYTES` 한도를 사용합니다. ZIP의 파일 수·총 비압축 크기도 검사하며 원본 파일명으로 로컬 경로를 만들지 않습니다. 파일 저장 후 DB 등록이 실패하면 미참조 불변 파일이 남을 수 있고 자동 삭제는 하지 않습니다. 파일·DB 볼륨을 함께 보존해야 합니다.
+
+수집 및 구조화 완료는 실제 재무 분석·사실 검수 완료가 아닙니다. 원문 HTML의 앱 내 렌더링·정제·하이라이트와 열람 확인도 후속 작업입니다.
+
 ## 로컬 실행
 
 저장소 루트에서 PowerShell로 실행합니다. PostgreSQL은 별도로 준비하고 연결 주소를 `backend/.env`에 입력합니다. 예시 비밀번호는 로컬 설명용입니다.

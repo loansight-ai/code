@@ -49,7 +49,9 @@ def parse_notes(source: bytes, artifact: SourceArtifact, revision: NoteStructure
             "receipt_no": artifact.receipt_no,
             "period": artifact.period,
             "kind": "연결" if artifact.scope == "CFS" else "별도",
-            "input_origin": "user_provided_note_html",
+            "input_origin": "dart_viewer_note_html"
+            if artifact.dart_note_id
+            else "user_provided_note_html",
         },
     )
     data = result.data
