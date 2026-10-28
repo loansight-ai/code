@@ -19,11 +19,11 @@ class Settings(BaseSettings):
     database_timeout_seconds: float = Field(default=3, gt=0, le=60)
     artifact_root: Path = Path(".run/artifacts")
     company_seed_csv: Path = (
-        Path(__file__).resolve().parents[3] / "opendart_ksic11_sync/companies_opendart_ksic11.csv"
+        Path(__file__).resolve().parents[2] / "data/company/companies_opendart_ksic11.csv"
     )
     company_sync_enabled: bool = True
     ksic11_codes_csv: Path = (
-        Path(__file__).resolve().parents[3] / "opendart_ksic11_sync/ksic11_codes.csv"
+        Path(__file__).resolve().parents[2] / "data/company/ksic11_codes.csv"
     )
     # Checkpoint size controls request throughput, not the set of companies synchronized.
     company_profile_batch_size: int = Field(default=20, ge=0)

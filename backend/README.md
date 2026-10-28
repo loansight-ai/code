@@ -164,9 +164,9 @@ API가 실행 중이고 인증키가 설정되어 있으면 **마지막 기업�
 
 ### KSIC11 스냅샷과 갱신 상태
 
-[입력 자료 안내](../opendart_ksic11_sync/README.md)의 `companies_opendart_ksic11.csv`와 `ksic11_codes.csv`를 사용합니다. 전자는 전체 기업 원장이 아닌 매칭된 기업정보 스냅샷이며 **로컬 입력으로 유지하고 Git에 포함하지 않습니다.** 새 설치에서는 해당 디렉터리에 기업 CSV를 준비해야 합니다. 코드표는 저장소에 포함하며, 원본 입력 파일을 수정하지 않습니다. UTF-8 BOM과 앞자리 0을 보존하고 기본키 `corp_code`로만 연결합니다. KSIC는 제공 코드표의 11차 코드와 계층을 검증하며 대분류 1자리·숫자 2~5자리의 원래 분류 수준을 유지합니다. `induty_code`는 DART 원본 값이고 `ksic11_code`에 복사하지 않습니다.
+[초기 데이터 안내](data/company/README.md)의 `companies_opendart_ksic11.csv`와 `ksic11_codes.csv`를 사용합니다. 전자는 전체 기업 원장이 아닌 매칭된 기업정보 스냅샷입니다. **두 CSV를 Git에 포함하므로 저장소를 복제하면 초기 수입 자료가 함께 준비됩니다.** 원본 입력 파일은 수정하지 않습니다. UTF-8 BOM과 앞자리 0을 보존하고 기본키 `corp_code`로만 연결합니다. KSIC는 제공 코드표의 11차 코드와 계층을 검증하며 대분류 1자리·숫자 2~5자리의 원래 분류 수준을 유지합니다. `induty_code`는 DART 원본 값이고 `ksic11_code`에 복사하지 않습니다.
 
-Native 기본 입력은 저장소의 `opendart_ksic11_sync/`이고, `LOANSIGHT_COMPANY_SEED_CSV`, `LOANSIGHT_KSIC11_CODES_CSV`로 경로를 바꿀 수 있습니다. Compose API는 해당 폴더를 `/data/company-seed:ro`로 연결합니다. 실행 중인 기존 컨테이너에는 코드·마운트 변경을 적용하기 위한 이미지 재빌드와 API 재생성이 필요합니다.
+기본 입력은 `backend/data/company/`이며 실행 디렉터리와 무관하게 찾습니다. Docker 이미지에도 `/app/data/company/`로 포함하므로 별도 파일 경로 설정이나 호스트 폴더 마운트 없이 사용할 수 있습니다. 외부 자료로 대체할 때만 `LOANSIGHT_COMPANY_SEED_CSV`, `LOANSIGHT_KSIC11_CODES_CSV`로 경로를 바꿉니다. 기존 컨테이너에는 이미지 재빌드와 API 재생성이 필요합니다. 수입 후 갱신되는 운영 데이터와 이력은 기존대로 `LOANSIGHT_ARTIFACT_ROOT`에 저장합니다.
 
 첫 수입에서는 제공 스냅샷에 있는 기업의 현재 ZIP 변경일을 **비교 기준선**으로 기록하며 이를 전 기업 API 조회 완료로 간주하지 않습니다. 스냅샷 밖의 기업은 `outside_seed`로 두고 신규 기업으로 단정하지 않습니다. 이후 ZIP에 추가·변경된 기업은 `company.json` 조회 대기열에 넣으며 조회 시각·원본 SHA-256을 기록합니다. 변경일이 바뀐 기존 KSIC 매핑은 값을 보존하면서 `review_required`로 표시합니다. 최신 ZIP에서 빠진 코드와 기존 기업정보는 삭제하지 않고 별도 비활성/검토 상태로 보존합니다.
 

@@ -8,6 +8,7 @@ COPY pyproject.toml uv.lock .python-version ./
 COPY app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl ./app/modules/
 RUN uv sync --frozen --no-dev
 COPY app ./app
+COPY data ./data
 COPY alembic.ini ./
 COPY migrations ./migrations
 RUN useradd --create-home --uid 10001 loansight

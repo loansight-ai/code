@@ -15,8 +15,6 @@ x-backend: &backend
     LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
     LOANSIGHT_RABBITMQ_URL: amqp://loansight:local-example@rabbitmq:5672/
     LOANSIGHT_ARTIFACT_ROOT: /data/artifacts
-    LOANSIGHT_COMPANY_SEED_CSV: /data/company-seed/companies_opendart_ksic11.csv
-    LOANSIGHT_KSIC11_CODES_CSV: /data/company-seed/ksic11_codes.csv
 
 services:
   db:
@@ -62,7 +60,6 @@ services:
     <<: *backend
     volumes:
       - source-artifacts:/data/artifacts
-      - ../opendart_ksic11_sync:/data/company-seed:ro
     ports:
       - "127.0.0.1:${LOANSIGHT_API_PORT:-8000}:8000"
     depends_on:
