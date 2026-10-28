@@ -39,7 +39,7 @@ class DevScriptsTest(unittest.TestCase):
         # Use files: background Windows descendants may inherit a capture pipe handle.
         output_path = self.root / "test-output.log"
         with output_path.open("w") as output:
-            result = subprocess.run(
+            process = subprocess.Popen(
                 [
                     POWERSHELL,
                     "-NoProfile",
@@ -51,11 +51,16 @@ class DevScriptsTest(unittest.TestCase):
                 ],
                 cwd=ROOT,
                 env=self.env,
+                stdin=subprocess.PIPE,
                 stdout=output,
                 stderr=subprocess.STDOUT,
-                timeout=45,
-                check=False,
             )
+            try:
+                # Keep the caller's input open: the background server must get its own EOF.
+                returncode = process.wait(timeout=45)
+            finally:
+                process.stdin.close()
+            result = subprocess.CompletedProcess(process.args, returncode)
         result.stdout = output_path.read_text(errors="replace")
         result.stderr = ""
         return result
@@ -84,7 +89,7 @@ class DevScriptsTest(unittest.TestCase):
         script_path = str(self.root / "scripts/dev-common.ps1").replace("'", "''")
         command = command.replace("$args[0]", f"'{script_path}'")
         result = subprocess.run(
-            [POWERSHELL, "-NoProfile", "-Command", command],
+            [POWERSHELL, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", command],
             capture_output=True,
             text=True,
             timeout=10,
@@ -109,15 +114,25 @@ class DevScriptsTest(unittest.TestCase):
         bin_directory = self.root / "bin"
         bin_directory.mkdir()
         # A small HTTP server stands in for pnpm/Vite, including its child process tree.
+        # It must see EOF before serving, even while the caller keeps stdin open.
+        server_path = bin_directory / 'server.py'
+        server_path.write_text(
+            'import http.server, sys\n'
+            'assert not sys.stdin.isatty()\n'
+            'assert sys.stdin.read() == ""\n'
+            'http.server.test(port=int(sys.argv[1]), bind="127.0.0.1")\n'
+        )
         (bin_directory / "pnpm.cmd").write_text(
             '@echo off\nif "%~1"=="--version" (echo 10.34.9& exit /b 0)\n'
-            f'"{sys.executable}" -u -m http.server %6 --bind 127.0.0.1\n'
+            f'"{sys.executable}" -u "{server_path}" %6\n'
         )
         (bin_directory / "node.cmd").write_text('@echo off\necho v24.22.1\n')
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", 0))
             port = listener.getsockname()[1]
-        self.env["PATH"] = str(bin_directory) + os.pathsep + os.environ["PATH"]
+        self.env["PATH"] = os.pathsep.join(
+            (str(bin_directory), str(Path(POWERSHELL).parent), str(Path(os.environ["SystemRoot"]) / "System32"))
+        )
         self.env["LOANSIGHT_FRONTEND_PORT"] = str(port)
         state_path = self.root / ".run/frontend.json"
         try:

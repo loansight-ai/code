@@ -189,13 +189,16 @@ function Invoke-Frontend {
     }
     $runner = Join-Path $ProjectRoot 'scripts/frontend-runner.ps1'
     $runDirectory = Join-Path $ProjectRoot '.run'
+    # Hidden windows still inherit stdin. Keep Vite's shortcuts away from the caller's console.
+    $stdinPath = Join-Path $runDirectory 'frontend.stdin'
+    [System.IO.File]::WriteAllText($stdinPath, '')
     $process = Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @(
         '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
         '-File', "`"$runner`"", '-ProjectRoot', "`"$ProjectRoot`"",
         '-PnpmPath', "`"$($tools.PnpmPath)`"", '-NodePath', "`"$($tools.NodePath)`"", '-Port', $port
     ) -WorkingDirectory $ProjectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (
         Join-Path $runDirectory 'frontend.stdout.log'
-    ) -RedirectStandardError (Join-Path $runDirectory 'frontend.stderr.log')
+    ) -RedirectStandardError (Join-Path $runDirectory 'frontend.stderr.log') -RedirectStandardInput $stdinPath
     try {
         @{
             ProjectRoot = $ProjectRoot; ProcessId = $process.Id; Port = $port
