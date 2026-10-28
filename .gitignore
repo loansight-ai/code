@@ -14,6 +14,8 @@ __pycache__/
 *.egg-info/
 .run/
 .tools/
+# Local company-profile input; import copies and history live under .run/.
+opendart_ksic11_sync/companies_opendart_ksic11.csv
 # JavaScript dependencies and build output
 node_modules/
 .pnpm-store/

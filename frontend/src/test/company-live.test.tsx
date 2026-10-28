@@ -11,6 +11,13 @@ const company = {
   corp_eng_name: 'Samsung Electronics',
   stock_code: '005930',
   modify_date: '20261028',
+  ksic11_code: '264',
+  ksic11_name: '통신 및 방송장비 제조업',
+  ksic11_level: 3,
+  ksic11_status: 'matched',
+  induty_code: null,
+  corp_cls: 'Y',
+  acc_mt: '12',
 }
 function mount() {
   const router = createMemoryRouter([{ path: '/', element: <CompanyPage /> }])
@@ -42,6 +49,10 @@ it('searches the server, preserves IME composition and selects a real company wi
   const router = mount()
   await user.click(await screen.findByRole('button', { name: /삼성전자/ }))
   expect(screen.getByText('DART 고유번호: 00126380')).toBeVisible()
+  expect(
+    screen.getByText('KSIC 11차: 264 · 통신 및 방송장비 제조업'),
+  ).toBeVisible()
+  expect(screen.getByText('DART 원본 업종코드: 미확보')).toBeVisible()
   expect(
     screen.queryByRole('button', { name: /예시 분석 열기/ }),
   ).not.toBeInTheDocument()

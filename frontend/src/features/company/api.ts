@@ -7,6 +7,15 @@ const dartCompanySchema = z.object({
   corp_eng_name: z.string().nullable(),
   stock_code: z.string().nullable(),
   modify_date: z.string(),
+  ksic11_code: z.string().nullable().default(null),
+  ksic11_name: z.string().nullable().default(null),
+  ksic11_level: z.number().int().nullable().default(null),
+  ksic11_status: z
+    .enum(['matched', 'unmatched', 'review_required'])
+    .default('unmatched'),
+  induty_code: z.string().nullable().default(null),
+  corp_cls: z.enum(['Y', 'K', 'N', 'E']).nullable().default(null),
+  acc_mt: z.string().nullable().default(null),
 })
 export type DartCompany = z.infer<typeof dartCompanySchema>
 

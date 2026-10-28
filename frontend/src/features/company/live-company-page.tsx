@@ -54,8 +54,8 @@ export function LiveCompanyPage() {
       </p>
       <div className="notice">
         <span>
-          OpenDART 기업 목록을 사용합니다. 업종 판정과 공시·분석 연결은 준비
-          중입니다. <a href="/?data=demo">예시 분석 둘러보기</a>
+          DART 기업 목록은 매주 갱신하며, 업종코드는 KSIC 11차 기업정보 스냅샷을
+          연결합니다. <a href="/?data=demo">예시 분석 둘러보기</a>
         </span>
       </div>
       <div className="search-layout">
@@ -153,6 +153,13 @@ export function LiveCompanyPage() {
                         ? `종목 ${company.stock_code}`
                         : '종목코드 없음'}
                     </small>
+                    <small>
+                      {company.ksic11_code
+                        ? `KSIC11 ${company.ksic11_code} · ${company.ksic11_name}`
+                        : 'KSIC11 미매칭'}
+                      {company.ksic11_status === 'review_required' &&
+                        ' · 재검토 필요'}
+                    </small>
                   </span>
                 </button>
               ))}
@@ -182,7 +189,7 @@ export function LiveCompanyPage() {
             </div>
           )}
           <p className="panel-footnote">
-            종목코드 유무만으로 상장 시장이나 대상 업종을 판단하지 않습니다.
+            KSIC11 매칭이 없는 기업의 업종을 임의로 추정하지 않습니다.
           </p>
         </section>
         <section
@@ -200,6 +207,31 @@ export function LiveCompanyPage() {
                 <span>DART 고유번호: {selected.corp_code}</span>
                 <span>종목코드: {selected.stock_code ?? '없음'}</span>
                 <span>
+                  KSIC 11차:{' '}
+                  {selected.ksic11_code
+                    ? `${selected.ksic11_code} · ${selected.ksic11_name}`
+                    : '미매칭'}
+                </span>
+                {selected.ksic11_status === 'review_required' && (
+                  <span>
+                    기업정보 변경으로 기존 업종코드 재검토가 필요합니다.
+                  </span>
+                )}
+                <span>
+                  DART 원본 업종코드: {selected.induty_code ?? '미확보'}
+                </span>
+                <span>
+                  시장:{' '}
+                  {selected.corp_cls
+                    ? { Y: '유가증권', K: '코스닥', N: '코넥스', E: '기타' }[
+                        selected.corp_cls
+                      ]
+                    : '미확보'}
+                </span>
+                <span>
+                  결산월: {selected.acc_mt ? `${selected.acc_mt}월` : '미확보'}
+                </span>
+                <span>
                   기업 목록 변경일:{' '}
                   {selected.modify_date.replace(
                     /^(\d{4})(\d{2})(\d{2})$/,
@@ -208,8 +240,9 @@ export function LiveCompanyPage() {
                 </span>
               </div>
               <p className="selection-note">
-                업종·시장·결산월은 아직 조회하지 않았습니다. 보고서 선택과 실제
-                분석은 후속 연결 후 제공됩니다.
+                기업정보는 제공된 스냅샷 기준입니다. KSIC11과 DART 원본
+                업종코드는 서로 구분합니다. 서비스 대상 업종 판정·보고서
+                선택·실제 분석은 후속 연결 후 제공됩니다.
               </p>
               <Button variant="ghost" onClick={() => setSelected(null)}>
                 기업 선택 해제

@@ -11,6 +11,10 @@ test('searches real DART codes and displays the selected company', async ({
   await page.getByRole('button', { name: /삼성전자.*00126380.*005930/ }).click()
   await expect(page.getByText('DART 고유번호: 00126380')).toBeVisible()
   await expect(
+    page.getByText('KSIC 11차: 264 · 통신 및 방송장비 제조업'),
+  ).toBeVisible()
+  await expect(page.getByText('DART 원본 업종코드: 미확보')).toBeVisible()
+  await expect(
     page.getByRole('button', { name: '예시 분석 열기' }),
   ).toHaveCount(0)
   await page.screenshot({

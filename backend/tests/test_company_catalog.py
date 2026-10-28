@@ -37,6 +37,8 @@ def settings(tmp_path, **kwargs):
         _env_file=None,
         database_url="postgresql+psycopg://test:test@localhost/test",
         artifact_root=tmp_path,
+        company_seed_csv=tmp_path / "seed.csv",
+        ksic11_codes_csv=tmp_path / "ksic.csv",
         **kwargs,
     )
 

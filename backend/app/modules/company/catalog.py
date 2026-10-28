@@ -15,6 +15,7 @@ from zipfile import BadZipFile, ZipFile
 from pydantic import BaseModel
 
 from app.core.config import Settings
+from app.modules.company.profiles import ProfileError, ProfileIndex
 
 MAX_ZIP_BYTES = 30 * 1024 * 1024
 MAX_XML_BYTES = 100 * 1024 * 1024
@@ -30,6 +31,13 @@ class Company(BaseModel):
     corp_eng_name: str | None
     stock_code: str | None
     modify_date: str
+    ksic11_code: str | None = None
+    ksic11_name: str | None = None
+    ksic11_level: int | None = None
+    ksic11_status: str = "unmatched"
+    induty_code: str | None = None
+    corp_cls: str | None = None
+    acc_mt: str | None = None
 
 
 def parse_archive(data: bytes) -> list[Company]:
@@ -99,6 +107,10 @@ class CompanyCatalog:
         self._lock = threading.Lock()
         self._companies: list[Company] | None = None
         self._cache_stamp: int | None = None
+        self.profiles = ProfileIndex(
+            settings.artifact_root, settings.company_seed_csv, settings.ksic11_codes_csv
+        )
+        self._profiles_lock = threading.Lock()
 
     def load(self, *, refresh: bool = False) -> list[Company]:
         with self._lock:
@@ -163,8 +175,17 @@ class CompanyCatalog:
                     )
                 )
             )
+        with self._profiles_lock:
+            try:
+                self.profiles.load()
+            except ProfileError:
+                raise CatalogUnavailable("company_profiles_unavailable") from None
+            items = [
+                company.model_copy(update=self.profiles.fields(company.corp_code))
+                for company in matches[offset : offset + limit]
+            ]
         return {
-            "items": matches[offset : offset + limit],
+            "items": items,
             "total": len(matches),
             "offset": offset,
             "limit": limit,
