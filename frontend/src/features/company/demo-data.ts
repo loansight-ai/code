@@ -1,5 +1,6 @@
 import type { Industry } from './industries'
 export { industries, type Industry } from './industries'
+export { reports } from './analysis-criteria'
 export type Company = {
   id: string
   name: string
@@ -91,7 +92,6 @@ export const companies: Company[] = [
       '장비·물품 렌탈은 현재 서비스 대상 업종에서 제외됩니다.',
   },
 ]
-export const reports = ['2025 사업보고서', '2024 사업보고서', '2023 사업보고서']
 export const financialRows = [
   { name: '매출액', y2023: 1080, y2024: 1190, y2025: 1250 },
   { name: '영업이익', y2023: 87, y2024: 94, y2025: 100 },

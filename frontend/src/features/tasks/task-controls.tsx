@@ -138,7 +138,9 @@ function TaskPanel() {
                         ? '연결 점검'
                         : task.task_type === 'NOTE_STRUCTURE'
                           ? '주석 구조화'
-                          : task.task_type}
+                          : task.task_type === 'DART_COLLECT'
+                            ? 'DART 원문 수집'
+                            : task.task_type}
                     </strong>
                     <span>{statusLabels[task.status] ?? task.status}</span>
                   </div>

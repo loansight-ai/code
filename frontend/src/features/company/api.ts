@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { request } from '../session/api'
-import type { Industry } from './industries'
+import { industries, type Industry } from './industries'
 
 const dartCompanySchema = z.object({
   corp_code: z.string().regex(/^[0-9]{8}$/),
@@ -17,6 +17,7 @@ const dartCompanySchema = z.object({
   induty_code: z.string().nullable().default(null),
   corp_cls: z.enum(['Y', 'K', 'N', 'E']).nullable().default(null),
   acc_mt: z.string().nullable().default(null),
+  industry: z.enum(industries).nullable().default(null),
 })
 export type DartCompany = z.infer<typeof dartCompanySchema>
 export const COMPANY_PAGE_SIZE = 10
@@ -41,4 +42,30 @@ export async function searchCompanies(
   })
   if (industry) params.set('industry', industry)
   return resultsSchema.parse(await request(`/companies?${params}`, { signal }))
+}
+
+const annualReportsSchema = z.object({
+  corp_code: z.string().regex(/^[0-9]{8}$/),
+  items: z.array(
+    z.object({
+      receipt_no: z.string().regex(/^[0-9]{14}$/),
+      report_name: z.string(),
+      fiscal_year: z.string().regex(/^[0-9]{4}$/),
+      period: z.string(),
+      receipt_date: z.string(),
+      withdrawn: z.boolean(),
+    }),
+  ),
+  checked_at: z.string(),
+  search_start: z.string(),
+  search_end: z.string(),
+})
+
+export async function getCompanyReports(corpCode: string, signal: AbortSignal) {
+  const result = annualReportsSchema.parse(
+    await request(`/companies/${corpCode}/reports`, { signal }),
+  )
+  if (result.corp_code !== corpCode)
+    throw new Error('Company report response mismatch')
+  return result
 }

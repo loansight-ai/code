@@ -7,6 +7,7 @@ import { Button } from '../../shared/components/button'
 import { StatePanel } from '../../shared/components/state-panel'
 import { ApiError } from '../session/api'
 import { industries } from './industries'
+import { CompanyCriteriaPanel } from './company-criteria-panel'
 
 export function LiveCompanyPage() {
   const [params, setParams] = useSearchParams()
@@ -215,66 +216,10 @@ export function LiveCompanyPage() {
             전체에서 확인할 수 있으며, 서비스 대상 최종 판정과는 다릅니다.
           </p>
         </section>
-        <section
-          className="panel selection-panel"
-          aria-label="선택한 기업 정보"
-        >
-          <div className="panel-heading">
-            <h2>선택한 기업</h2>
-          </div>
-          {selected ? (
-            <>
-              <div className="selected-company has-company">
-                <strong>{selected.corp_name}</strong>
-                <span>{selected.corp_eng_name}</span>
-                <span>DART 고유번호: {selected.corp_code}</span>
-                <span>종목코드: {selected.stock_code ?? '없음'}</span>
-                <span>
-                  KSIC 11차:{' '}
-                  {selected.ksic11_code
-                    ? `${selected.ksic11_code} · ${selected.ksic11_name}`
-                    : '미매칭'}
-                </span>
-                {selected.ksic11_status === 'review_required' && (
-                  <span>
-                    기업정보 변경으로 기존 업종코드 재검토가 필요합니다.
-                  </span>
-                )}
-                <span>
-                  DART 원본 업종코드: {selected.induty_code ?? '미확보'}
-                </span>
-                <span>
-                  시장:{' '}
-                  {selected.corp_cls
-                    ? { Y: '유가증권', K: '코스닥', N: '코넥스', E: '기타' }[
-                        selected.corp_cls
-                      ]
-                    : '미확보'}
-                </span>
-                <span>
-                  결산월: {selected.acc_mt ? `${selected.acc_mt}월` : '미확보'}
-                </span>
-                <span>
-                  기업 목록 변경일:{' '}
-                  {selected.modify_date.replace(
-                    /^(\d{4})(\d{2})(\d{2})$/,
-                    '$1.$2.$3',
-                  )}
-                </span>
-              </div>
-              <p className="selection-note">
-                기업정보는 제공된 스냅샷 기준입니다. KSIC11과 DART 원본
-                업종코드는 서로 구분합니다. 서비스 대상 업종 판정·보고서
-                선택·실제 분석은 후속 연결 후 제공됩니다.
-              </p>
-              <Button variant="ghost" onClick={() => setSelected(null)}>
-                기업 선택 해제
-              </Button>
-            </>
-          ) : (
-            <p>왼쪽 목록에서 기업을 선택하세요.</p>
-          )}
-        </section>
+        <CompanyCriteriaPanel
+          company={selected}
+          onClear={() => setSelected(null)}
+        />
       </div>
     </main>
   )
