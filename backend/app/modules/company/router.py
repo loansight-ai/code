@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, HTTPException, Path, Query, Request
 from pydantic import BaseModel
 
 from app.modules.company.catalog import CatalogUnavailable, Company, Industry
+from app.modules.company.reports import AnnualReports
 
 router = APIRouter(prefix="/api/v1", tags=["company"])
 
@@ -25,5 +26,18 @@ async def search_companies(
 ) -> dict:
     try:
         return await request.app.state.company_repository.search(q, offset, limit, industry)
+    except CatalogUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from None
+
+
+@router.get("/companies/{corp_code}/reports", response_model=AnnualReports)
+async def company_reports(
+    request: Request,
+    corp_code: Annotated[str, Path(pattern=r"^[0-9]{8}$")],
+) -> AnnualReports:
+    try:
+        return await request.app.state.company_reports.get(corp_code)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="company_not_found") from None
     except CatalogUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from None

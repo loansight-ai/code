@@ -98,6 +98,7 @@ async def test_database_search_filters_count_pagination_and_exact_rank(catalog, 
         assert response.status_code == 200
         assert response.json()["total"] == count
         assert len(response.json()["items"]) == 1
+        assert response.json()["items"][0]["industry"] == industry
         response = await client.get(
             "/api/v1/companies", params={"industry": industry, "offset": count}
         )

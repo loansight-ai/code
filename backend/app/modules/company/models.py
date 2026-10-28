@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Index, String, Text, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -42,3 +43,14 @@ class CompanyImport(Base):
     imported_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class CompanyReportCatalog(Base):
+    __tablename__ = "company_report_catalog"
+
+    corp_code: Mapped[str] = mapped_column(ForeignKey("company.corp_code"), primary_key=True)
+    items: Mapped[list] = mapped_column(JSONB)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    search_start: Mapped[str] = mapped_column(String(8))
+    search_end: Mapped[str] = mapped_column(String(8))
+    source_hashes: Mapped[list] = mapped_column(JSONB)

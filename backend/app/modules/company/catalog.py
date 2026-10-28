@@ -42,6 +42,7 @@ class Company(BaseModel):
     induty_code: str | None = None
     corp_cls: str | None = None
     acc_mt: str | None = None
+    industry: Industry | None = None
 
 
 def parse_archive(data: bytes) -> list[Company]:

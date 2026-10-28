@@ -159,7 +159,7 @@ DB 적재·검색·마이그레이션 검증 결과는 [기업 원장 PostgreSQL
 
 선택 항목 `industry`는 `제조`, `건설`, `도소매`, `부동산 임대`를 받습니다. 제공된 KSIC11 코드표의 계층에서 각각 `C`, `F`, `G`, `6811`과 그 하위 분류를 검색하며, 검색어와 함께 적용한 뒤 전체 건수와 페이지를 계산합니다. `부동산 임대`는 개발·공급(`6812`)과 관리·중개를 포함하지 않습니다. 더 넓은 부동산 분류만 확보한 기업의 세부 업종은 추정하지 않습니다. `matched`인 기업만 업종별 검색에 포함하며 미매칭·재검토 기업은 업종을 지정하지 않은 전체 검색에서 확인할 수 있습니다. 이는 검색용 분류이며 서비스 대상/제외·복합 업종의 최종 판정을 뜻하지 않습니다.
 
-`GET /api/v1/companies?q=삼성&offset=0&limit=10`으로 기업명·영문명·종목코드·DART 고유번호를 부분 검색합니다. 공백과 영문 대소문자를 구분하지 않으며 정확히 일치하는 이름/코드를 우선 표시합니다. 응답은 `items`, `total`, `offset`, `limit`이고 `items`에는 `corp_code`, `corp_name`, `corp_eng_name`, `stock_code`, `modify_date`, `ksic11_code`, `ksic11_name`, `ksic11_level`, `ksic11_status`, `induty_code`, `corp_cls`, `acc_mt`가 있습니다. 고유번호와 종목코드는 앞자리 0을 보존하는 문자열이며 영문 종목코드도 허용합니다. 미확보 값은 `null`입니다. `limit`은 기본 10(허용 범위 1–100), `offset`은 0 이상입니다.
+`GET /api/v1/companies?q=삼성&offset=0&limit=10`으로 기업명·영문명·종목코드·DART 고유번호를 부분 검색합니다. 공백과 영문 대소문자를 구분하지 않으며 정확히 일치하는 이름/코드를 우선 표시합니다. 응답은 `items`, `total`, `offset`, `limit`이고 `items`에는 `corp_code`, `corp_name`, `corp_eng_name`, `stock_code`, `modify_date`, `ksic11_code`, `ksic11_name`, `ksic11_level`, `ksic11_status`, `induty_code`, `corp_cls`, `acc_mt`, `industry`가 있습니다. `industry`는 DB에 저장된 KSIC11 검색용 검토 업종이며 미확정이면 `null`입니다. 고유번호와 종목코드는 앞자리 0을 보존하는 문자열이며 영문 종목코드도 허용합니다. 미확보 값은 `null`입니다. `limit`은 기본 10(허용 범위 1–100), `offset`은 0 이상입니다.
 
 원천은 [OpenDART 고유번호 API](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019018)의 ZIP/XML입니다. 인증키는 서버에서만 사용합니다. 최초 DB 적재 시 기존 원본 ZIP을 우선 사용하고 없으면 다운로드하여 검증한 ZIP을 `LOANSIGHT_ARTIFACT_ROOT/company/CORPCODE.zip`에 보관합니다. Native 기본 경로는 backend에서 실행할 때 `backend/.run/artifacts/company/CORPCODE.zip`, Compose는 `source-artifacts` 볼륨의 `/data/artifacts/company/CORPCODE.zip`입니다. 두 실행 방식의 원본 캐시는 별개입니다. 캐시가 있으면 최초 적재에도 인증키·외부 요청이 필요하지 않습니다. 공개 기업 식별정보 원본은 Git에 포함하지 않습니다. 서비스 이용은 OpenDART 이용 조건과 호출 제한을 따릅니다.
 
@@ -171,6 +171,16 @@ uv run python -m app.modules.company.catalog --refresh
 ```
 
 API가 실행 중이고 인증키가 설정되어 있으면 **마지막 기업코드 다운로드 성공 시점부터 7일마다** 원장을 갱신합니다. `LOANSIGHT_COMPANY_SYNC_ENABLED=false`로 중지할 수 있습니다. 60초마다 기한을 확인하며, 기한 전에 재시작해도 저장된 성공 시각을 유지합니다. 기한이 지난 채 중지되었다면 다음 시작 시 갱신합니다. 여러 API 프로세스는 공유 저장소의 OS 파일 잠금으로 중복 실행을 막으며 프로세스 종료 시 잠금이 해제됩니다. 갱신 파일을 검증한 뒤 원자적으로 교체하고 실패하면 기존 캐시로 검색을 유지합니다. 초기 캐시도 없는 키 미설정·다운로드 실패·잘못된 ZIP/XML·캐시 저장 실패는 빈 결과 대신 503을 반환하며 응답에 키나 원천 오류 본문을 노출하지 않습니다.
+
+### 기업별 사업보고서
+
+`GET /api/v1/companies/{corp_code}/reports`는 해당 기업의 실제 사업보고서 선택 목록을 반환합니다. 고유번호는 8자리이며 활성 기업 원장에 없는 번호는 404, 잘못된 형식은 422입니다. [OpenDART 공시검색 공식 계약](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019001)의 `A001`(사업보고서), `last_reprt_at=Y`(최종보고서)로 1999-01-01부터 조회 당일 한국 시각 접수일까지 모든 페이지를 조회합니다. 최근 3개년으로 잘라내지 않습니다. 접수일 검색 범위 이전 자료의 존재 여부를 단정하지 않습니다.
+
+응답은 `corp_code`, `items`, `checked_at`, `search_start`, `search_end`입니다. 각 항목은 `receipt_no`, `report_name`, `fiscal_year`, `period`, `receipt_date`, `withdrawn`을 포함합니다. 사업연도와 결산월은 보고서명 안의 기간에서 읽고 제출연도에서 추정하지 않습니다. 정정 표시는 원래 보고서명으로 유지하고 철회 표시는 선택 불가로 제공합니다. 연도 사이의 공백을 보고서가 있는 것으로 채우지 않습니다. 사업보고서 목록은 연결/별도 재무정보의 제공 여부를 보장하지 않습니다.
+
+조회 결과와 빈 목록 모두 PostgreSQL `company_report_catalog`에 저장합니다. 같은 기업에 대한 동시 요청은 DB 잠금으로 중복 외부 호출을 막습니다. 캐시 유효기간은 기술 설정 `LOANSIGHT_COMPANY_REPORTS_CACHE_SECONDS`(기본 3600초, 0이면 매번 재조회)이며 기간 내 캐시는 API 키 없이도 사용할 수 있습니다. 만료 후 조회가 실패하면 DB의 기존 목록을 덮어쓰지 않고 503을 반환합니다. DART의 자료 없음(`013`)은 성공한 빈 목록, 키 미설정·요청 제한·통신 오류·잘못된 응답·부분 페이지 수집은 조회 실패로 구분합니다. 인증키와 원천 오류 메시지는 응답에 노출하지 않습니다.
+
+원본 페이지 응답은 `LOANSIGHT_ARTIFACT_ROOT/company/reports/originals/`에 SHA-256 기반으로 보존하고 해시를 DB에 기록합니다. 실제 원문 열람은 접수번호로 DART 공식 뷰어에 연결하며 본 API가 보고서 본문이나 재무·주석을 수집·분석하지는 않습니다.
 
 ### KSIC11 스냅샷과 갱신 상태
 
