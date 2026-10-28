@@ -4,7 +4,7 @@
 
 Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업코드 수집·검색을 구현했으며 공시 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
-로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 프론트 원문 뷰어와 사실 추출·검수는 후속 작업입니다.
+로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 저장된 결과는 프론트 원문 뷰어에 연결했으며 사실 추출·검수는 후속 작업입니다.
 
 <a id="note-hierarchy"></a>
 
@@ -56,6 +56,7 @@ wheel에는 테스트·평가 workflows·기업 데이터·수집기·API 키가
 | `GET /api/v1/me/note-imports/{structure_id}` | 작업 상태, 출처/해시·파서/설정 버전, 완료 후 계층·검토 상태 조회 |
 | `GET /api/v1/me/note-imports/{structure_id}/segments` | 원문 구간을 문서 순서로 조회. `after=-1`, `limit=100` 기본, 최대 500개 |
 | `GET /api/v1/me/note-imports/{structure_id}/segments/{segment_id}` | 같은 결과에 속한 구간의 원문 위치·내용·표 문맥 조회 |
+| `GET /api/v1/me/note-imports/{structure_id}/source-view` | 원문 해시를 확인한 뒤 열람용 HTML·구간별 앵커를 JSON으로 반환 |
 
 접수 query는 `corp_code`(8자리), `receipt_no`(14자리), `scope=CFS|OFS`, `period=YYYY.MM`이 필수입니다. `encoding=utf-8|euc-kr`(기본 UTF-8), `link_periods=true|false`(기본 true)를 선택할 수 있습니다. 연결·별도 주석을 분리한 HTML을 준비해야 하며 이 API가 전체 보고서를 수집하거나 주석 영역을 자동 분리하지는 않습니다. 문서 정보는 사용자가 제출한 값이며 DART 원천 진위를 승인한 정보로 간주하지 않습니다.
 
@@ -68,7 +69,11 @@ curl.exe -c ../.run/note-cookies.txt -H "Origin: http://localhost:8000" -X POST 
 curl.exe -b ../.run/note-cookies.txt -H "Origin: http://localhost:8000" -H "Content-Type: text/html" --data-binary "@input/notes.html" "http://localhost:8000/api/v1/me/note-imports?corp_code=01214248&receipt_no=20260320001416&scope=CFS&period=2025.12"
 ```
 
-접수 응답의 `task_id`는 기존 작업/SSE API에서, `structure_id`는 위 조회 API에서 사용합니다. `NOTE_STRUCTURE` 완료는 구조화 저장 완료이며 사실 검수 완료가 아닙니다. 결과는 `rule_based_draft_not_gold`, `evidence_verified=false`를 유지합니다. 원문 HTML은 아직 브라우저 응답으로 제공하지 않고 표 HTML도 JSON 문자열로만 반환합니다. 뷰어 연결 전 원문 정제·열람 기록 처리가 필요합니다.
+접수 응답의 `task_id`는 기존 작업/SSE API에서, `structure_id`는 위 조회 API에서 사용합니다. `NOTE_STRUCTURE` 완료는 구조화 저장 완료이며 사실 검수 완료가 아닙니다. 결과는 `rule_based_draft_not_gold`, `evidence_verified=false`를 유지합니다.
+
+구간 목록은 `node_id`(저장된 부모 관계의 하위 노드 포함), `q`(본문 부분 검색), `tables_only=true`로 필터링합니다. `total`은 필터 결과 수이며 프론트는 30개씩 추가 조회합니다. 원문 뷰어의 HTML 전체는 한 번에 가져옵니다.
+
+`source-view`는 Workspace 권한을 확인한 뒤 SHA-256 검증을 거쳐 원문 바이트를 읽고, 저장된 XPath에 구간 앵커를 부여한 파생 HTML을 JSON으로 반환합니다. 원본 파일은 수정하지 않습니다. 미완료는 409, 다른 사용자 결과는 404, 파일 누락·변조 또는 위치 불일치는 503이며 응답은 `no-store`, `nosniff`입니다. 클라이언트는 DOMPurify의 태그·속성 허용 목록으로 HTML을 정제하고 스크립트·외부 리소스를 막는 CSP 및 `sandbox="allow-same-origin"` iframe에서 표시합니다. 원문 자체의 스타일·링크·이미지는 허용하지 않으며 앱의 열람 서식을 적용합니다. 구간 선택 시 해당 앵커를 강조합니다. 열람 사실·담당자 검수 기록과 교차참조 이동은 아직 제공하지 않습니다.
 
 원본은 `LOANSIGHT_ARTIFACT_ROOT` 아래 SHA-256 기반 불변 파일로 저장하고, PostgreSQL에는 `source_artifact`·`note_structure`·`source_segment`를 저장합니다. Native API/Worker는 같은 디렉터리를 사용해야 하며 기본값은 실행 디렉터리 기준 `.run/artifacts`입니다. Compose는 두 프로세스에 `/data/artifacts`와 `source-artifacts` named volume을 공유합니다. DB와 이 볼륨을 함께 보존해야 합니다. `LOANSIGHT_NOTE_IMPORT_MAX_BYTES`는 요청당 기술적 크기 제한이며 기본 20 MiB입니다.
 
@@ -88,7 +93,7 @@ Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구�
 
 `LOANSIGHT_DART_DOCUMENT_MAX_BYTES`(기본 50 MiB)는 ZIP/목차 응답의 기술적 수집 한도입니다. 주석 HTML은 기존 `LOANSIGHT_NOTE_IMPORT_MAX_BYTES` 한도를 사용합니다. ZIP의 파일 수·총 비압축 크기도 검사하며 원본 파일명으로 로컬 경로를 만들지 않습니다. 파일 저장 후 DB 등록이 실패하면 미참조 불변 파일이 남을 수 있고 자동 삭제는 하지 않습니다. 파일·DB 볼륨을 함께 보존해야 합니다.
 
-수집 및 구조화 완료는 실제 재무 분석·사실 검수 완료가 아닙니다. 원문 HTML의 앱 내 렌더링·정제·하이라이트와 열람 확인도 후속 작업입니다. 검증 범위와 실제 수치는 [DART 자동 수집·구조화 검증](../docs/reviews/11_dart-document-collection-validation.md)을 참고합니다.
+수집 및 구조화 완료는 실제 재무 분석·사실 검수 완료가 아닙니다. 원문 열람·강조는 [주석 조회 계약](#note-import-api), 수집 검증은 [DART 자동 수집·구조화 검증](../docs/reviews/11_dart-document-collection-validation.md), 화면 검증은 [결과 화면 검증](../docs/reviews/12_note-results-view-validation.md)을 참고합니다.
 
 ## 로컬 실행
 

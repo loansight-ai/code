@@ -57,6 +57,7 @@ async def test_import_idempotence_revisions_and_scoped_reads(client, environment
     assert len({item["task_id"] for item in items}) == 1
     url = "/api/v1/me/note-imports/" + first["structure_id"]
     assert (await client.get(url + "/segments")).status_code == 409
+    assert (await client.get(url + "/source-view")).status_code == 409
     async with database.transaction() as db:
         assert await db.scalar(select(func.count()).select_from(Outbox)) == 1
     await run_job(database, settings, message(first))
@@ -64,6 +65,12 @@ async def test_import_idempotence_revisions_and_scoped_reads(client, environment
     assert meta["status"] == "SUCCEEDED" and meta["segment_count"] > 0
     assert meta["hierarchy"]["status"] == "rule_based_draft_not_gold"
     assert meta["evidence_verified"] is False
+    source_view = await client.get(url + "/source-view")
+    assert source_view.status_code == 200
+    assert source_view.headers["content-type"].startswith("application/json")
+    assert source_view.headers["x-content-type-options"] == "nosniff"
+    assert source_view.headers["cache-control"] == "no-store"
+    assert source_view.json()["source_sha256"] == meta["source_sha256"]
     assert meta["hierarchy"]["verification"]["structural_checks_passed"] is True
     collected = []
     after = -1
@@ -76,6 +83,16 @@ async def test_import_idempotence_revisions_and_scoped_reads(client, environment
             break
         after = page["next_after"]
     assert len(collected) == meta["segment_count"] == len({r["id"] for r in collected})
+    assert set(source_view.json()["anchors"]) == {row["id"] for row in collected}
+    table_page = (await client.get(url + "/segments", params={"tables_only": True})).json()
+    assert table_page["total"] > 0
+    assert all(row["kind"] == "table" for row in table_page["segments"])
+    owner = collected[-1]["owner_node_id"]
+    node_page = await client.get(url + "/segments", params={"node_id": owner})
+    assert node_page.status_code == 200 and node_page.json()["total"] > 0
+    empty = await client.get(url + "/segments", params={"q": "nonexistent-unique-text-xyz"})
+    assert empty.json()["total"] == 0 and empty.json()["segments"] == []
+    assert (await client.get(url + "/segments", params={"node_id": "unknown"})).status_code == 404
     assert [r["ordinal"] for r in collected] == list(range(meta["segment_count"]))
     for row in collected:
         assert row["source_xpath"] == row["payload"]["source_xpath"]
@@ -103,10 +120,13 @@ async def test_import_idempotence_revisions_and_scoped_reads(client, environment
     ) as other:
         await other.post("/api/v1/users")
         assert (await other.get(url)).status_code == 404
+        assert (await other.get(url + "/source-view")).status_code == 404
         assert (await other.get(url + "/segments")).status_code == 404
         assert (await other.get(detail_url)).status_code == 404
         personal = await submit(other)
         assert personal["structure_id"] != first["structure_id"]
+    artifact.path(meta["source_sha256"]).write_bytes(b"tampered")
+    assert (await client.get(url + "/source-view")).status_code == 503
 
 
 async def test_rejects_bad_requests_and_keeps_failed_import_uncommitted(client, environment):

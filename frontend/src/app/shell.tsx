@@ -41,7 +41,7 @@ const menus = [
 ]
 
 export function Shell() {
-  const { analysisId } = useParams()
+  const { analysisId, structureId } = useParams()
   const location = useLocation()
   const company = findCompany(analysisId)
   const searchPath = company
@@ -64,7 +64,9 @@ export function Shell() {
         </NavLink>
         <span className="brand-description">기업 여신 검토 워크스페이스</span>
         <div className="top-actions">
-          <span className="demo-label">기업 분석은 예시 데이터</span>
+          <span className="demo-label">
+            {structureId ? '수집한 주석 · 검수 전' : '기업 분석은 예시 데이터'}
+          </span>
           <TaskControls />
           <SessionControls />
         </div>
@@ -79,6 +81,15 @@ export function Shell() {
           <Search size={18} />
           기업 검색<span className="nav-shortcut">⌕</span>
         </NavLink>
+        {structureId && (
+          <NavLink
+            to={`/notes/${structureId}${location.search}`}
+            className="nav-item active"
+          >
+            <FileSearch size={18} />
+            주석 구조화 결과
+          </NavLink>
+        )}
         <div className="nav-heading">기업 분석</div>
         <nav aria-label="기업 분석">
           {menus.map(({ label, path, icon: Icon, number }) =>
@@ -109,11 +120,16 @@ export function Shell() {
         </nav>
         <div className="sidebar-context">
           <Building2 size={18} />
-          <strong>{company?.name ?? '기업을 선택해 주세요'}</strong>
+          <strong>
+            {company?.name ??
+              (structureId ? '저장된 주석 결과' : '기업을 선택해 주세요')}
+          </strong>
           <p>
             {company
               ? `${company.industry} · 가상 기업`
-              : '분석할 기업과 보고서를 선택하면 검토를 시작할 수 있습니다.'}
+              : structureId
+                ? '선택한 구간의 원문 위치와 목차를 확인할 수 있습니다.'
+                : '분석할 기업과 보고서를 선택하면 검토를 시작할 수 있습니다.'}
           </p>
         </div>
         <button className="help-link" onClick={() => setHelpOpen(true)}>
@@ -132,7 +148,11 @@ export function Shell() {
         <div className="breadcrumb">
           워크스페이스
           <ChevronRight size={13} />
-          {company ? company.name : '기업 검색'}
+          {company
+            ? company.name
+            : structureId
+              ? '주석 구조화 결과'
+              : '기업 검색'}
         </div>
         <Outlet />
       </div>
@@ -150,8 +170,9 @@ export function Shell() {
           </li>
         </ol>
         <p className="notice">
-          사용자 코드·서버 세션·작업 알림은 서버에 연결됩니다. 기업 분석은 가상
-          기업과 예시 데이터이며 공시 수집·모델 추론은 연결되지 않았습니다.
+          기업 검색·원문 수집·주석 구조화와 결과 조회는 서버에 연결됩니다.
+          재무·위험 분석은 예시 화면이며 모델 추론과 주석 내용 검수는
+          후속입니다.
         </p>
       </Modal>
     </div>

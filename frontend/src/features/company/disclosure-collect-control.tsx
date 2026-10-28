@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { getCompanyReports } from './api'
 import { Button } from '../../shared/components/button'
@@ -189,6 +189,13 @@ function CollectButton({
             </p>
           )}
         </div>
+      )}
+      {completed && collected.success && (
+        <Button asChild variant="outline">
+          <Link to={`/notes/${collected.data.structure_id}`}>
+            주석 결과 보기
+          </Link>
+        </Button>
       )}
     </>
   )

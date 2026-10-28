@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
+import { Link } from 'react-router'
+import { z } from 'zod'
 import { Button } from '../../shared/components/button'
 import { Modal } from '../../shared/components/modal'
 import { errorMessage } from '../session/api'
@@ -43,6 +45,10 @@ function TaskPanel() {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const [selected, setSelected] = useState<TaskDetail | null>(null)
+  const structureLink =
+    selected?.status === 'SUCCEEDED'
+      ? z.object({ structure_id: z.string().uuid() }).safeParse(selected.result)
+      : null
   const diagnosticKey = useRef<string | null>(null)
   const mounted = useRef(true)
   useEffect(() => {
@@ -192,6 +198,19 @@ function TaskPanel() {
                   {selected.state_version}
                 </p>
                 <p>작업 ID: {selected.task_id}</p>
+                {structureLink?.success && (
+                  <Button asChild variant="outline">
+                    <Link
+                      to={`/notes/${structureLink.data.structure_id}`}
+                      onClick={() => {
+                        setOpen(false)
+                        setSelected(null)
+                      }}
+                    >
+                      주석 결과 보기
+                    </Link>
+                  </Button>
+                )}
                 {selected.task_type === 'PIPELINE_CHECK' && (
                   <p>연결 점검 결과이며 재무 분석 결과가 아닙니다.</p>
                 )}

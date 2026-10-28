@@ -38,6 +38,34 @@ test('collects actual DART ZIP/XML and viewer notes then completes the parser jo
     '주석 구조화',
   )
   await page.getByRole('button', { name: '닫기', exact: true }).click()
+  await criteria.getByRole('link', { name: '주석 결과 보기' }).click()
+  await expect(page).toHaveURL(/\/notes\/[0-9a-f-]{36}/)
+  await expect(
+    page.getByRole('heading', { name: '주석 구조화 결과', exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText('내용 검수 전', { exact: true })).toBeVisible()
+  const original = page.frameLocator('iframe[title="저장된 주석 원문"]')
+  await expect(original.locator('body')).toContainText('주석')
+  await page.getByRole('checkbox', { name: '표만 보기' }).check()
+  const table = page
+    .getByRole('region', { name: '주석 구간 목록' })
+    .getByRole('button', { name: /표 · 구간/ })
+    .first()
+  await table.click()
+  await expect(original.locator('.source-active')).toHaveCount(1)
+  await expect(original.locator('.source-active')).toBeVisible()
+  await expect(page).toHaveURL(/segment=[0-9a-f-]{36}/)
+  await page.reload()
+  await expect(
+    page
+      .frameLocator('iframe[title="저장된 주석 원문"]')
+      .locator('.source-active'),
+  ).toBeVisible()
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
   await page.screenshot({
     path: testInfo.outputPath('dart-collection-complete.png'),
     fullPage: true,
