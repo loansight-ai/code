@@ -10,6 +10,8 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.health import router as health_router
 from app.messaging.notifications import NotificationHub
+from app.modules.company.catalog import CompanyCatalog
+from app.modules.company.router import router as company_router
 from app.modules.evidence.router import router as evidence_router
 from app.modules.identity.router import router as identity_router
 from app.modules.tasks.router import router as tasks_router
@@ -26,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         config = settings if settings is not None else Settings()
         app.state.settings = config
+        app.state.company_catalog = CompanyCatalog(config)
         app.state.database = Database(config)
         app.state.notifications = NotificationHub(config)
         if config.task_events_enabled:
@@ -38,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="LoanSight AI API", version="0.1.0", lifespan=lifespan)
     app.include_router(health_router)
+    app.include_router(company_router)
     app.include_router(identity_router)
     app.include_router(tasks_router)
     app.include_router(evidence_router)

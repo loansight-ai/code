@@ -1,11 +1,11 @@
-﻿import { expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test('company selection, analysis navigation, source confirmation and local memo restore', async ({
   page,
 }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/')
+  await page.goto('/?data=demo')
   await expect(
     page.getByRole('button', { name: '예시 분석 열기' }),
   ).toBeDisabled()
@@ -86,7 +86,7 @@ test('company selection, analysis navigation, source confirmation and local memo
 test('shows classification reasons and prevents analysis of unresolved or excluded examples', async ({
   page,
 }, testInfo) => {
-  await page.goto('/')
+  await page.goto('/?data=demo')
   await expect(page.getByRole('button', { name: /누리렌탈/ })).toBeDisabled()
   await page.getByRole('button', { name: /다온산업/ }).click()
   await expect(

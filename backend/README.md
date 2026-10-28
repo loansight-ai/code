@@ -2,7 +2,7 @@
 
 [Issue #9](https://github.com/loansight-ai/code/issues/9)의 실행 기반과 [Issue #11](https://github.com/loansight-ai/code/issues/11)의 사용자·세션·비동기 작업 흐름을 제공합니다.
 
-Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. 실제 DART 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
+Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업코드 수집·검색을 구현했으며 공시 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
 로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 프론트 원문 뷰어와 사실 추출·검수는 후속 작업입니다.
 
@@ -145,7 +145,24 @@ DB·MQ를 외부 서비스로 바꾸려면 Compose 연결 설정도 명시적으
 | `ecos_api_key` | `LOANSIGHT_ECOS_API_KEY` | `ecos_api_key` |
 | `open_data_api_key` | `LOANSIGHT_OPEN_DATA_API_KEY` | `open_data_api_key` |
 
-키는 선택 항목이며 빈 값·공백은 미설정으로 취급합니다. `SecretStr`로 보관해 설정 객체의 repr/JSON 출력에서 값을 가립니다. 이번 구현은 키 로딩까지이며 실제 OpenDART·ECOS·공공데이터 호출·유효성 검증은 후속 연동 범위입니다. `.env`는 Git과 Docker 빌드 컨텍스트에서 제외하고 런타임에만 주입합니다.
+키는 선택 항목이며 빈 값·공백은 미설정으로 취급합니다. `SecretStr`로 보관해 설정 객체의 repr/JSON 출력에서 값을 가립니다. OpenDART 기업코드 다운로드는 아래 기업 검색에서 사용하며, ECOS·공공데이터 호출은 후속 연동 범위입니다. `.env`는 Git과 Docker 빌드 컨텍스트에서 제외하고 런타임에만 주입합니다.
+
+## 기업 검색
+
+`GET /api/v1/companies?q=삼성&offset=0&limit=30`으로 기업명·영문명·종목코드·DART 고유번호를 부분 검색합니다. 공백과 영문 대소문자를 구분하지 않으며 정확히 일치하는 이름/코드를 우선 표시합니다. 응답은 `items`, `total`, `offset`, `limit`이고 `items`에는 `corp_code`, `corp_name`, `corp_eng_name`, `stock_code`, `modify_date`가 있습니다. 고유번호와 종목코드는 앞자리 0을 보존하는 문자열이며 영문 종목코드도 허용합니다. 종목코드 미기재는 `null`입니다. `limit`은 1–100, `offset`은 0 이상입니다.
+
+원천은 [OpenDART 고유번호 API](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS001&apiId=2019018)의 ZIP/XML입니다. 인증키는 서버에서만 사용합니다. 최초 검색 시 다운로드하고 검증한 원본 ZIP을 `LOANSIGHT_ARTIFACT_ROOT/company/CORPCODE.zip`에 보관합니다. Native 기본 경로는 backend에서 실행할 때 `backend/.run/artifacts/company/CORPCODE.zip`, Compose는 `source-artifacts` 볼륨의 `/data/artifacts/company/CORPCODE.zip`입니다. 두 실행 방식의 캐시는 별개입니다. 캐시가 있으면 인증키·외부 요청 없이 검색합니다. 공개 기업 식별정보 원본은 Git에 포함하지 않습니다. 서비스 이용은 OpenDART 이용 조건과 호출 제한을 따릅니다.
+
+backend 디렉터리에서 미리 준비하거나 명시적으로 갱신합니다.
+
+```sh
+uv run python -m app.modules.company.catalog
+uv run python -m app.modules.company.catalog --refresh
+```
+
+Compose에서 갱신하려면 `docker compose -f deploy/compose.yaml exec api /app/.venv/bin/python -m app.modules.company.catalog --refresh`를 사용합니다. 자동 갱신 주기는 확정하지 않았습니다. 갱신 파일을 검증한 뒤 원자적으로 교체하며, 실패하면 기존 파일을 보존합니다. 실행 중 API는 파일 변경을 다음 검색에서 반영합니다. 키 미설정·다운로드 실패·잘못된 ZIP/XML·캐시 저장 실패는 빈 결과 대신 503을 반환하며 응답에 키나 원천 오류 본문을 노출하지 않습니다.
+
+기업코드 목록에는 업종·상장 시장·결산월이 없으므로 값을 추정하지 않습니다. 회사개황 조회·서비스 업종 매핑·공시 목록·실제 분석 연결은 후속 범위입니다. 현재 검색은 전체 공시 대상 기업 목록을 조회합니다. 공개 기업 목록 검색은 사용자 세션 없이 가능하며 사용자별 검토 데이터는 포함하지 않습니다.
 
 `.env`를 수정해도 실행 중인 컨테이너 환경이 즉시 바뀌지는 않습니다. 이미 DB·MQ가 실행 중이면 아래 명령으로 API·Worker·Relay만 재생성할 수 있습니다. **환경값 변경만으로 이미지 재빌드는 필요하지 않습니다.**
 

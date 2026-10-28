@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('keeps Korean IME composition local until committed', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/?data=demo')
   const input = page.getByRole('textbox', { name: '기업명 또는 종목코드' })
   await input.focus()
   const cdp = await page.context().newCDPSession(page)
@@ -29,7 +29,9 @@ test('keeps Korean IME composition local until committed', async ({ page }) => {
 test('preserves rapid middle edits and pending text when other criteria change', async ({
   page,
 }) => {
-  await page.goto('/?company=demo-manufacturing&report=2024&scope=OFS')
+  await page.goto(
+    '/?data=demo&company=demo-manufacturing&report=2024&scope=OFS',
+  )
   const input = page.getByRole('textbox', { name: '기업명 또는 종목코드' })
   await input.fill('123456')
   await input.evaluate((element: HTMLInputElement) =>
@@ -60,7 +62,7 @@ test('preserves rapid middle edits and pending text when other criteria change',
 test('restores URL search on navigation and cancels pending text on reset', async ({
   page,
 }) => {
-  await page.goto('/?q=없는기업')
+  await page.goto('/?data=demo&q=없는기업')
   const input = page.getByRole('textbox', { name: '기업명 또는 종목코드' })
   await expect(input).toHaveValue('없는기업')
   await expect(page.getByText('검색 결과가 없습니다')).toBeVisible()
@@ -75,7 +77,7 @@ test('restores URL search on navigation and cancels pending text on reset', asyn
   await page.reload()
   await expect(input).toHaveValue('한빛')
   await page.evaluate(() => {
-    history.pushState(null, '', '/?q=새움')
+    history.pushState(null, '', '/?data=demo&q=새움')
     dispatchEvent(new PopStateEvent('popstate'))
   })
   await expect(input).toHaveValue('새움')

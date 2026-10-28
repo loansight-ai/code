@@ -23,6 +23,17 @@ import { Button } from '../shared/components/button'
 import { StatePanel } from '../shared/components/state-panel'
 import { StatusBadge } from '../shared/components/status-badge'
 import { CompanyPreparation } from '../features/company/company-preparation'
+import { LiveCompanyPage } from '../features/company/live-company-page'
+
+export function CompanyPage() {
+  const [params] = useSearchParams()
+  return params.get('data') === 'demo' ||
+    params.get('company')?.startsWith('demo-') ? (
+    <DemoCompanyPage />
+  ) : (
+    <LiveCompanyPage />
+  )
+}
 
 const selectionSchema = z.object({
   company: z
@@ -39,7 +50,7 @@ const selectionSchema = z.object({
 })
 type Selection = z.infer<typeof selectionSchema>
 
-export function CompanyPage() {
+export function DemoCompanyPage() {
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const [searchInput, setSearchInput] = useState({ query, value: query })
@@ -136,7 +147,8 @@ export function CompanyPage() {
         <Database size={16} />
         <span>
           <strong>예시 데이터로 둘러보기</strong> · 아래 기업과 수치는 모두
-          가상입니다. 실제 공시 수집 및 분석은 실행되지 않습니다.
+          가상입니다. 실제 공시 수집 및 분석은 실행되지 않습니다.{' '}
+          <a href="/">실제 기업 검색으로 이동</a>
         </span>
       </div>
       <div className="search-layout">
