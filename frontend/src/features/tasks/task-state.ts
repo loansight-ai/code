@@ -61,6 +61,7 @@ export const stageLabels: Record<string, string> = {
   NOTE_STRUCTURE: '주석 구조화 중',
   NOTE_AGENT: '주석 근거 보완 탐색 중',
   DART_COLLECT: 'DART 원문·주석 HTML 수집 중',
+  FINANCIAL_ANALYSIS: '공시 재무 수집·계산 중',
   RETRY_WAIT: '재시도 대기',
   COMPLETED: '처리 완료',
   FAILED: '처리 실패',

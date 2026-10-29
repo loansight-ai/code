@@ -8,6 +8,8 @@ import { useNoteWorkspace } from '../features/analysis/use-note-workspace'
 import { Modal } from '../shared/components/modal'
 import { SessionControls } from '../features/session/session-controls'
 import { TaskControls } from '../features/tasks/task-controls'
+import { useSession } from '../features/session/session-context'
+import { getFinancialRun } from '../features/financial/api'
 
 const menus = [
   ['summary', '핵심 재무 요약'],
@@ -18,13 +20,30 @@ const menus = [
 ] as const
 
 export function Shell() {
-  const { analysisId, structureId, section } = useParams()
+  const { analysisId, structureId, financialId, section } = useParams()
+  const session = useSession()
+  const financialQuery = useQuery({
+    queryKey: [
+      'server',
+      session.session?.workspace_id,
+      'financial-run',
+      financialId?.toLowerCase(),
+    ],
+    queryFn: ({ signal }) =>
+      getFinancialRun(financialId!.toLowerCase(), signal),
+    enabled: !!financialId && session.phase === 'ready' && !!session.session,
+    retry: false,
+  }).data
+  const financial = session.phase === 'ready' ? financialQuery : undefined
+  const financialContext =
+    session.phase === 'ready' ? financial?.context : undefined
   const location = useLocation()
   const params = new URLSearchParams(location.search)
   const company = findCompany(analysisId)
   const live = useNoteWorkspace(structureId?.toLowerCase())
   const metadata = live.data
-  const corp = metadata?.corp_code ?? params.get('corp')
+  const corp =
+    financialContext?.corp_code ?? metadata?.corp_code ?? params.get('corp')
   const publicCompany = useQuery({
     queryKey: ['dart', 'workspace-company', corp],
     queryFn: ({ signal }) => searchCompanies(corp!, 0, signal),
@@ -36,18 +55,28 @@ export function Shell() {
     company?.name ??
     publicCompany?.corp_name ??
     metadata?.company_name ??
+    financial?.result?.company_name ??
     (corp ? `DART ${corp}` : '기업을 선택해 주세요')
   const searchPath = company
     ? `/?${new URLSearchParams({ data: 'demo', company: company.id, report: params.get('report') ?? '2025', scope: params.get('scope') ?? 'CFS', lease: params.get('lease') ?? 'include' })}`
-    : metadata
-      ? `/?${new URLSearchParams({ q: metadata.corp_code, corp: metadata.corp_code, report: metadata.receipt_no, scope: metadata.scope })}`
-      : '/'
+    : financialContext
+      ? `/?${new URLSearchParams({ q: financialContext.corp_code, corp: financialContext.corp_code, report: financialContext.receipt_no, scope: financialContext.scope })}`
+      : metadata
+        ? `/?${new URLSearchParams({ q: metadata.corp_code, corp: metadata.corp_code, report: metadata.receipt_no, scope: metadata.scope })}`
+        : '/'
   const [helpOpen, setHelpOpen] = useState(false)
-  const ready = !!company || !!metadata?.hierarchy
-  const base = company ? `/analyses/${analysisId}` : `/notes/${structureId}`
+  const ready = !!company || !!metadata?.hierarchy || !!financialContext
+  const base = financialId
+    ? `/financials/${financialId}`
+    : company
+      ? `/analyses/${analysisId}`
+      : `/notes/${structureId}`
   const active = section ?? (structureId ? 'evidence' : 'summary')
   const scope =
-    metadata?.scope ?? params.get('scope') ?? (company ? 'CFS' : 'OFS')
+    financialContext?.scope ??
+    metadata?.scope ??
+    params.get('scope') ??
+    (company ? 'CFS' : 'OFS')
   return (
     <div className="app-shell design-shell">
       <a className="skip-link" href="#main">
@@ -62,12 +91,13 @@ export function Shell() {
           <NavLink
             to={searchPath}
             end
-            className={`nav-item ${!analysisId && !structureId ? 'active' : ''}`}
+            className={`nav-item ${!analysisId && !structureId && !financialId ? 'active' : ''}`}
           >
             기업 검색
           </NavLink>
           {menus.map(([path, label]) =>
-            ready ? (
+            ready &&
+            (!financialId || ['summary', 'cashflow'].includes(path)) ? (
               <NavLink
                 key={path}
                 to={`${base}/${path}${location.search}`}
@@ -123,11 +153,22 @@ export function Shell() {
             {metadata || company || corp ? (
               <>
                 <span>
-                  {metadata
-                    ? `${metadata.period} 결산 보고서`
-                    : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
+                  {financialContext
+                    ? `${financialContext.period} 결산 보고서`
+                    : metadata
+                      ? `${metadata.period} 결산 보고서`
+                      : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
                 </span>
                 <span>{scope === 'OFS' ? '별도(OFS)' : '연결(CFS)'}</span>
+                {financialContext && (
+                  <>
+                    <span>접수번호 {financialContext.receipt_no}</span>
+                    <span>
+                      리스{' '}
+                      {financialContext.lease === 'include' ? '포함' : '제외'}
+                    </span>
+                  </>
+                )}
                 {metadata && (
                   <>
                     <span>접수번호 {metadata.receipt_no}</span>
@@ -189,8 +230,9 @@ export function Shell() {
           <li>체크·검토 메모에서 근거를 대조하고 담당자 의견을 정리합니다.</li>
         </ol>
         <p className="notice">
-          실제 주석 탐색과 예시 재무 분석을 구분합니다. 재무 계산·위험규칙·외부
-          모델·검토 기록의 서버 저장은 후속입니다.
+          핵심 재무 분석에서 실제 공시 계정과 산식을 확인할 수 있습니다. 예시
+          화면은 별도 표시합니다. 위험규칙·외부 모델·검토 기록의 서버 저장은
+          후속입니다.
         </p>
       </Modal>
     </div>

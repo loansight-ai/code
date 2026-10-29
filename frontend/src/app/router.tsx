@@ -3,6 +3,7 @@ import { Shell } from './shell'
 import { CompanyPage } from '../pages/company-page'
 import { AnalysisPage } from '../pages/analysis-page'
 import { LiveAnalysisPage } from '../pages/live-analysis-page'
+import { FinancialSummaryPage } from '../pages/financial-summary-page'
 
 export const router = createBrowserRouter([
   {
@@ -11,6 +12,10 @@ export const router = createBrowserRouter([
       { path: '/', element: <CompanyPage /> },
       { path: '/analyses/:analysisId/:section?', element: <AnalysisPage /> },
       { path: '/notes/:structureId/:section?', element: <LiveAnalysisPage /> },
+      {
+        path: '/financials/:financialId/:section?',
+        element: <FinancialSummaryPage />,
+      },
       {
         path: '*',
         element: (

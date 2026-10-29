@@ -50,6 +50,15 @@ function TaskPanel() {
       ? z.object({ structure_id: z.string().uuid() }).safeParse(selected.result)
       : null
   const diagnosticKey = useRef<string | null>(null)
+  const financialLink =
+    selected && ['SUCCEEDED', 'PARTIAL_SUCCEEDED'].includes(selected.status)
+      ? z
+          .object({
+            kind: z.literal('FINANCIAL_ANALYSIS'),
+            analysis_run_id: z.string().uuid(),
+          })
+          .safeParse(selected.result)
+      : null
   const mounted = useRef(true)
   useEffect(() => {
     mounted.current = true
@@ -148,7 +157,9 @@ function TaskPanel() {
                             ? 'DART 원문 수집'
                             : task.task_type === 'NOTE_AGENT'
                               ? '주석 근거 보완 탐색'
-                              : task.task_type}
+                              : task.task_type === 'FINANCIAL_ANALYSIS'
+                                ? '핵심 재무 분석'
+                                : task.task_type}
                     </strong>
                     <span>{statusLabels[task.status] ?? task.status}</span>
                   </div>
@@ -215,6 +226,19 @@ function TaskPanel() {
                 )}
                 {selected.task_type === 'PIPELINE_CHECK' && (
                   <p>연결 점검 결과이며 재무 분석 결과가 아닙니다.</p>
+                )}
+                {financialLink?.success && (
+                  <Button asChild>
+                    <Link
+                      to={`/financials/${financialLink.data.analysis_run_id}/summary`}
+                      onClick={() => {
+                        setOpen(false)
+                        setSelected(null)
+                      }}
+                    >
+                      재무 결과 보기
+                    </Link>
+                  </Button>
                 )}
                 <pre>
                   {JSON.stringify(selected.result, null, 2) ?? '결과 대기 중'}

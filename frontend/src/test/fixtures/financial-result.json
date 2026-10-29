@@ -1,0 +1,3450 @@
+{
+  "analysis_run_id": "11111111-1111-4111-8111-111111111111",
+  "context": {
+    "corp_code": "00141529",
+    "receipt_no": "20260318000621",
+    "scope": "OFS",
+    "lease": "include",
+    "fiscal_year": "2025",
+    "period": "2025.12",
+    "report_name": "사업보고서 (2025.12)",
+    "receipt_date": "2026-03-18",
+    "refresh_key": null
+  },
+  "company_name": "오뚜기",
+  "industry": "제조",
+  "source_sha256": "cc7e65e3e3a7aa1e3109d79b78c289b89cbd7975c16dba7b2844c6604c8ea4a4",
+  "source_url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260318000621",
+  "collected_at": "2026-10-29T03:00:00+00:00",
+  "mapping_version": "financial-accounts-v1",
+  "formula_version": "financial-formulas-v1",
+  "periods": [
+    {
+      "key": "current",
+      "label": "제 55 기"
+    },
+    {
+      "key": "previous",
+      "label": "제 54 기"
+    },
+    {
+      "key": "before_previous",
+      "label": "제 53 기"
+    }
+  ],
+  "facts": [
+    {
+      "key": "revenue",
+      "label": "매출액",
+      "period": "current",
+      "value": "2988655024536",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 66,
+          "account_id": "ifrs-full_Revenue",
+          "account_name": "매출",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "2988655024536"
+        }
+      ]
+    },
+    {
+      "key": "revenue",
+      "label": "매출액",
+      "period": "previous",
+      "value": "2926767214446",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 66,
+          "account_id": "ifrs-full_Revenue",
+          "account_name": "매출",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "2926767214446"
+        }
+      ]
+    },
+    {
+      "key": "revenue",
+      "label": "매출액",
+      "period": "before_previous",
+      "value": "2872350951592",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 66,
+          "account_id": "ifrs-full_Revenue",
+          "account_name": "매출",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "2872350951592"
+        }
+      ]
+    },
+    {
+      "key": "operating_profit",
+      "label": "영업이익",
+      "period": "current",
+      "value": "89381498748",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 46,
+          "account_id": "dart_OperatingIncomeLoss",
+          "account_name": "영업이익",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "89381498748"
+        }
+      ]
+    },
+    {
+      "key": "operating_profit",
+      "label": "영업이익",
+      "period": "previous",
+      "value": "121142366685",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 46,
+          "account_id": "dart_OperatingIncomeLoss",
+          "account_name": "영업이익",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "121142366685"
+        }
+      ]
+    },
+    {
+      "key": "operating_profit",
+      "label": "영업이익",
+      "period": "before_previous",
+      "value": "159705813538",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 46,
+          "account_id": "dart_OperatingIncomeLoss",
+          "account_name": "영업이익",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "159705813538"
+        }
+      ]
+    },
+    {
+      "key": "net_profit",
+      "label": "당기순이익",
+      "period": "current",
+      "value": "61771749105",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 64,
+          "account_id": "ifrs-full_ProfitLoss",
+          "account_name": "당기순이익",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "61771749105"
+        }
+      ]
+    },
+    {
+      "key": "net_profit",
+      "label": "당기순이익",
+      "period": "previous",
+      "value": "97068190163",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 64,
+          "account_id": "ifrs-full_ProfitLoss",
+          "account_name": "당기순이익",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "97068190163"
+        }
+      ]
+    },
+    {
+      "key": "net_profit",
+      "label": "당기순이익",
+      "period": "before_previous",
+      "value": "120710062884",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 64,
+          "account_id": "ifrs-full_ProfitLoss",
+          "account_name": "당기순이익",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "120710062884"
+        }
+      ]
+    },
+    {
+      "key": "cost_of_sales",
+      "label": "매출원가",
+      "period": "current",
+      "value": "2435553360640",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 51,
+          "account_id": "ifrs-full_CostOfSales",
+          "account_name": "매출원가",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "2435553360640"
+        }
+      ]
+    },
+    {
+      "key": "cost_of_sales",
+      "label": "매출원가",
+      "period": "previous",
+      "value": "2368269830045",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 51,
+          "account_id": "ifrs-full_CostOfSales",
+          "account_name": "매출원가",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "2368269830045"
+        }
+      ]
+    },
+    {
+      "key": "cost_of_sales",
+      "label": "매출원가",
+      "period": "before_previous",
+      "value": "2310351915321",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 51,
+          "account_id": "ifrs-full_CostOfSales",
+          "account_name": "매출원가",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "2310351915321"
+        }
+      ]
+    },
+    {
+      "key": "gross_profit",
+      "label": "매출총이익",
+      "period": "current",
+      "value": "553101663896",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 56,
+          "account_id": "ifrs-full_GrossProfit",
+          "account_name": "매출총이익",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "553101663896"
+        }
+      ]
+    },
+    {
+      "key": "gross_profit",
+      "label": "매출총이익",
+      "period": "previous",
+      "value": "558497384401",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 56,
+          "account_id": "ifrs-full_GrossProfit",
+          "account_name": "매출총이익",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "558497384401"
+        }
+      ]
+    },
+    {
+      "key": "gross_profit",
+      "label": "매출총이익",
+      "period": "before_previous",
+      "value": "561999036271",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 56,
+          "account_id": "ifrs-full_GrossProfit",
+          "account_name": "매출총이익",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "561999036271"
+        }
+      ]
+    },
+    {
+      "key": "sga",
+      "label": "판매비와관리비",
+      "period": "current",
+      "value": "463720165148",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 49,
+          "account_id": "dart_TotalSellingGeneralAdministrativeExpenses",
+          "account_name": "판매비와관리비",
+          "statement": "CIS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "463720165148"
+        }
+      ]
+    },
+    {
+      "key": "sga",
+      "label": "판매비와관리비",
+      "period": "previous",
+      "value": "437355017716",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 49,
+          "account_id": "dart_TotalSellingGeneralAdministrativeExpenses",
+          "account_name": "판매비와관리비",
+          "statement": "CIS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "437355017716"
+        }
+      ]
+    },
+    {
+      "key": "sga",
+      "label": "판매비와관리비",
+      "period": "before_previous",
+      "value": "402293222733",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 49,
+          "account_id": "dart_TotalSellingGeneralAdministrativeExpenses",
+          "account_name": "판매비와관리비",
+          "statement": "CIS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "402293222733"
+        }
+      ]
+    },
+    {
+      "key": "interest_expense",
+      "label": "이자비용",
+      "period": "current",
+      "value": "12751847000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "interest_expense",
+          "period": "current",
+          "value": "12751847000",
+          "raw_amount": "12,751,847",
+          "account_name": "이자비용(금융원가)",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[477]/tbody/tr",
+          "source_cell_xpath": "/html/body/table[477]/tbody/tr/td[6]",
+          "period_caption": "금융비용에 포함된 이자비용에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "12751847000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "interest_expense",
+      "label": "이자비용",
+      "period": "previous",
+      "value": "18631099000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "interest_expense",
+          "period": "previous",
+          "value": "18631099000",
+          "raw_amount": "18,631,099",
+          "account_name": "이자비용(금융원가)",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[480]/tbody/tr",
+          "source_cell_xpath": "/html/body/table[480]/tbody/tr/td[6]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "18631099000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "interest_expense",
+      "label": "이자비용",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "assets",
+      "label": "자산총계",
+      "period": "current",
+      "value": "2594456353175",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 0,
+          "account_id": "ifrs-full_Assets",
+          "account_name": "자산총계",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "2594456353175"
+        }
+      ]
+    },
+    {
+      "key": "assets",
+      "label": "자산총계",
+      "period": "previous",
+      "value": "2561725637673",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 0,
+          "account_id": "ifrs-full_Assets",
+          "account_name": "자산총계",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "2561725637673"
+        }
+      ]
+    },
+    {
+      "key": "assets",
+      "label": "자산총계",
+      "period": "before_previous",
+      "value": "2489488900266",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 0,
+          "account_id": "ifrs-full_Assets",
+          "account_name": "자산총계",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "2489488900266"
+        }
+      ]
+    },
+    {
+      "key": "liabilities",
+      "label": "부채총계",
+      "period": "current",
+      "value": "889835989968",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 38,
+          "account_id": "ifrs-full_Liabilities",
+          "account_name": "부채총계",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "889835989968"
+        }
+      ]
+    },
+    {
+      "key": "liabilities",
+      "label": "부채총계",
+      "period": "previous",
+      "value": "872673817092",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 38,
+          "account_id": "ifrs-full_Liabilities",
+          "account_name": "부채총계",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "872673817092"
+        }
+      ]
+    },
+    {
+      "key": "liabilities",
+      "label": "부채총계",
+      "period": "before_previous",
+      "value": "861985553852",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 38,
+          "account_id": "ifrs-full_Liabilities",
+          "account_name": "부채총계",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "861985553852"
+        }
+      ]
+    },
+    {
+      "key": "equity",
+      "label": "자본총계",
+      "period": "current",
+      "value": "1704620363207",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 25,
+          "account_id": "ifrs-full_Equity",
+          "account_name": "자본총계",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "1704620363207"
+        }
+      ]
+    },
+    {
+      "key": "equity",
+      "label": "자본총계",
+      "period": "previous",
+      "value": "1689051820581",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 25,
+          "account_id": "ifrs-full_Equity",
+          "account_name": "자본총계",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "1689051820581"
+        }
+      ]
+    },
+    {
+      "key": "equity",
+      "label": "자본총계",
+      "period": "before_previous",
+      "value": "1627503346414",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 25,
+          "account_id": "ifrs-full_Equity",
+          "account_name": "자본총계",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "1627503346414"
+        }
+      ]
+    },
+    {
+      "key": "current_assets",
+      "label": "유동자산",
+      "period": "current",
+      "value": "906826293082",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 1,
+          "account_id": "ifrs-full_CurrentAssets",
+          "account_name": "유동자산",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "906826293082"
+        }
+      ]
+    },
+    {
+      "key": "current_assets",
+      "label": "유동자산",
+      "period": "previous",
+      "value": "964558970754",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 1,
+          "account_id": "ifrs-full_CurrentAssets",
+          "account_name": "유동자산",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "964558970754"
+        }
+      ]
+    },
+    {
+      "key": "current_assets",
+      "label": "유동자산",
+      "period": "before_previous",
+      "value": "883427308977",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 1,
+          "account_id": "ifrs-full_CurrentAssets",
+          "account_name": "유동자산",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "883427308977"
+        }
+      ]
+    },
+    {
+      "key": "current_liabilities",
+      "label": "유동부채",
+      "period": "current",
+      "value": "689362059218",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 29,
+          "account_id": "ifrs-full_CurrentLiabilities",
+          "account_name": "유동부채",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "689362059218"
+        }
+      ]
+    },
+    {
+      "key": "current_liabilities",
+      "label": "유동부채",
+      "period": "previous",
+      "value": "712752501007",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 29,
+          "account_id": "ifrs-full_CurrentLiabilities",
+          "account_name": "유동부채",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "712752501007"
+        }
+      ]
+    },
+    {
+      "key": "current_liabilities",
+      "label": "유동부채",
+      "period": "before_previous",
+      "value": "564395095992",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 29,
+          "account_id": "ifrs-full_CurrentLiabilities",
+          "account_name": "유동부채",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "564395095992"
+        }
+      ]
+    },
+    {
+      "key": "inventory",
+      "label": "재고자산",
+      "period": "current",
+      "value": "252178849970",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 9,
+          "account_id": "ifrs-full_Inventories",
+          "account_name": "재고자산",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "252178849970"
+        }
+      ]
+    },
+    {
+      "key": "inventory",
+      "label": "재고자산",
+      "period": "previous",
+      "value": "245093968916",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 9,
+          "account_id": "ifrs-full_Inventories",
+          "account_name": "재고자산",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "245093968916"
+        }
+      ]
+    },
+    {
+      "key": "inventory",
+      "label": "재고자산",
+      "period": "before_previous",
+      "value": "248188514684",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 9,
+          "account_id": "ifrs-full_Inventories",
+          "account_name": "재고자산",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "248188514684"
+        }
+      ]
+    },
+    {
+      "key": "receivables",
+      "label": "매출채권",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "receivables",
+      "label": "매출채권",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "receivables",
+      "label": "매출채권",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "payables",
+      "label": "매입채무",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "payables",
+      "label": "매입채무",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "payables",
+      "label": "매입채무",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_assets",
+      "label": "계약자산",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_assets",
+      "label": "계약자산",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_assets",
+      "label": "계약자산",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_liabilities",
+      "label": "계약부채",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_liabilities",
+      "label": "계약부채",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "contract_liabilities",
+      "label": "계약부채",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "investment_property",
+      "label": "투자부동산",
+      "period": "current",
+      "value": "7937750855",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 13,
+          "account_id": "ifrs-full_InvestmentProperty",
+          "account_name": "투자부동산",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "7937750855"
+        }
+      ]
+    },
+    {
+      "key": "investment_property",
+      "label": "투자부동산",
+      "period": "previous",
+      "value": "8924466983",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 13,
+          "account_id": "ifrs-full_InvestmentProperty",
+          "account_name": "투자부동산",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "8924466983"
+        }
+      ]
+    },
+    {
+      "key": "investment_property",
+      "label": "투자부동산",
+      "period": "before_previous",
+      "value": "7408158058",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 13,
+          "account_id": "ifrs-full_InvestmentProperty",
+          "account_name": "투자부동산",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "7408158058"
+        }
+      ]
+    },
+    {
+      "key": "short_borrowings",
+      "label": "단기차입금",
+      "period": "current",
+      "value": "237636531195",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 36,
+          "account_id": "ifrs-full_ShorttermBorrowings",
+          "account_name": "단기차입금",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "237636531195"
+        }
+      ]
+    },
+    {
+      "key": "short_borrowings",
+      "label": "단기차입금",
+      "period": "previous",
+      "value": "138099081781",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 36,
+          "account_id": "ifrs-full_ShorttermBorrowings",
+          "account_name": "단기차입금",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "138099081781"
+        }
+      ]
+    },
+    {
+      "key": "short_borrowings",
+      "label": "단기차입금",
+      "period": "before_previous",
+      "value": "129655214188",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 36,
+          "account_id": "ifrs-full_ShorttermBorrowings",
+          "account_name": "단기차입금",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "129655214188"
+        }
+      ]
+    },
+    {
+      "key": "current_long_borrowings",
+      "label": "유동성장기차입금",
+      "period": "current",
+      "value": "47000000000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "current_long_borrowings",
+          "period": "current",
+          "value": "47000000000",
+          "raw_amount": "47,000,000",
+          "account_name": "유동성장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[693]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[693]/tbody/tr[2]/td[2]",
+          "period_caption": "금융부채의 잔액에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "47000000000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        },
+        {
+          "key": "current_long_borrowings",
+          "period": "current",
+          "value": "47000000000",
+          "raw_amount": "47,000,000",
+          "account_name": "유동성장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[757]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[2]/td[2]",
+          "period_caption": "자본관리지표에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "47000000000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "current_long_borrowings",
+      "label": "유동성장기차입금",
+      "period": "previous",
+      "value": "162960938000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "current_long_borrowings",
+          "period": "previous",
+          "value": "162960938000",
+          "raw_amount": "162,960,938",
+          "account_name": "유동성장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[696]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[696]/tbody/tr[2]/td[2]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "162960938000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        },
+        {
+          "key": "current_long_borrowings",
+          "period": "previous",
+          "value": "162960938000",
+          "raw_amount": "162,960,938",
+          "account_name": "유동성장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[760]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[2]/td[2]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "162960938000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "current_long_borrowings",
+      "label": "유동성장기차입금",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "long_borrowings",
+      "label": "장기차입금",
+      "period": "current",
+      "value": "135000000000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "long_borrowings",
+          "period": "current",
+          "value": "135000000000",
+          "raw_amount": "135,000,000",
+          "account_name": "장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[693]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[693]/tbody/tr[3]/td[2]",
+          "period_caption": "금융부채의 잔액에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "135000000000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        },
+        {
+          "key": "long_borrowings",
+          "period": "current",
+          "value": "135000000000",
+          "raw_amount": "135,000,000",
+          "account_name": "장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[757]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[3]/td[2]",
+          "period_caption": "자본관리지표에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "135000000000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "long_borrowings",
+      "label": "장기차입금",
+      "period": "previous",
+      "value": "94590236000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_exact_table",
+      "sources": [
+        {
+          "key": "long_borrowings",
+          "period": "previous",
+          "value": "94590236000",
+          "raw_amount": "94,590,236",
+          "account_name": "장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[696]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[696]/tbody/tr[3]/td[2]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "94590236000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        },
+        {
+          "key": "long_borrowings",
+          "period": "previous",
+          "value": "94590236000",
+          "raw_amount": "94,590,236",
+          "account_name": "장기차입금",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[760]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[3]/td[2]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "method": "note_exact_table",
+          "eligible": true,
+          "semantic_match": true,
+          "observed_value": "94590236000",
+          "validation": "exact_row_period_unit_total",
+          "parser_version": "financial-note-tables-v1"
+        }
+      ]
+    },
+    {
+      "key": "long_borrowings",
+      "label": "장기차입금",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_borrowings_aggregate",
+      "label": "유동 차입·사채 집계",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_borrowings_aggregate",
+      "label": "유동 차입·사채 집계",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_borrowings_aggregate",
+      "label": "유동 차입·사채 집계",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "noncurrent_borrowings_aggregate",
+      "label": "비유동 차입·사채 집계",
+      "period": "current",
+      "value": "135000000000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 42,
+          "account_id": "ifrs-full_LongtermBorrowings",
+          "account_name": "장기차입금",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "135000000000"
+        }
+      ]
+    },
+    {
+      "key": "noncurrent_borrowings_aggregate",
+      "label": "비유동 차입·사채 집계",
+      "period": "previous",
+      "value": "94590236000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 42,
+          "account_id": "ifrs-full_LongtermBorrowings",
+          "account_name": "장기차입금",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "94590236000"
+        }
+      ]
+    },
+    {
+      "key": "noncurrent_borrowings_aggregate",
+      "label": "비유동 차입·사채 집계",
+      "period": "before_previous",
+      "value": "228213711750",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 42,
+          "account_id": "ifrs-full_LongtermBorrowings",
+          "account_name": "장기차입금",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "228213711750"
+        }
+      ]
+    },
+    {
+      "key": "bonds",
+      "label": "비유동 사채",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "bonds",
+      "label": "비유동 사채",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "bonds",
+      "label": "비유동 사채",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_bonds",
+      "label": "유동성사채",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_bonds",
+      "label": "유동성사채",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_bonds",
+      "label": "유동성사채",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "current_lease",
+      "label": "유동 리스부채",
+      "period": "current",
+      "value": "3611991272",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 32,
+          "account_id": "ifrs-full_CurrentLeaseLiabilities",
+          "account_name": "유동성리스부채",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "3611991272"
+        }
+      ]
+    },
+    {
+      "key": "current_lease",
+      "label": "유동 리스부채",
+      "period": "previous",
+      "value": "4652793546",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 32,
+          "account_id": "ifrs-full_CurrentLeaseLiabilities",
+          "account_name": "유동성리스부채",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "4652793546"
+        }
+      ]
+    },
+    {
+      "key": "current_lease",
+      "label": "유동 리스부채",
+      "period": "before_previous",
+      "value": "4111409167",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 32,
+          "account_id": "ifrs-full_CurrentLeaseLiabilities",
+          "account_name": "유동성리스부채",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "4111409167"
+        }
+      ]
+    },
+    {
+      "key": "noncurrent_lease",
+      "label": "비유동 리스부채",
+      "period": "current",
+      "value": "4430387738",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 44,
+          "account_id": "ifrs-full_NoncurrentLeaseLiabilities",
+          "account_name": "리스부채",
+          "statement": "BS",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "4430387738"
+        }
+      ]
+    },
+    {
+      "key": "noncurrent_lease",
+      "label": "비유동 리스부채",
+      "period": "previous",
+      "value": "4270930201",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 44,
+          "account_id": "ifrs-full_NoncurrentLeaseLiabilities",
+          "account_name": "리스부채",
+          "statement": "BS",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "4270930201"
+        }
+      ]
+    },
+    {
+      "key": "noncurrent_lease",
+      "label": "비유동 리스부채",
+      "period": "before_previous",
+      "value": "4576143100",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 44,
+          "account_id": "ifrs-full_NoncurrentLeaseLiabilities",
+          "account_name": "리스부채",
+          "statement": "BS",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "4576143100"
+        }
+      ]
+    },
+    {
+      "key": "rental_deposits",
+      "label": "임대보증금",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "rental_deposits",
+      "label": "임대보증금",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "rental_deposits",
+      "label": "임대보증금",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "operating_cashflow",
+      "label": "영업활동현금흐름",
+      "period": "current",
+      "value": "80123880518",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 97,
+          "account_id": "ifrs-full_CashFlowsFromUsedInOperatingActivities",
+          "account_name": "영업활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "80123880518"
+        }
+      ]
+    },
+    {
+      "key": "operating_cashflow",
+      "label": "영업활동현금흐름",
+      "period": "previous",
+      "value": "180871350100",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 97,
+          "account_id": "ifrs-full_CashFlowsFromUsedInOperatingActivities",
+          "account_name": "영업활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "180871350100"
+        }
+      ]
+    },
+    {
+      "key": "operating_cashflow",
+      "label": "영업활동현금흐름",
+      "period": "before_previous",
+      "value": "236045606368",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 97,
+          "account_id": "ifrs-full_CashFlowsFromUsedInOperatingActivities",
+          "account_name": "영업활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "236045606368"
+        }
+      ]
+    },
+    {
+      "key": "investing_cashflow",
+      "label": "투자활동현금흐름",
+      "period": "current",
+      "value": "-34182559067",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 80,
+          "account_id": "ifrs-full_CashFlowsFromUsedInInvestingActivities",
+          "account_name": "투자활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "-34182559067"
+        }
+      ]
+    },
+    {
+      "key": "investing_cashflow",
+      "label": "투자활동현금흐름",
+      "period": "previous",
+      "value": "-100799396366",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 80,
+          "account_id": "ifrs-full_CashFlowsFromUsedInInvestingActivities",
+          "account_name": "투자활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "-100799396366"
+        }
+      ]
+    },
+    {
+      "key": "investing_cashflow",
+      "label": "투자활동현금흐름",
+      "period": "before_previous",
+      "value": "-42432550302",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 80,
+          "account_id": "ifrs-full_CashFlowsFromUsedInInvestingActivities",
+          "account_name": "투자활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "-42432550302"
+        }
+      ]
+    },
+    {
+      "key": "financing_cashflow",
+      "label": "재무활동현금흐름",
+      "period": "current",
+      "value": "-6896465023",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 69,
+          "account_id": "ifrs-full_CashFlowsFromUsedInFinancingActivities",
+          "account_name": "재무활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "-6896465023"
+        }
+      ]
+    },
+    {
+      "key": "financing_cashflow",
+      "label": "재무활동현금흐름",
+      "period": "previous",
+      "value": "-60498890482",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 69,
+          "account_id": "ifrs-full_CashFlowsFromUsedInFinancingActivities",
+          "account_name": "재무활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "-60498890482"
+        }
+      ]
+    },
+    {
+      "key": "financing_cashflow",
+      "label": "재무활동현금흐름",
+      "period": "before_previous",
+      "value": "-162903240729",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 69,
+          "account_id": "ifrs-full_CashFlowsFromUsedInFinancingActivities",
+          "account_name": "재무활동으로 인한 현금흐름",
+          "statement": "CF",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "-162903240729"
+        }
+      ]
+    },
+    {
+      "key": "depreciation",
+      "label": "감가상각비",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "depreciation",
+      "label": "감가상각비",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "depreciation",
+      "label": "감가상각비",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "amortisation",
+      "label": "무형자산상각비",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "amortisation",
+      "label": "무형자산상각비",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "amortisation",
+      "label": "무형자산상각비",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "ppe_acquisition",
+      "label": "유형자산 취득 지출",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "ppe_acquisition",
+      "label": "유형자산 취득 지출",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "ppe_acquisition",
+      "label": "유형자산 취득 지출",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "intangible_acquisition",
+      "label": "무형자산 취득 지출",
+      "period": "current",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "intangible_acquisition",
+      "label": "무형자산 취득 지출",
+      "period": "previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "intangible_acquisition",
+      "label": "무형자산 취득 지출",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "interest_paid",
+      "label": "이자 지급",
+      "period": "current",
+      "value": "12699600491",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 100,
+          "account_id": "ifrs-full_InterestPaidClassifiedAsOperatingActivities",
+          "account_name": "이자의 지급",
+          "statement": "CF",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "12699600491"
+        }
+      ]
+    },
+    {
+      "key": "interest_paid",
+      "label": "이자 지급",
+      "period": "previous",
+      "value": "19324989989",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 100,
+          "account_id": "ifrs-full_InterestPaidClassifiedAsOperatingActivities",
+          "account_name": "이자의 지급",
+          "statement": "CF",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "19324989989"
+        }
+      ]
+    },
+    {
+      "key": "interest_paid",
+      "label": "이자 지급",
+      "period": "before_previous",
+      "value": "23779493699",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 100,
+          "account_id": "ifrs-full_InterestPaidClassifiedAsOperatingActivities",
+          "account_name": "이자의 지급",
+          "statement": "CF",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "23779493699"
+        }
+      ]
+    },
+    {
+      "key": "tax_paid",
+      "label": "법인세 지급",
+      "period": "current",
+      "value": "26365860013",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 99,
+          "account_id": "ifrs-full_IncomeTaxesPaidRefundClassifiedAsOperatingActivities",
+          "account_name": "법인세의 납부",
+          "statement": "CF",
+          "amount_field": "thstrm_amount",
+          "raw_amount": "26365860013"
+        }
+      ]
+    },
+    {
+      "key": "tax_paid",
+      "label": "법인세 지급",
+      "period": "previous",
+      "value": "34488369279",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 99,
+          "account_id": "ifrs-full_IncomeTaxesPaidRefundClassifiedAsOperatingActivities",
+          "account_name": "법인세의 납부",
+          "statement": "CF",
+          "amount_field": "frmtrm_amount",
+          "raw_amount": "34488369279"
+        }
+      ]
+    },
+    {
+      "key": "tax_paid",
+      "label": "법인세 지급",
+      "period": "before_previous",
+      "value": "46836440519",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "standard_id",
+      "sources": [
+        {
+          "row": 99,
+          "account_id": "ifrs-full_IncomeTaxesPaidRefundClassifiedAsOperatingActivities",
+          "account_name": "법인세의 납부",
+          "statement": "CF",
+          "amount_field": "bfefrmtrm_amount",
+          "raw_amount": "46836440519"
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "key": "current_ratio",
+      "label": "유동비율",
+      "group": "유동성",
+      "unit": "%",
+      "formula": "유동자산 ÷ 유동부채 × 100",
+      "inputs": ["current_assets", "current_liabilities"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "131.5457",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "135.3287",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "156.5264",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-3.7830",
+      "change_unit": "%p"
+    },
+    {
+      "key": "debt_ratio",
+      "label": "부채비율",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "부채총계 ÷ 자본총계 × 100",
+      "inputs": ["liabilities", "equity"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "52.2014",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "51.6665",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "52.9637",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "0.5349",
+      "change_unit": "%p"
+    },
+    {
+      "key": "equity_ratio",
+      "label": "자기자본비율",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "자본총계 ÷ 자산총계 × 100",
+      "inputs": ["equity", "assets"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "65.7024",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "65.9341",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "65.3750",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-0.2317",
+      "change_unit": "%p"
+    },
+    {
+      "key": "operating_margin",
+      "label": "매출액영업이익률",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "영업이익 ÷ 매출액 × 100",
+      "inputs": ["operating_profit", "revenue"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "2.9907",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "4.1391",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "5.5601",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-1.1484",
+      "change_unit": "%p"
+    },
+    {
+      "key": "gross_margin",
+      "label": "매출총이익률",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "매출총이익 ÷ 매출액 × 100",
+      "inputs": ["gross_profit", "revenue"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "18.5067",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "19.0824",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "19.5658",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-0.5757",
+      "change_unit": "%p"
+    },
+    {
+      "key": "cost_ratio",
+      "label": "매출원가율",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "매출원가 ÷ 매출액 × 100",
+      "inputs": ["cost_of_sales", "revenue"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "81.4933",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "80.9176",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "80.4342",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "0.5757",
+      "change_unit": "%p"
+    },
+    {
+      "key": "interest_coverage",
+      "label": "이자보상비율",
+      "group": "수익성",
+      "unit": "배",
+      "formula": "영업이익 ÷ 이자비용",
+      "inputs": ["operating_profit", "interest_expense"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "7.0093",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "6.5022",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": "0.5071",
+      "change_unit": "배"
+    },
+    {
+      "key": "cash_profit",
+      "label": "영업CF/영업이익",
+      "group": "수익성",
+      "unit": "배",
+      "formula": "영업활동현금흐름 ÷ 영업이익",
+      "inputs": ["operating_cashflow", "operating_profit"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "0.8964",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "1.4930",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "1.4780",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-0.5966",
+      "change_unit": "배"
+    },
+    {
+      "key": "cash_current_liabilities",
+      "label": "영업CF/유동부채",
+      "group": "유동성",
+      "unit": "%",
+      "formula": "영업활동현금흐름 ÷ 유동부채 × 100",
+      "inputs": ["operating_cashflow", "current_liabilities"],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": "11.6229",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "25.3765",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "41.8228",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-13.7536",
+      "change_unit": "%p"
+    },
+    {
+      "key": "borrowing_ratio",
+      "label": "차입금의존도",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "정의된 총차입금 ÷ 총자산 × 100",
+      "inputs": [
+        "short_borrowings",
+        "current_long_borrowings",
+        "long_borrowings",
+        "bonds",
+        "current_bonds",
+        "current_lease",
+        "noncurrent_lease",
+        "assets"
+      ],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "short_borrowing_ratio",
+      "label": "단기차입금 비중",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "단기차입금 ÷ 정의된 총차입금 × 100",
+      "inputs": [
+        "short_borrowings",
+        "current_long_borrowings",
+        "long_borrowings",
+        "bonds",
+        "current_bonds",
+        "current_lease",
+        "noncurrent_lease"
+      ],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "borrowing_investment_property",
+      "label": "총차입금/투자부동산",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "정의된 총차입금 ÷ 투자부동산 장부금액 × 100",
+      "inputs": [
+        "short_borrowings",
+        "current_long_borrowings",
+        "long_borrowings",
+        "bonds",
+        "current_bonds",
+        "current_lease",
+        "noncurrent_lease",
+        "investment_property"
+      ],
+      "basis": "공시 보고기간 · 기말 잔액/기간 손익",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "revenue_growth",
+      "label": "매출액 증가율",
+      "group": "성장성",
+      "unit": "%",
+      "formula": "(당기 − 전기) ÷ 전기 × 100",
+      "inputs": ["revenue"],
+      "basis": "공시 비교기간 · 0/음수 전기는 증가율 보류",
+      "values": [
+        {
+          "period": "current",
+          "value": "2.1145",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "1.8945",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": "0.2200",
+      "change_unit": "%p"
+    },
+    {
+      "key": "inventory_growth",
+      "label": "재고자산 증가율",
+      "group": "성장성",
+      "unit": "%",
+      "formula": "(당기 − 전기) ÷ 전기 × 100",
+      "inputs": ["inventory"],
+      "basis": "공시 비교기간 · 0/음수 전기는 증가율 보류",
+      "values": [
+        {
+          "period": "current",
+          "value": "2.8907",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "-1.2469",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": "4.1376",
+      "change_unit": "%p"
+    },
+    {
+      "key": "receivables_growth",
+      "label": "매출채권 증가율",
+      "group": "성장성",
+      "unit": "%",
+      "formula": "(당기 − 전기) ÷ 전기 × 100",
+      "inputs": ["receivables"],
+      "basis": "공시 비교기간 · 0/음수 전기는 증가율 보류",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "contract_assets_growth",
+      "label": "계약자산 증가율",
+      "group": "성장성",
+      "unit": "%",
+      "formula": "(당기 − 전기) ÷ 전기 × 100",
+      "inputs": ["contract_assets"],
+      "basis": "공시 비교기간 · 0/음수 전기는 증가율 보류",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "inventory_sales_gap",
+      "label": "재고자산 증가율 − 매출 증가율",
+      "group": "성장성",
+      "unit": "%p",
+      "formula": "재고자산 증가율 − 매출액 증가율",
+      "inputs": ["inventory", "revenue"],
+      "basis": "같은 공시 비교기간의 증가율 차이",
+      "values": [
+        {
+          "period": "current",
+          "value": "0.7762",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "-3.1414",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": "3.9176",
+      "change_unit": "%p"
+    },
+    {
+      "key": "receivables_sales_gap",
+      "label": "매출채권 증가율 − 매출 증가율",
+      "group": "성장성",
+      "unit": "%p",
+      "formula": "매출채권 증가율 − 매출액 증가율",
+      "inputs": ["receivables", "revenue"],
+      "basis": "같은 공시 비교기간의 증가율 차이",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "contract_assets_sales_gap",
+      "label": "계약자산 증가율 − 매출 증가율",
+      "group": "성장성",
+      "unit": "%p",
+      "formula": "계약자산 증가율 − 매출액 증가율",
+      "inputs": ["contract_assets", "revenue"],
+      "basis": "같은 공시 비교기간의 증가율 차이",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "operating_roa",
+      "label": "총자산영업이익률",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "영업이익 ÷ 적용 총자산 × 100",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "inventory_days",
+      "label": "재고자산 회전일수",
+      "group": "활동성",
+      "unit": "일",
+      "formula": "적용 재고잔액 ÷ 매출원가 × 기간 일수",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "일"
+    },
+    {
+      "key": "receivable_days",
+      "label": "매출채권 회수일수",
+      "group": "활동성",
+      "unit": "일",
+      "formula": "적용 매출채권 ÷ 매출액 × 기간 일수",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "일"
+    },
+    {
+      "key": "payable_days",
+      "label": "매입채무 지급일수",
+      "group": "활동성",
+      "unit": "일",
+      "formula": "적용 매입채무 ÷ 적용 원가 × 기간 일수",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "일"
+    },
+    {
+      "key": "ccc",
+      "label": "현금전환주기",
+      "group": "활동성",
+      "unit": "일",
+      "formula": "재고일수 + 채권일수 − 채무일수",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "balance_days_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "일"
+    },
+    {
+      "key": "ebitda_coverage",
+      "label": "EBITDA 이자보상비율",
+      "group": "수익성",
+      "unit": "배",
+      "formula": "정의된 EBITDA ÷ 이자비용",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "ebitda_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "ebitda_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "ebitda_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "배"
+    },
+    {
+      "key": "cash_coverage",
+      "label": "현금보상비율",
+      "group": "유동성",
+      "unit": "배",
+      "formula": "승인된 현금보상 산식 적용",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "cash_coverage_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "cash_coverage_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "cash_coverage_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "배"
+    },
+    {
+      "key": "capex_cashflow",
+      "label": "CAPEX/영업CF",
+      "group": "성장성",
+      "unit": "배",
+      "formula": "정의된 투자 지출 ÷ 영업CF",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "capex_policy_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "capex_policy_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "capex_policy_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "배"
+    },
+    {
+      "key": "construction_receivable_days",
+      "label": "공사미수금 회수기간",
+      "group": "활동성",
+      "unit": "일",
+      "formula": "공사미수금 ÷ 대응 매출 × 기간 일수",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "construction_receivables_missing"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "construction_receivables_missing"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "construction_receivables_missing"
+        }
+      ],
+      "change": null,
+      "change_unit": "일"
+    },
+    {
+      "key": "pf_equity",
+      "label": "PF·조건부 의무/자본",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "검증된 PF·조건부 의무 ÷ 자본 × 100",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "pf_within_year",
+      "label": "1년 내 PF 비중",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "1년 내 PF 의무 ÷ 전체 PF 의무 × 100",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "pf_details_missing"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "debt_within_year",
+      "label": "1년 내 만기 차입 비중",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "1년 내 만기 차입 ÷ 총차입금 × 100",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "maturity_details_missing"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "maturity_details_missing"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "maturity_details_missing"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "average_funding_rate",
+      "label": "평균 조달금리",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "차입별 금리의 잔액 가중평균",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "funding_rate_details_missing"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "funding_rate_details_missing"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "funding_rate_details_missing"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    },
+    {
+      "key": "finance_cost_burden",
+      "label": "금융비용부담률",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "정의된 금융비용 ÷ 매출액 × 100",
+      "inputs": [],
+      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
+      "values": [
+        {
+          "period": "current",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "finance_cost_scope_unset"
+        },
+        {
+          "period": "previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "finance_cost_scope_unset"
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "finance_cost_scope_unset"
+        }
+      ],
+      "change": null,
+      "change_unit": "%p"
+    }
+  ],
+  "changes": {
+    "revenue": {
+      "amount": "61887810090",
+      "growth": "2.1145",
+      "reason": null,
+      "transition": null
+    },
+    "operating_profit": {
+      "amount": "-31760867937",
+      "growth": "-26.2178",
+      "reason": null,
+      "transition": null
+    },
+    "net_profit": {
+      "amount": "-35296441058",
+      "growth": "-36.3625",
+      "reason": null,
+      "transition": null
+    },
+    "cost_of_sales": {
+      "amount": "67283530595",
+      "growth": "2.8410",
+      "reason": null,
+      "transition": null
+    },
+    "gross_profit": {
+      "amount": "-5395720505",
+      "growth": "-0.9661",
+      "reason": null,
+      "transition": null
+    },
+    "sga": {
+      "amount": "26365147432",
+      "growth": "6.0283",
+      "reason": null,
+      "transition": null
+    },
+    "interest_expense": {
+      "amount": "-5879252000",
+      "growth": "-31.5561",
+      "reason": null,
+      "transition": null
+    },
+    "assets": {
+      "amount": "32730715502",
+      "growth": "1.2777",
+      "reason": null,
+      "transition": null
+    },
+    "liabilities": {
+      "amount": "17162172876",
+      "growth": "1.9666",
+      "reason": null,
+      "transition": null
+    },
+    "equity": {
+      "amount": "15568542626",
+      "growth": "0.9217",
+      "reason": null,
+      "transition": null
+    },
+    "current_assets": {
+      "amount": "-57732677672",
+      "growth": "-5.9854",
+      "reason": null,
+      "transition": null
+    },
+    "current_liabilities": {
+      "amount": "-23390441789",
+      "growth": "-3.2817",
+      "reason": null,
+      "transition": null
+    },
+    "inventory": {
+      "amount": "7084881054",
+      "growth": "2.8907",
+      "reason": null,
+      "transition": null
+    },
+    "receivables": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "payables": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "contract_assets": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "contract_liabilities": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "investment_property": {
+      "amount": "-986716128",
+      "growth": "-11.0563",
+      "reason": null,
+      "transition": null
+    },
+    "short_borrowings": {
+      "amount": "99537449414",
+      "growth": "72.0768",
+      "reason": null,
+      "transition": null
+    },
+    "current_long_borrowings": {
+      "amount": "-115960938000",
+      "growth": "-71.1587",
+      "reason": null,
+      "transition": null
+    },
+    "long_borrowings": {
+      "amount": "40409764000",
+      "growth": "42.7209",
+      "reason": null,
+      "transition": null
+    },
+    "current_borrowings_aggregate": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "noncurrent_borrowings_aggregate": {
+      "amount": "40409764000",
+      "growth": "42.7209",
+      "reason": null,
+      "transition": null
+    },
+    "bonds": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "current_bonds": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "current_lease": {
+      "amount": "-1040802274",
+      "growth": "-22.3694",
+      "reason": null,
+      "transition": null
+    },
+    "noncurrent_lease": {
+      "amount": "159457537",
+      "growth": "3.7336",
+      "reason": null,
+      "transition": null
+    },
+    "rental_deposits": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "operating_cashflow": {
+      "amount": "-100747469582",
+      "growth": "-55.7012",
+      "reason": null,
+      "transition": null
+    },
+    "investing_cashflow": {
+      "amount": "66616837299",
+      "growth": null,
+      "reason": "nonpositive_denominator",
+      "transition": null
+    },
+    "financing_cashflow": {
+      "amount": "53602425459",
+      "growth": null,
+      "reason": "nonpositive_denominator",
+      "transition": null
+    },
+    "depreciation": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "amortisation": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "ppe_acquisition": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "intangible_acquisition": {
+      "amount": null,
+      "growth": null,
+      "reason": "missing_input",
+      "transition": null
+    },
+    "interest_paid": {
+      "amount": "-6625389498",
+      "growth": "-34.2841",
+      "reason": null,
+      "transition": null
+    },
+    "tax_paid": {
+      "amount": "-8122509266",
+      "growth": "-23.5514",
+      "reason": null,
+      "transition": null
+    }
+  },
+  "profit_bridge": [
+    {
+      "label": "매출 증감",
+      "value": "61887810090"
+    },
+    {
+      "label": "매출원가 증감",
+      "value": "-67283530595"
+    },
+    {
+      "label": "판관비 증감",
+      "value": "-26365147432"
+    },
+    {
+      "label": "기타·조정 잔차",
+      "value": "0"
+    }
+  ],
+  "borrowing_totals": {
+    "current": null,
+    "previous": null,
+    "before_previous": null
+  },
+  "availability": "AVAILABLE",
+  "comparison_basis": "선택한 보고서의 당기·전기·전전기 비교금액. 각 기간 길이와 비교 가능성은 원문 확인 필요.",
+  "note_state": "PROCESSED"
+}
