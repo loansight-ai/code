@@ -8,6 +8,7 @@ from app.core.database import Base, Database
 from app.modules.company import models as company_models  # noqa: F401
 from app.modules.evidence import dart_models  # noqa: F401
 from app.modules.evidence import models as evidence_models  # noqa: F401
+from app.modules.financial import models as financial_models  # noqa: F401
 from app.modules.identity import models as identity_models  # noqa: F401
 from app.modules.tasks import models as task_models  # noqa: F401
 

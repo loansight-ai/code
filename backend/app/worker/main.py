@@ -15,6 +15,8 @@ from app.modules.evidence import dart_service
 from app.modules.evidence import service as evidence
 from app.modules.evidence.dart_collector import CollectionError
 from app.modules.evidence.parser import PreparedNotes
+from app.modules.financial import service as financial
+from app.modules.financial.service import PreparedFinancials
 from app.modules.tasks import service
 from app.modules.tasks.models import Job
 
@@ -23,7 +25,7 @@ logger = structlog.get_logger()
 
 async def execute(
     database: Database, job_id, settings: Settings | None = None
-) -> dict | PreparedNotes:
+) -> dict | PreparedNotes | PreparedFinancials:
     async with database.transaction() as db:
         job = await db.get(Job, job_id)
         task_type = job.task_type
@@ -33,9 +35,10 @@ async def execute(
         return await dart_service.prepare(database, settings, job_id, job.owner_token)
     if task_type == "NOTE_AGENT" and settings is not None:
         return await evidence_agent.prepare(database, settings, job_id)
+    if task_type == "FINANCIAL_ANALYSIS" and settings is not None:
+        return await financial.prepare(database, settings, job_id)
     if task_type != "PIPELINE_CHECK":
         raise ValueError("unsupported_task_type")
-    # Real financial analysis handlers will be added in the next implementation stage.
     return {
         "kind": "PIPELINE_CHECK",
         "transport": "outbox-rabbitmq-worker",
@@ -66,6 +69,8 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
         result = await execution
         if isinstance(result, PreparedNotes):
             await evidence.complete(database, message.job_id, owner, result)
+        elif isinstance(result, PreparedFinancials):
+            await financial.complete(database, message.job_id, owner, result)
         else:
             await service.finish(database, message.job_id, owner, result)
     except asyncio.CancelledError:
