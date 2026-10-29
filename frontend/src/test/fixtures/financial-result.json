@@ -16,8 +16,8 @@
   "source_sha256": "cc7e65e3e3a7aa1e3109d79b78c289b89cbd7975c16dba7b2844c6604c8ea4a4",
   "source_url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260318000621",
   "collected_at": "2026-10-29T03:00:00+00:00",
-  "mapping_version": "financial-accounts-v1",
-  "formula_version": "financial-formulas-v1",
+  "mapping_version": "financial-accounts-v2",
+  "formula_version": "financial-formulas-v2",
   "periods": [
     {
       "key": "current",
@@ -438,7 +438,7 @@
           "semantic_match": true,
           "observed_value": "12751847000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -469,7 +469,7 @@
           "semantic_match": true,
           "observed_value": "18631099000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -1160,7 +1160,7 @@
           "semantic_match": true,
           "observed_value": "47000000000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         },
         {
           "key": "current_long_borrowings",
@@ -1178,7 +1178,7 @@
           "semantic_match": true,
           "observed_value": "47000000000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -1209,7 +1209,7 @@
           "semantic_match": true,
           "observed_value": "162960938000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         },
         {
           "key": "current_long_borrowings",
@@ -1227,7 +1227,7 @@
           "semantic_match": true,
           "observed_value": "162960938000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -1270,7 +1270,7 @@
           "semantic_match": true,
           "observed_value": "135000000000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         },
         {
           "key": "long_borrowings",
@@ -1288,7 +1288,7 @@
           "semantic_match": true,
           "observed_value": "135000000000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -1319,7 +1319,7 @@
           "semantic_match": true,
           "observed_value": "94590236000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         },
         {
           "key": "long_borrowings",
@@ -1337,7 +1337,7 @@
           "semantic_match": true,
           "observed_value": "94590236000",
           "validation": "exact_row_period_unit_total",
-          "parser_version": "financial-note-tables-v1"
+          "parser_version": "financial-note-tables-v2"
         }
       ]
     },
@@ -1515,6 +1515,204 @@
     {
       "key": "current_bonds",
       "label": "유동성사채",
+      "period": "before_previous",
+      "value": null,
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": null,
+      "sources": []
+    },
+    {
+      "key": "note_borrowing_subtotal",
+      "label": "주석 차입금 소계 (리스 제외)",
+      "period": "current",
+      "value": "419636531000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_reconciled_subtotal",
+      "sources": [
+        {
+          "key": "note_borrowing_subtotal",
+          "period": "current",
+          "value": "419636531000",
+          "raw_amount": "419636531",
+          "account_name": "주석 차입금 소계",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[757]",
+          "period_caption": "자본관리지표에 대한 공시 당기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "components": [
+            {
+              "label": "단기차입금",
+              "value": "237636531000",
+              "raw_amount": "237,636,531",
+              "source_xpath": "/html/body/table[757]/tbody/tr[1]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[1]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "유동성장기차입금",
+              "value": "47000000000",
+              "raw_amount": "47,000,000",
+              "source_xpath": "/html/body/table[757]/tbody/tr[2]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[2]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "장기차입금",
+              "value": "135000000000",
+              "raw_amount": "135,000,000",
+              "source_xpath": "/html/body/table[757]/tbody/tr[3]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[3]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "현금및현금성자산",
+              "value": "-263946801000",
+              "raw_amount": "(263,946,801)",
+              "source_xpath": "/html/body/table[757]/tbody/tr[4]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[4]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "당기손익인식금융자산",
+              "value": "-37253124000",
+              "raw_amount": "(37,253,124)",
+              "source_xpath": "/html/body/table[757]/tbody/tr[5]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[5]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "기타포괄손익인식금융자산",
+              "value": "-5623568000",
+              "raw_amount": "(5,623,568)",
+              "source_xpath": "/html/body/table[757]/tbody/tr[6]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[6]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "상각후원가로측정하는금융자산",
+              "value": "-150195820000",
+              "raw_amount": "(150,195,820)",
+              "source_xpath": "/html/body/table[757]/tbody/tr[7]",
+              "source_cell_xpath": "/html/body/table[757]/tbody/tr[7]/td[2]",
+              "kind": "reduction"
+            }
+          ],
+          "control": {
+            "label": "순부채(순자산)",
+            "value": "-37382782000",
+            "source_xpath": "/html/body/table[757]/tbody/tr[8]"
+          },
+          "derived": true,
+          "method": "note_reconciled_subtotal",
+          "eligible": true,
+          "validation": "capital_management_exact_reconciliation",
+          "scope": "issuer_disclosed_borrowing_components_excluding_lease",
+          "parser_version": "financial-note-tables-v2"
+        }
+      ]
+    },
+    {
+      "key": "note_borrowing_subtotal",
+      "label": "주석 차입금 소계 (리스 제외)",
+      "period": "previous",
+      "value": "395650256000",
+      "state": "CONFIRMED",
+      "reason": null,
+      "currency": "KRW",
+      "unit": "원",
+      "mapping_method": "note_reconciled_subtotal",
+      "sources": [
+        {
+          "key": "note_borrowing_subtotal",
+          "period": "previous",
+          "value": "395650256000",
+          "raw_amount": "395650256",
+          "account_name": "주석 차입금 소계",
+          "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+          "source_xpath": "/html/body/table[760]",
+          "period_caption": "전기 (단위 : 천원)",
+          "unit_multiplier": 1000,
+          "components": [
+            {
+              "label": "단기차입금",
+              "value": "138099082000",
+              "raw_amount": "138,099,082",
+              "source_xpath": "/html/body/table[760]/tbody/tr[1]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[1]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "유동성장기차입금",
+              "value": "162960938000",
+              "raw_amount": "162,960,938",
+              "source_xpath": "/html/body/table[760]/tbody/tr[2]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[2]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "장기차입금",
+              "value": "94590236000",
+              "raw_amount": "94,590,236",
+              "source_xpath": "/html/body/table[760]/tbody/tr[3]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[3]/td[2]",
+              "kind": "borrowing"
+            },
+            {
+              "label": "현금및현금성자산",
+              "value": "-227751575000",
+              "raw_amount": "(227,751,575)",
+              "source_xpath": "/html/body/table[760]/tbody/tr[4]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[4]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "당기손익인식금융자산",
+              "value": "-36045096000",
+              "raw_amount": "(36,045,096)",
+              "source_xpath": "/html/body/table[760]/tbody/tr[5]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[5]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "기타포괄손익인식금융자산",
+              "value": "-5541416000",
+              "raw_amount": "(5,541,416)",
+              "source_xpath": "/html/body/table[760]/tbody/tr[6]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[6]/td[2]",
+              "kind": "reduction"
+            },
+            {
+              "label": "상각후원가로측정하는금융자산",
+              "value": "-210938970000",
+              "raw_amount": "(210,938,970)",
+              "source_xpath": "/html/body/table[760]/tbody/tr[7]",
+              "source_cell_xpath": "/html/body/table[760]/tbody/tr[7]/td[2]",
+              "kind": "reduction"
+            }
+          ],
+          "control": {
+            "label": "순부채(순자산)",
+            "value": "-84626801000",
+            "source_xpath": "/html/body/table[760]/tbody/tr[8]"
+          },
+          "derived": true,
+          "method": "note_reconciled_subtotal",
+          "eligible": true,
+          "validation": "capital_management_exact_reconciliation",
+          "scope": "issuer_disclosed_borrowing_components_excluding_lease",
+          "parser_version": "financial-note-tables-v2"
+        }
+      ]
+    },
+    {
+      "key": "note_borrowing_subtotal",
+      "label": "주석 차입금 소계 (리스 제외)",
       "period": "before_previous",
       "value": null,
       "state": "MISSING",
@@ -2424,6 +2622,42 @@
         }
       ],
       "change": "-13.7536",
+      "change_unit": "%p"
+    },
+    {
+      "key": "note_borrowing_ratio",
+      "label": "주석 차입금 소계/총자산",
+      "group": "레버리지",
+      "unit": "%",
+      "formula": "주석 차입금 소계(리스 옵션 적용) ÷ 총자산 × 100",
+      "inputs": [
+        "note_borrowing_subtotal",
+        "current_lease",
+        "noncurrent_lease",
+        "assets"
+      ],
+      "basis": "회사 자본관리 주석의 검산된 구성 범위 · 전체 차입 범위와 구분",
+      "values": [
+        {
+          "period": "current",
+          "value": "16.4843",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "15.7930",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": null,
+          "state": "NOT_COMPUTABLE",
+          "reason": "missing_input"
+        }
+      ],
+      "change": "0.6913",
       "change_unit": "%p"
     },
     {
@@ -3348,6 +3582,12 @@
       "reason": "missing_input",
       "transition": null
     },
+    "note_borrowing_subtotal": {
+      "amount": "23986275000",
+      "growth": "6.0625",
+      "reason": null,
+      "transition": null
+    },
     "current_lease": {
       "amount": "-1040802274",
       "growth": "-22.3694",
@@ -3443,6 +3683,166 @@
     "current": null,
     "previous": null,
     "before_previous": null
+  },
+  "note_borrowing_summaries": {
+    "current": {
+      "base_subtotal": "419636531000",
+      "adjusted_subtotal": "427678910010",
+      "lease": "include",
+      "state": "RECONCILED_SUBTOTAL",
+      "reason": null,
+      "components": [
+        {
+          "label": "단기차입금",
+          "value": "237636531000",
+          "raw_amount": "237,636,531",
+          "source_xpath": "/html/body/table[757]/tbody/tr[1]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[1]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "유동성장기차입금",
+          "value": "47000000000",
+          "raw_amount": "47,000,000",
+          "source_xpath": "/html/body/table[757]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[2]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "장기차입금",
+          "value": "135000000000",
+          "raw_amount": "135,000,000",
+          "source_xpath": "/html/body/table[757]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[3]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "현금및현금성자산",
+          "value": "-263946801000",
+          "raw_amount": "(263,946,801)",
+          "source_xpath": "/html/body/table[757]/tbody/tr[4]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[4]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "당기손익인식금융자산",
+          "value": "-37253124000",
+          "raw_amount": "(37,253,124)",
+          "source_xpath": "/html/body/table[757]/tbody/tr[5]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[5]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "기타포괄손익인식금융자산",
+          "value": "-5623568000",
+          "raw_amount": "(5,623,568)",
+          "source_xpath": "/html/body/table[757]/tbody/tr[6]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[6]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "상각후원가로측정하는금융자산",
+          "value": "-150195820000",
+          "raw_amount": "(150,195,820)",
+          "source_xpath": "/html/body/table[757]/tbody/tr[7]",
+          "source_cell_xpath": "/html/body/table[757]/tbody/tr[7]/td[2]",
+          "kind": "reduction"
+        }
+      ],
+      "reconciliation": {
+        "label": "순부채(순자산)",
+        "value": "-37382782000",
+        "source_xpath": "/html/body/table[757]/tbody/tr[8]"
+      },
+      "source_xpath": "/html/body/table[757]",
+      "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+      "scope": "issuer_disclosed_borrowing_components_excluding_lease"
+    },
+    "previous": {
+      "base_subtotal": "395650256000",
+      "adjusted_subtotal": "404573979747",
+      "lease": "include",
+      "state": "RECONCILED_SUBTOTAL",
+      "reason": null,
+      "components": [
+        {
+          "label": "단기차입금",
+          "value": "138099082000",
+          "raw_amount": "138,099,082",
+          "source_xpath": "/html/body/table[760]/tbody/tr[1]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[1]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "유동성장기차입금",
+          "value": "162960938000",
+          "raw_amount": "162,960,938",
+          "source_xpath": "/html/body/table[760]/tbody/tr[2]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[2]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "장기차입금",
+          "value": "94590236000",
+          "raw_amount": "94,590,236",
+          "source_xpath": "/html/body/table[760]/tbody/tr[3]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[3]/td[2]",
+          "kind": "borrowing"
+        },
+        {
+          "label": "현금및현금성자산",
+          "value": "-227751575000",
+          "raw_amount": "(227,751,575)",
+          "source_xpath": "/html/body/table[760]/tbody/tr[4]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[4]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "당기손익인식금융자산",
+          "value": "-36045096000",
+          "raw_amount": "(36,045,096)",
+          "source_xpath": "/html/body/table[760]/tbody/tr[5]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[5]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "기타포괄손익인식금융자산",
+          "value": "-5541416000",
+          "raw_amount": "(5,541,416)",
+          "source_xpath": "/html/body/table[760]/tbody/tr[6]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[6]/td[2]",
+          "kind": "reduction"
+        },
+        {
+          "label": "상각후원가로측정하는금융자산",
+          "value": "-210938970000",
+          "raw_amount": "(210,938,970)",
+          "source_xpath": "/html/body/table[760]/tbody/tr[7]",
+          "source_cell_xpath": "/html/body/table[760]/tbody/tr[7]/td[2]",
+          "kind": "reduction"
+        }
+      ],
+      "reconciliation": {
+        "label": "순부채(순자산)",
+        "value": "-84626801000",
+        "source_xpath": "/html/body/table[760]/tbody/tr[8]"
+      },
+      "source_xpath": "/html/body/table[760]",
+      "source_sha256": "70fedbe980e50ee5676bcb62cdc457686b202a839bd389a0aa7a06d3eda062d6",
+      "scope": "issuer_disclosed_borrowing_components_excluding_lease"
+    },
+    "before_previous": {
+      "base_subtotal": null,
+      "adjusted_subtotal": null,
+      "lease": "include",
+      "state": "MISSING",
+      "reason": "account_not_found",
+      "components": [],
+      "reconciliation": null,
+      "source_xpath": null,
+      "source_sha256": null,
+      "scope": null
+    }
   },
   "availability": "AVAILABLE",
   "comparison_basis": "선택한 보고서의 당기·전기·전전기 비교금액. 각 기간 길이와 비교 가능성은 원문 확인 필요.",

@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { FormulaDialog } from './formula-dialog'
+import { MetricValue, MetricStatus } from './data-status'
+import { dataState, displayedMetricValue } from './data-state'
 import {
   money,
-  metricValue,
   reasonLabels,
   type FinancialMetric,
   type FinancialResult,
@@ -31,17 +32,21 @@ export function LiveFormulaDialog({
   onClose: () => void
   onCloseAutoFocus: (event: Event) => void
 }) {
-  const current = metric.values.find((v) => v.period === 'current')
-  const confirmed = current?.state === 'CONFIRMED'
+  const current = displayedMetricValue(metric, result)
+  const state = dataState(current)
   const explanation = current?.reason
     ? (reasonLabels[current.reason] ?? current.reason)
-    : '공시 계정으로 계산했습니다. 다른 계정으로 대체하거나 근사하지 않았습니다.'
+    : state === 'CONFIRMED'
+      ? '공시 계정으로 계산했습니다. 다른 계정으로 대체하거나 근사하지 않았습니다.'
+      : state === 'APPROXIMATE'
+        ? '근사 사유 확인 필요'
+        : '필요한 자료와 산식 조건을 확인해 주세요.'
   function fact(key: string, period = 'current'): ReactNode {
     const value = result.facts.find((f) => f.key === key && f.period === period)
     return (
       <span key={`${key}:${period}`}>
         {value?.label ?? key}:{' '}
-        {value?.value == null ? '미확보' : `${money(value.value)}억원`}
+        {value?.value == null ? '자료 없음' : `${money(value.value)}억원`}
         {value?.reason && (
           <small>{reasonLabels[value.reason] ?? value.reason}</small>
         )}
@@ -69,6 +74,18 @@ export function LiveFormulaDialog({
     rows.push(
       { label: '분자', value: numerator },
       { label: '분모', value: pair[1].map((key) => fact(key)) },
+    )
+  } else if (metric.key === 'note_borrowing_ratio') {
+    const summary = result.note_borrowing_summaries.current
+    rows.push(
+      {
+        label: '분자',
+        value:
+          summary?.adjusted_subtotal == null
+            ? '검산된 주석 차입금 소계 미확보'
+            : `주석 차입금 소계: ${money(summary.adjusted_subtotal)}억원 · 리스 ${result.context.lease === 'include' ? '포함' : '제외'}`,
+      },
+      { label: '분모', value: fact('assets') },
     )
   } else if (metric.key === 'operating_roa') {
     rows.push(
@@ -139,7 +156,11 @@ export function LiveFormulaDialog({
     { label: '단위', value: `${metric.unit} · 소수 첫째 자리 표시` },
     {
       label: '당기 결과',
-      value: confirmed ? metricValue(current?.value, metric.unit) : '계산 보류',
+      value: <MetricValue metric={metric} result={result} />,
+    },
+    {
+      label: '자료 상태',
+      value: <MetricStatus metric={metric} result={result} />,
     },
     {
       label: '버전',
@@ -156,7 +177,10 @@ export function LiveFormulaDialog({
       title={`${metric.label} 산식`}
       description={`${result.context.report_name} · ${result.context.scope === 'OFS' ? '별도(OFS)' : '연결(CFS)'} · 당기 기준`}
       formula={metric.formula}
-      state={confirmed ? 'confirmed' : 'pending'}
+      state={
+        state.toLowerCase() as
+          'confirmed' | 'approximate' | 'missing' | 'not_computable'
+      }
       rows={rows}
       reason={explanation}
       sourceUrl={result.source_url}

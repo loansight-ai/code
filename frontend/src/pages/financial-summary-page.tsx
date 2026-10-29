@@ -20,6 +20,14 @@ import { Button } from '../shared/components/button'
 import { LiveFormulaDialog } from '../features/financial/live-formula-dialog'
 import { Chart } from '../shared/components/chart'
 import { StatusBadge } from '../shared/components/status-badge'
+import {
+  DataBadge,
+  DataStateBadge,
+  DataStatus,
+  FinancialValue,
+  MetricStatus,
+  MetricValue,
+} from '../features/financial/data-status'
 import '../financial-summary.css'
 
 export function FinancialSummaryPage() {
@@ -274,12 +282,6 @@ function getMetric(result: FinancialResult, key: string) {
 function metricPeriod(metric: FinancialMetric | undefined, period = 'current') {
   return metric?.values.find((v) => v.period === period)
 }
-function reason(value: { reason: string | null } | undefined) {
-  return value?.reason
-    ? (reasonLabels[value.reason] ?? value.reason)
-    : '확정 · 공시 계정 기준'
-}
-
 function Summary({
   result,
   onLease,
@@ -296,6 +298,7 @@ function Summary({
   const opener = useRef<HTMLButtonElement | null>(null)
   const profit = getFact(result, 'operating_profit')
   const previous = getFact(result, 'operating_profit', 'previous')
+  const noteBorrowing = result.note_borrowing_summaries.current
   const difference = result.changes.operating_profit?.amount
   const core = [
     'current_ratio',
@@ -320,30 +323,44 @@ function Summary({
         <section className="panel profit-primary">
           <span>영업이익 · {result.context.scope} · 억원</span>
           <strong>
-            {money(profit?.value)}
-            <small>억원</small>
+            <FinancialValue value={profit} />
+            {profit?.value != null && <small>억원</small>}
           </strong>
           <p>
-            전기 {money(previous?.value)}억원 · 증감{' '}
+            전기 <FinancialValue value={previous} />
+            {previous?.value != null && '억원'} · 증감{' '}
             {difference == null
               ? '비교 보류'
               : `${Number(difference) > 0 ? '+' : ''}${money(difference)}억원`}
           </p>
           <p>
-            증가율 {metricValue(result.changes.operating_profit?.growth, '%')}{' '}
+            증가율{' '}
+            {result.changes.operating_profit?.transition ? (
+              '계산 불가 · 증감 금액으로 비교'
+            ) : result.changes.operating_profit?.growth == null ? (
+              <span className="financial-data-empty">
+                {result.changes.operating_profit?.reason === 'missing_input'
+                  ? '자료 없음'
+                  : '계산 불가'}
+              </span>
+            ) : (
+              metricValue(result.changes.operating_profit.growth, '%')
+            )}{' '}
             {result.changes.operating_profit?.transition === 'NEGATIVE_TURN'
               ? '· 적자 전환'
               : result.changes.operating_profit?.transition === 'POSITIVE_TURN'
                 ? '· 흑자 전환'
                 : ''}
           </p>
-          <p>{reason(profit)}</p>
+          <p>
+            <DataStatus value={profit} />
+          </p>
           <p>
             영업이익률{' '}
-            {metricValue(
-              metricPeriod(getMetric(result, 'operating_margin'))?.value,
-              '%',
-            )}
+            <FinancialValue
+              value={metricPeriod(getMetric(result, 'operating_margin'))}
+              unit="%"
+            />
           </p>
         </section>
         <div className="profit-support">
@@ -357,10 +374,12 @@ function Summary({
               <section className="panel" key={key}>
                 <span>{label}</span>
                 <strong>
-                  {money(fact?.value)}
-                  <small>억원</small>
+                  <FinancialValue value={fact} />
+                  {fact?.value != null && <small>억원</small>}
                 </strong>
-                <p>{reason(fact)}</p>
+                <p>
+                  <DataStatus value={fact} />
+                </p>
               </section>
             )
           })}
@@ -383,15 +402,17 @@ function Summary({
                 >
                   {metric.label}
                 </Button>
-                <strong>{metricValue(v?.value, metric.unit)}</strong>
+                <strong>
+                  <FinancialValue value={v} unit={metric.unit} />
+                </strong>
                 <span>
                   전기{' '}
-                  {metricValue(
-                    metricPeriod(metric, 'previous')?.value,
-                    metric.unit,
-                  )}
+                  <FinancialValue
+                    value={metricPeriod(metric, 'previous')}
+                    unit={metric.unit}
+                  />
                 </span>
-                <small>{reason(v)}</small>
+                <MetricStatus metric={metric} result={result} />
               </div>
             )
           })}
@@ -466,6 +487,7 @@ function Summary({
           ))}
         </div>
         <MetricTable
+          result={result}
           metrics={result.metrics.filter((m) => m.group === group)}
           onFormula={show}
         />
@@ -507,15 +529,97 @@ function Summary({
                   return (
                     <tr key={key}>
                       <td>{f.label}</td>
-                      <td>{money(f.value)}</td>
-                      <td>{reason(f)}</td>
+                      <td>
+                        <FinancialValue value={f} />
+                      </td>
+                      <td>
+                        <DataStatus value={f} />
+                      </td>
                     </tr>
                   )
                 })}
+                {noteBorrowing?.base_subtotal != null && (
+                  <>
+                    <tr>
+                      <th scope="row">주석 차입금 소계 · 리스 제외</th>
+                      <td>{money(noteBorrowing.base_subtotal)}</td>
+                      <td>
+                        <DataBadge
+                          value={getFact(result, 'note_borrowing_subtotal')}
+                        />{' '}
+                        <details>
+                          <summary>주석 표 검산 일치 · 근거 보기</summary>
+                          {noteBorrowing.components.map((item) => (
+                            <p key={item.label}>
+                              {item.label}: {money(item.value)}억원
+                            </p>
+                          ))}
+                          {noteBorrowing.reconciliation && (
+                            <p>
+                              검산 대상 {noteBorrowing.reconciliation.label}:{' '}
+                              {money(noteBorrowing.reconciliation.value)}억원
+                            </p>
+                          )}
+                          <p>표 위치: {noteBorrowing.source_xpath}</p>
+                          <a
+                            href={result.source_url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            주석 원문 확인
+                          </a>
+                        </details>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">
+                        주석 소계 · 리스{' '}
+                        {result.context.lease === 'include' ? '포함' : '제외'}
+                      </th>
+                      <td>
+                        {noteBorrowing.adjusted_subtotal == null ? (
+                          <span className="financial-data-empty">
+                            자료 없음
+                          </span>
+                        ) : (
+                          money(noteBorrowing.adjusted_subtotal)
+                        )}
+                      </td>
+                      <td>
+                        <DataStateBadge
+                          state={
+                            noteBorrowing.adjusted_subtotal == null
+                              ? 'MISSING'
+                              : 'CONFIRMED'
+                          }
+                        />{' '}
+                        {noteBorrowing.reason
+                          ? (reasonLabels[noteBorrowing.reason] ??
+                            noteBorrowing.reason)
+                          : result.context.lease === 'include'
+                            ? '확보한 리스부채 가산'
+                            : '주석의 차입금 구성 범위'}
+                      </td>
+                    </tr>
+                  </>
+                )}
                 <tr>
-                  <th>정의된 총차입금</th>
-                  <td>{money(result.borrowing_totals.current)}</td>
+                  <th scope="row">정의된 총차입금</th>
                   <td>
+                    {result.borrowing_totals.current == null ? (
+                      <span className="financial-data-empty">자료 없음</span>
+                    ) : (
+                      money(result.borrowing_totals.current)
+                    )}
+                  </td>
+                  <td>
+                    <DataStateBadge
+                      state={
+                        result.borrowing_totals.current == null
+                          ? 'MISSING'
+                          : 'CONFIRMED'
+                      }
+                    />{' '}
                     {result.borrowing_totals.current == null
                       ? '구성 계정 미확보 · 합산 보류'
                       : '구성 계정 합산'}
@@ -524,12 +628,20 @@ function Summary({
               </tbody>
             </table>
           </div>
+          {noteBorrowing?.base_subtotal != null && (
+            <p className="panel-footnote">
+              주석 소계는 회사의 자본관리 표에 기재된 차입금 범위입니다. 같은
+              표의 현금·금융자산 차감과 순부채를 공시 단위로 검산했습니다.
+              미확보 사채를 0으로 처리하거나 전체 차입금으로 대체하지 않습니다.
+            </p>
+          )}
         </section>
         <section className="panel">
           <div className="panel-heading">
             <h2>상환 지표</h2>
           </div>
           <MetricTable
+            result={result}
             metrics={result.metrics.filter((m) =>
               [
                 'borrowing_ratio',
@@ -538,6 +650,7 @@ function Summary({
                 'ebitda_coverage',
                 'cash_coverage',
                 'finance_cost_burden',
+                'note_borrowing_ratio',
               ].includes(m.key),
             )}
             onFormula={show}
@@ -570,9 +683,11 @@ function Summary({
 
 function MetricTable({
   metrics,
+  result,
   onFormula,
 }: {
   metrics: FinancialMetric[]
+  result: FinancialResult
   onFormula: (m: FinancialMetric, b: HTMLButtonElement) => void
 }) {
   return (
@@ -592,10 +707,24 @@ function MetricTable({
           {metrics.map((m) => (
             <tr key={m.key}>
               <td>{m.label}</td>
-              <td>{metricValue(metricPeriod(m)?.value, m.unit)}</td>
-              <td>{metricValue(metricPeriod(m, 'previous')?.value, m.unit)}</td>
-              <td>{metricValue(m.change, m.change_unit)}</td>
-              <td>{reason(metricPeriod(m))}</td>
+              <td>
+                <MetricValue metric={m} result={result} />
+              </td>
+              <td>
+                <MetricValue metric={m} result={result} period="previous" />
+              </td>
+              <td>
+                {m.change == null ||
+                (m.key.endsWith('_growth') &&
+                  result.changes[m.inputs[0]]?.transition) ? (
+                  <span className="financial-data-empty">비교 불가</span>
+                ) : (
+                  metricValue(m.change, m.change_unit)
+                )}
+              </td>
+              <td>
+                <MetricStatus metric={m} result={result} />
+              </td>
               <td>
                 <Button
                   variant="ghost"
@@ -671,9 +800,13 @@ function Industry({ result }: { result: FinancialResult }) {
                 return (
                   <tr key={key}>
                     <td>{m.label}</td>
-                    <td>{metricValue(metricPeriod(m)?.value, m.unit)}</td>
+                    <td>
+                      <FinancialValue value={metricPeriod(m)} unit={m.unit} />
+                    </td>
                     <td>비교 보류</td>
-                    <td>{reason(metricPeriod(m))}</td>
+                    <td>
+                      <MetricStatus metric={m} result={result} />
+                    </td>
                   </tr>
                 )
               })}
@@ -774,12 +907,14 @@ function SourceFacts({ result }: { result: FinancialResult }) {
                 <td>{fact.label}</td>
                 {periods.map((p) => (
                   <td key={p.key}>
-                    {money(getFact(result, fact.key, p.key)?.value)}
+                    <FinancialValue value={getFact(result, fact.key, p.key)} />
                   </td>
                 ))}
                 <td>
                   <details>
-                    <summary>{reason(fact)}</summary>
+                    <summary>
+                      <DataStatus value={fact} />
+                    </summary>
                     <p>매핑: {fact.mapping_method ?? '미확정'}</p>
                     {fact.sources.map((s, i) => (
                       <p key={i}>

@@ -1,0 +1,51 @@
+.financial-data-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.financial-data-badge.financial-data-confirmed {
+  color: #6b5700;
+  background: #fff3cc;
+}
+.financial-data-badge.financial-data-approximate {
+  color: #955800;
+  background: #fcf0dc;
+}
+.financial-data-badge.financial-data-missing {
+  color: #626b78;
+  background: #eef0f3;
+}
+.financial-data-badge.financial-data-not_computable {
+  color: #414740;
+  background: #eceee9;
+}
+.financial-data-badge.financial-data-reference {
+  color: #755a14;
+  background: #f6eedc;
+}
+.financial-data-status,
+.financial-reference {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.financial-metric-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.financial-data-empty {
+  color: #626b78;
+  font-size: 13px;
+}
+.financial-reference,
+.financial-approximation {
+  font-size: 12px;
+  line-height: 1.6;
+}

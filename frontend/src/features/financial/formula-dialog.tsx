@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { Modal } from '../../shared/components/modal'
 import './formula-dialog.css'
+import { DataStateBadge } from './data-status'
 
 export function FormulaDialog({
   title,
@@ -17,7 +18,13 @@ export function FormulaDialog({
   title: string
   description: string
   formula: string
-  state: 'confirmed' | 'pending' | 'example'
+  state:
+    | 'confirmed'
+    | 'pending'
+    | 'example'
+    | 'approximate'
+    | 'missing'
+    | 'not_computable'
   rows: { label: string; value: ReactNode }[]
   reason: string
   sourceUrl?: string
@@ -33,7 +40,20 @@ export function FormulaDialog({
       description={description}
       className="formula-dialog"
       headerAside={
-        <span className={`formula-state formula-state-${state}`}>{label}</span>
+        ['confirmed', 'approximate', 'missing', 'not_computable'].includes(
+          state,
+        ) ? (
+          <DataStateBadge
+            state={
+              state.toUpperCase() as
+                'CONFIRMED' | 'APPROXIMATE' | 'MISSING' | 'NOT_COMPUTABLE'
+            }
+          />
+        ) : (
+          <span className={`formula-state formula-state-${state}`}>
+            {label}
+          </span>
+        )
       }
       onOpenChange={(open) => {
         if (!open) onClose()
@@ -61,10 +81,10 @@ export function FormulaDialog({
         </tbody>
       </table>
       <div
-        className={`formula-explanation ${state === 'pending' ? 'is-pending' : ''}`}
+        className={`formula-explanation ${['pending', 'missing', 'not_computable'].includes(state) ? 'is-pending' : ''}`}
       >
         <strong>
-          {state === 'pending'
+          {['pending', 'missing', 'not_computable'].includes(state)
             ? '계산을 보류한 이유'
             : state === 'example'
               ? '예시 자료 안내'

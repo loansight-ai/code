@@ -161,3 +161,163 @@ it('shows correction mismatch as an error without example values', async () => {
     screen.queryByRole('heading', { name: '공통 핵심 5개 비율' }),
   ).not.toBeInTheDocument()
 })
+
+it('shows reconciled note borrowing amounts and provenance while full borrowing scope remains withheld', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+    response(detail()),
+  )
+  mount()
+  const table = await screen.findByRole('table', { name: '차입 구성' })
+  const subtotal = within(table)
+    .getByRole('rowheader', { name: '주석 차입금 소계 · 리스 제외' })
+    .closest('tr')!
+  expect(subtotal).toHaveTextContent('4,196.37')
+  const leaseIncluded = within(table)
+    .getByRole('rowheader', { name: '주석 소계 · 리스 포함' })
+    .closest('tr')!
+  expect(leaseIncluded).toHaveTextContent('4,276.79')
+  const full = within(table)
+    .getByRole('rowheader', { name: '정의된 총차입금' })
+    .closest('tr')!
+  expect(full).toHaveTextContent('구성 계정 미확보 · 합산 보류')
+  await userEvent
+    .setup()
+    .click(within(table).getByText('주석 표 검산 일치 · 근거 보기'))
+  expect(
+    within(table).getByText(/검산 대상 순부채\(순자산\): -373.83억원/),
+  ).toBeVisible()
+  await userEvent
+    .setup()
+    .click(
+      screen.getByRole('button', { name: '주석 차입금 소계/총자산 산식 보기' }),
+    )
+  expect(screen.getByRole('dialog')).toHaveTextContent(
+    '주석 차입금 소계: 4,276.79억원',
+  )
+})
+
+it.each([
+  {
+    state: 'NOT_COMPUTABLE',
+    value: null,
+    reason: 'missing_input',
+    badge: '미확보',
+    display: '자료 없음',
+  },
+  {
+    state: 'NOT_COMPUTABLE',
+    value: null,
+    reason: 'nonpositive_denominator',
+    badge: '계산 불가',
+    display: '계산 불가',
+  },
+  {
+    state: 'APPROXIMATE',
+    value: '12.5',
+    reason: '테스트용 승인된 대체 계정',
+    badge: '근사',
+    display: '12.5%',
+  },
+])(
+  'keeps $badge consistent between the metric card and formula dialog',
+  async ({ state, value, reason, badge, display }) => {
+    const result = resultSchema.parse(structuredClone(fixture))
+    const metric = result.metrics.find((m) => m.key === 'current_ratio')!
+    Object.assign(
+      metric.values.find((v) => v.period === 'current')!,
+      { state, value, reason },
+    )
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+      response(detail('SUCCEEDED', result)),
+    )
+    mount()
+    const opener = await screen.findByRole('button', {
+      name: '유동비율',
+    })
+    const card = opener.closest('.financial-core-item')!
+    expect(card).toHaveTextContent(badge)
+    expect(card).toHaveTextContent(display)
+    if (reason === 'missing_input') expect(card).toHaveTextContent('참고')
+    if (state === 'APPROXIMATE') expect(card).toHaveTextContent(reason)
+    await userEvent.setup().click(opener)
+    const dialog = screen.getByRole('dialog', { name: '유동비율 산식' })
+    expect(within(dialog).getAllByText(badge).length).toBeGreaterThan(0)
+    expect(dialog).toHaveTextContent(display)
+    expect(dialog).toHaveTextContent(
+      reason === 'missing_input'
+        ? '필수 계정 미확보'
+        : reason === 'nonpositive_denominator'
+          ? '분모 0 또는 음수'
+          : reason,
+    )
+  },
+)
+
+it('preserves actual zero and shows missing source amounts as data unavailable with reference guidance', async () => {
+  const result = resultSchema.parse(structuredClone(fixture))
+  result.facts.find(
+    (f) => f.key === 'revenue' && f.period === 'current',
+  )!.value = '0'
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+    response(detail('SUCCEEDED', result)),
+  )
+  mount()
+  const sources = await screen.findByRole('table', {
+    name: '공통 원천 재무 계정',
+  })
+  const revenue = within(sources)
+    .getByText('매출액', { exact: true })
+    .closest('tr')!
+  expect(within(revenue).getAllByRole('cell')[3]).toHaveTextContent(/^0$/)
+  const borrowings = screen.getByRole('table', { name: '차입 구성' })
+  const bonds = within(borrowings).getByText('비유동 사채').closest('tr')!
+  expect(bonds).toHaveTextContent('자료 없음')
+  expect(bonds).toHaveTextContent('미확보')
+  expect(screen.getAllByText(/주석 보강 필요/).length).toBeGreaterThan(0)
+})
+
+it('rejects approximation without an explicit reason', () => {
+  const result = structuredClone(fixture)
+  Object.assign(result.metrics[0].values[0], {
+    state: 'APPROXIMATE',
+    value: '1',
+    reason: null,
+  })
+  expect(resultSchema.safeParse(result).success).toBe(false)
+})
+
+it('shows monetary changes and transition status instead of growth percentages when profit turns negative', async () => {
+  const result = resultSchema.parse(structuredClone(fixture))
+  result.facts.find(
+    (f) => f.key === 'operating_profit' && f.period === 'current',
+  )!.value = '-100000000'
+  result.facts.find(
+    (f) => f.key === 'operating_profit' && f.period === 'previous',
+  )!.value = '100000000'
+  result.changes.operating_profit = {
+    amount: '-200000000',
+    growth: '-200',
+    reason: null,
+    transition: 'NEGATIVE_TURN',
+  }
+  result.facts.find(
+    (f) => f.key === 'revenue' && f.period === 'current',
+  )!.value = '-100000000'
+  result.facts.find(
+    (f) => f.key === 'revenue' && f.period === 'previous',
+  )!.value = '100000000'
+  result.changes.revenue = { ...result.changes.operating_profit }
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+    response(detail('SUCCEEDED', result)),
+  )
+  mount()
+  await screen.findByRole('heading', { name: '핵심 재무 요약' })
+  await userEvent.setup().click(screen.getByRole('button', { name: '성장성' }))
+  const row = screen
+    .getByRole('button', { name: '매출액 증가율 산식 보기' })
+    .closest('tr')!
+  expect(row).toHaveTextContent('적자 전환')
+  expect(row).toHaveTextContent('증감 -2억원')
+  expect(row).toHaveTextContent('계산 불가')
+  expect(row).not.toHaveTextContent('-200%')
+})

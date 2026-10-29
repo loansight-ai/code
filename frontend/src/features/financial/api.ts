@@ -14,13 +14,18 @@ const contextSchema = z.object({
   refresh_key: z.string().nullable(),
 })
 export type FinancialContext = z.infer<typeof contextSchema>
-const valueSchema = z.object({
-  period: z.string(),
-  value: z.string().nullable(),
-  state: z.enum(['CONFIRMED', 'MISSING', 'NOT_COMPUTABLE']),
-  reason: z.string().nullable(),
-})
-const factSchema = valueSchema.extend({
+const valueSchema = z
+  .object({
+    period: z.string(),
+    value: z.string().nullable(),
+    state: z.enum(['CONFIRMED', 'APPROXIMATE', 'MISSING', 'NOT_COMPUTABLE']),
+    reason: z.string().nullable(),
+  })
+  .refine(
+    (v) => v.state !== 'APPROXIMATE' || (v.value != null && !!v.reason?.trim()),
+    { message: '근사값은 값과 근사 사유가 필요합니다.' },
+  )
+const factSchema = valueSchema.safeExtend({
   key: z.string(),
   label: z.string(),
   currency: z.literal('KRW'),
@@ -67,6 +72,28 @@ export const resultSchema = z.object({
     .array(z.object({ label: z.string(), value: z.string() }))
     .nullable(),
   borrowing_totals: z.record(z.string(), z.string().nullable()),
+  note_borrowing_summaries: z
+    .record(
+      z.string(),
+      z.object({
+        base_subtotal: z.string().nullable(),
+        adjusted_subtotal: z.string().nullable(),
+        lease: z.enum(['include', 'exclude']),
+        state: z.enum(['RECONCILED_SUBTOTAL', 'MISSING']),
+        reason: z.string().nullable(),
+        components: z.array(
+          z.object({ label: z.string(), value: z.string(), kind: z.string() }),
+        ),
+        reconciliation: z
+          .object({ label: z.string(), value: z.string() })
+          .nullable(),
+        source_xpath: z.string().nullable(),
+        source_sha256: z.string().nullable(),
+        scope: z.string().nullable(),
+      }),
+    )
+    .optional()
+    .default({}),
   availability: z.enum(['AVAILABLE', 'NO_DATA']),
   comparison_basis: z.string(),
   note_state: z.enum(['NOT_COLLECTED', 'PROCESSED', 'FAILED']),
@@ -107,6 +134,8 @@ export async function startFinancialRun(
   )
 }
 export const reasonLabels: Record<string, string> = {
+  profit_transition: '흑자·적자 전환 · 증감 금액으로 비교',
+  missing_lease_input: '리스부채 미확보 · 리스 포함 소계 보류',
   construction_receivables_missing: '공사미수금 범위·기간 기준 미확보',
   pf_details_missing: 'PF 의무·잔액·만기 검증 자료 미확보',
   maturity_details_missing: '차입 만기 구간 검증 자료 미확보',
