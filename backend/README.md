@@ -17,14 +17,15 @@ Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pypro
   "corp_code": "00141529",
   "receipt_no": "20260318000621",
   "scope": "OFS",
-  "lease": "include"
+  "lease": "include",
+  "enrich_notes": true
 }
 ```
 
 | API | 동작 |
 |---|---|
 | `POST /api/v1/me/financial-analyses` | 202. `analysis_run_id`, 작업 식별자·상태·`reused` 반환 |
-| `GET /api/v1/me/financial-analyses/{id}` | 본인 Workspace의 기준·작업 상태·결과 스냅샷 조회. 진행/실패 시 `result:null` |
+| `GET /api/v1/me/financial-analyses/{id}` | 본인 Workspace의 기준·기본 작업 상태·현재 결과·선택적 `note_workflow` 조회. 기본 분석 미완료 시 `result:null` |
 | `GET /api/v1/me/financial-analyses/{id}/source` | 동일 권한으로 수집한 원본 JSON 다운로드. 해시를 검증하며 미완료/파일 손상·누락은 409 |
 
 `scope`는 OFS 기본/CFS 분리, `lease`는 include 기본/exclude입니다. 같은 Workspace·접수번호·옵션·계정/산식/주석 파서 버전은 재사용합니다. 새 수집은 선택적 UUID `refresh_key`로 구분하며 같은 키는 중복 생성하지 않습니다. 옵션 변경은 새 분석을 생성하거나 같은 조건의 기존 결과를 재사용합니다. 자동 수집만 지원하며 직접 입력·업종 override는 이 API의 범위 밖입니다.
@@ -46,6 +47,20 @@ Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pypro
 결과의 `note_borrowing_summaries`는 비교기간별 기본 소계·리스 옵션 적용 소계·구성·검산 근거를 제공합니다. 리스 포함 시 유동·비유동 리스부채가 모두 있어야 가산하며 미확보면 적용 소계를 보류합니다. 화면의 주석 소계와 `note_borrowing_ratio`는 회사가 해당 표에 기재한 범위이며, 기존 `borrowing_totals`와 구분합니다. 사채 미공시를 0으로 간주하거나 전체 차입금으로 대체하지 않습니다. 계정·산식·주석 파서 v2는 새 분석에 적용하며 기존 결과 스냅샷은 유지합니다. 이전 분석 화면에서는 다시 수집·분석하여 반영합니다.
 
 대표 4기업·양 회계 범위의 공식 응답, 주석 보완, DB·화면 검증은 [재무 분석 검증](../docs/reviews/16_financial-summary-validation.md), 주석 차입금 추가 검증은 [별도 기록](../docs/reviews/17_note-borrowing-validation.md)을 참고합니다.
+
+<a id="financial-note-enrichment"></a>
+
+### 선택적 주석 구조화·Codex 재무 보완
+
+`enrich_notes`의 기본값은 false입니다. false에서는 기존 정형 재무와 규칙 기반 주석 보완을 수행합니다. true에서는 동일 원문으로 기존 `NOTE_STRUCTURE`를 접수·재사용합니다. 기본 분석 결과는 먼저 저장하고 구조화가 끝날 때까지 Worker를 점유하지 않습니다. Relay가 DB의 완료된 의존 작업을 확인해 `FINANCIAL_NOTE_ENRICHMENT`와 Outbox를 한 트랜잭션으로 예약합니다. 중복 Relay·전달·화면 종료·프로세스 재시작에도 같은 분석에 보완 작업을 중복 생성하지 않습니다.
+
+`note_workflow.stage`는 `BASE_ANALYSIS`, `WAITING_STRUCTURE`, `ENRICHING`, `COMPLETED`, `PARTIAL`, `FAILED`입니다. 기본 분석의 SUCCEEDED와 주석 보완 완료는 별개이며 클라이언트는 기본 결과를 표시하면서 이 단계를 조회합니다. 응답에는 구조화 ID·보완 작업 상태·한계·오류 코드·후보와 채택 상태가 있습니다. COMPLETED는 탐색 실행 완료이며 모든 계정 확보를 뜻하지 않습니다. 구조화·인증·시간/호출 제한·보완 검증 실패는 기본 결과를 유지합니다. Codex 설정·인증은 [기존 실행 기반](#note-agent)을 사용합니다.
+
+Codex에는 계정/금액이 미확보된 대상만 전달하며 기존 `NoteSearchTools`의 목차·검색·문맥 조회를 사용합니다. 공통 6항목 서술형 탐색과 별도의 재무 출력 스키마를 사용합니다. 후보는 계정·비교기간·통화·단위·표 행/열·금액·기간/단위 인용·대응 이유를 반환합니다. 서버는 같은 Workspace/구조화 revision·접수번호·회계 범위, 읽은 구간과 실제 인용, 병합 셀을 펼친 좌표, 계정명·원문 금액·단위·기간 열을 검사합니다. 현재 자동 채택은 기존 정확 이름 사전과 직접 공시 금액에 한정합니다. 새 별칭의 의미 추정·합산·근사·미정 산식 결정은 자동 채택하지 않습니다. 일반 ‘사채’는 비유동 금액 열 근거 없이 비유동 사채로 채택하지 않습니다. 특수관계자·종속/관계/공동기업·부문정보·중단영업·매각예정 목차 아래의 부분 금액도 자동으로 회사 전체 계정에 채택하지 않습니다.
+
+후보는 `financial_note_candidate`의 계정·기간·`Numeric(38,6)` 금액·채택 상태와 인용/좌표/이유 JSONB로 저장합니다. 상태는 `APPLIED`, `REVIEW_REQUIRED`, `CONFLICT`이며 동일 계정/기간의 금액 충돌이나 이미 확보된 값의 교체는 보류합니다. `financial_run.result`와 `financial_fact`의 기본 결과는 유지하고, 채택값을 합쳐 재계산한 스냅샷은 `financial_note_workflow.result`에 보존합니다. GET은 완료된 보완 스냅샷이 있으면 이를 제공합니다. `evidence_verified=false`, `review_status=PENDING`은 담당자 검수 전임을 뜻하며 기계적 수치/인용 검증과 구분합니다.
+
+옵션·계정/산식/주석 파서·보완 프롬프트/출력 버전·모델/실행 제한이 분석 재사용 조건에 반영됩니다. 중단된 Codex 작업의 재전달은 모델을 자동 재호출하지 않고 부분 완료로 남깁니다. 명시적 재시도는 `refresh_key`를 바꾼 새 분석으로 수행합니다. 마이그레이션 `a0436d7e0054`가 필요하며 실제 실행·실패 경로·셀 강조 검증은 [검증 기록](../docs/reviews/19_financial-note-workflow-validation.md)을 참고합니다.
 
 <a id="note-hierarchy"></a>
 
@@ -370,7 +385,7 @@ docker compose -f deploy/compose.yaml down
 
 세션 TTL·진입 제한·최대 작업 시도 횟수는 운영 정책이 미정이므로 코드에 기본값을 두지 않았습니다. `.env.example`과 Compose의 수치는 **로컬 개발 예시**이며 운영 정책 확정을 뜻하지 않습니다. 설정이 빠진 기능은 503으로 거부합니다. 허용 Origin도 명시적으로 설정하며 프록시의 임의 헤더로 IP나 권한을 신뢰하지 않습니다.
 
-현재 작업 종류는 연결 점검 `PIPELINE_CHECK`, 주석 구조화 `NOTE_STRUCTURE`, 원문 수집 `DART_COLLECT`, 보완 탐색 `NOTE_AGENT`, 재무 분석 `FINANCIAL_ANALYSIS`입니다. 연결 점검 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 주석 접수는 [별도 API](#note-import-api)를 사용하고 Workspace별로 격리합니다. 연결 점검·주석 구조화는 `financial_analysis_performed:false`이며 실제 재무 작업은 [재무 API](#financial-api)로 요청합니다. 위험규칙·외부 모델은 포함하지 않습니다.
+현재 작업 종류는 연결 점검 `PIPELINE_CHECK`, 주석 구조화 `NOTE_STRUCTURE`, 원문 수집 `DART_COLLECT`, 보완 탐색 `NOTE_AGENT`, 재무 분석 `FINANCIAL_ANALYSIS`, `FINANCIAL_NOTE_ENRICHMENT`입니다. 연결 점검 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 주석 접수는 [별도 API](#note-import-api)를 사용하고 Workspace별로 격리합니다. 연결 점검·주석 구조화는 `financial_analysis_performed:false`이며 실제 재무 작업은 [재무 API](#financial-api)로 요청합니다. 위험규칙·외부 모델은 포함하지 않습니다.
 
 SSE는 내장 FastAPI SSE와 API 프로세스별 전용 PostgreSQL LISTEN 연결을 사용합니다. 연결 시작 시 주석을 즉시 전송하여 유휴 스트림도 프록시를 거쳐 연결을 확정합니다. cursor는 Workspace 스트림 ID·커밋 순번이며 권한 증명이 아닙니다. `Last-Event-ID`가 `after`보다 우선합니다. 잘못된·다른 사용자 cursor나 재생 한도(`LOANSIGHT_EVENT_BATCH_SIZE`, 기본 100건) 초과 시 `reset`을 보내며 작업 목록을 다시 조회해야 합니다. 현재 이벤트는 삭제하지 않고 보존합니다. 자동 삭제·운영 보존 기간은 후속 정책 결정 사항입니다. 프론트엔드 연결 UI는 [프론트엔드 안내](../frontend/README.md#서버-세션작업-연동)를 참고합니다.
 
