@@ -15,6 +15,7 @@ x-backend: &backend
     LOANSIGHT_DATABASE_URL: postgresql+psycopg://loansight:local-example@db:5432/loansight
     LOANSIGHT_RABBITMQ_URL: amqp://loansight:local-example@rabbitmq:5672/
     LOANSIGHT_ARTIFACT_ROOT: /data/artifacts
+    LOANSIGHT_CODEX_HOME: /home/loansight/.codex
 
 services:
   db:
@@ -82,6 +83,7 @@ services:
     <<: *backend
     volumes:
       - source-artifacts:/data/artifacts
+      - codex-home:/home/loansight/.codex
     command: ["/app/.venv/bin/python", "-m", "app.worker.main"]
     stop_grace_period: 15s
     depends_on:
@@ -113,6 +115,7 @@ services:
       start_period: 15s
 
 volumes:
+  codex-home:
   source-artifacts:
   postgres-data:
   rabbitmq-data:

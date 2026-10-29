@@ -106,7 +106,7 @@ flowchart TD
 
 ## 키워드 도구를 사용하는 근거 탐색 설계
 
-2026-10-28 설계 방향: 기존 PostgreSQL·FastAPI·SQLAlchemy와 외부 LLM의 도구 호출로 시작한다. 임베딩·벡터 DB·로컬 LLM·GPU를 초기 필수 조건으로 두지 않는다. 2026-10-29 현재 목차·다중 키워드 검색·문맥 조회 도구와 6항목 기본 검색의 DB 저장·화면 연결을 구현했다. 실제 API·도구 스키마·기술적 응답 제한은 [검색 구현 계약](../../backend/README.md#note-search-api)에서 관리한다. 사용자가 지정한 범위에 따라 Codex/OpenAI API를 통한 보완 탐색·사실 추출은 후속이며, 공급자 선택은 기존 LLM Gateway/AgentRuntime 경계를 따른다. 아래 전체 흐름과 인수 조건이 모두 구현된 것은 아니다.
+2026-10-28 설계 방향: 기존 PostgreSQL·FastAPI·SQLAlchemy와 외부 LLM의 도구 호출로 시작한다. 임베딩·벡터 DB·로컬 LLM·GPU를 초기 필수 조건으로 두지 않는다. 2026-10-29 현재 목차·다중 키워드 검색·문맥 조회 도구와 6항목 기본 검색의 DB 저장·화면 연결을 구현했다. 추가로 공급자 중립 `AgentRuntime`과 Codex App Server 어댑터를 연결했다. 실제 API·도구 스키마·실행 제한·인증·검증 범위는 [검색 구현 계약](../../backend/README.md#note-search-api)과 [Codex 보완 탐색](../../backend/README.md#note-agent)에서 관리한다. OpenAI API 어댑터·담당자 사실 검수 저장은 후속이다. 아래 전체 흐름과 인수 조건이 모두 구현된 것은 아니다.
 
 ### 검색 범위와 기본 흐름
 

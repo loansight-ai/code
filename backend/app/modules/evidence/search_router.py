@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 
+from app.modules.evidence import agent
 from app.modules.evidence.search import NoteSearchTools
 from app.modules.evidence.search_baseline import payload, run_baseline, saved_run
 from app.modules.evidence.search_schemas import ContextQuery, SearchQuery, SectionsQuery
@@ -10,6 +11,31 @@ from app.modules.identity.service import Identity, current_identity, require_ori
 
 router = APIRouter(prefix="/api/v1/me/note-imports", tags=["note-search"])
 CurrentIdentity = Annotated[Identity, Depends(current_identity)]
+
+
+@router.get("/{structure_id}/search/agent")
+async def get_agent(
+    structure_id: UUID, request: Request, response: Response, identity: CurrentIdentity
+):
+    response.headers["Cache-Control"] = "no-store"
+    async with request.app.state.database.transaction() as db:
+        run = await agent.latest(db, identity, structure_id)
+    return {
+        "available": agent.configured(request.app.state.settings),
+        "provider": request.app.state.settings.note_agent_provider,
+        "run": run,
+    }
+
+
+@router.post("/{structure_id}/search/agent", status_code=202)
+async def start_agent(
+    structure_id: UUID, request: Request, response: Response, identity: CurrentIdentity
+):
+    require_origin(request)
+    response.headers["Cache-Control"] = "no-store"
+    return await agent.submit(
+        request.app.state.database, request.app.state.settings, identity, structure_id
+    )
 
 
 @router.get("/{structure_id}/search/sections")

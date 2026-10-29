@@ -8,6 +8,7 @@ import {
 import { SessionContext } from '../session/session-context'
 import { ApiError, errorMessage } from '../session/api'
 import { Button } from '../../shared/components/button'
+import { AgentSearchPanel } from './agent-search-panel'
 import {
   getBaseline,
   startBaseline,
@@ -92,7 +93,7 @@ export function BaselineSearchPanel({
               {new Date(saved.data.created_at).toLocaleString('ko-KR', {
                 timeZone: 'Asia/Seoul',
               })}{' '}
-              (한국 시각) · AI 보완 검색 미실행
+              (한국 시각) · AI 보완 탐색 상태는 아래에서 확인
             </p>
             <div
               className="baseline-categories"
@@ -121,6 +122,12 @@ export function BaselineSearchPanel({
                 onSelect={onSelect}
               />
             )}
+            <AgentSearchPanel
+              id={id}
+              hash={hash}
+              workspaceId={workspaceId}
+              onSelect={onSelect}
+            />
           </>
         )}
       </div>

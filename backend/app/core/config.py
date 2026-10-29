@@ -22,9 +22,7 @@ class Settings(BaseSettings):
         Path(__file__).resolve().parents[2] / "data/company/companies_opendart_ksic11.csv"
     )
     company_sync_enabled: bool = True
-    ksic11_codes_csv: Path = (
-        Path(__file__).resolve().parents[2] / "data/company/ksic11_codes.csv"
-    )
+    ksic11_codes_csv: Path = Path(__file__).resolve().parents[2] / "data/company/ksic11_codes.csv"
     # Checkpoint size controls request throughput, not the set of companies synchronized.
     company_profile_batch_size: int = Field(default=20, ge=0)
     company_reports_cache_seconds: int = Field(default=3600, ge=0)
@@ -59,6 +57,13 @@ class Settings(BaseSettings):
     relay_interval_seconds: float = Field(default=1, gt=0)
     event_batch_size: int = Field(default=100, gt=0, le=1000)
     sse_heartbeat_seconds: float = Field(default=10, gt=0)
+    # Execution budgets are deployment choices, not implicit business policy.
+    note_agent_provider: str = "codex"
+    codex_binary: str = "codex"
+    codex_home: Path | None = None
+    note_agent_model: str | None = None
+    note_agent_timeout_seconds: float | None = Field(default=None, gt=0)
+    note_agent_max_tool_calls: int | None = Field(default=None, gt=0)
 
     @field_validator("open_dart_api_key", "ecos_api_key", "open_data_api_key", mode="before")
     @classmethod

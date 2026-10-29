@@ -80,9 +80,15 @@ it('runs and restores a baseline, displays all six items and opens cited source 
   const fetcher = vi
     .spyOn(globalThis, 'fetch')
     .mockImplementation(
-      async (_, init) =>
+      async (url, init) =>
         new Response(
-          JSON.stringify(init?.method === 'POST' ? baseline : { run: null }),
+          JSON.stringify(
+            String(url).endsWith('/agent')
+              ? { available: false, run: null }
+              : init?.method === 'POST'
+                ? baseline
+                : { run: null },
+          ),
         ),
     )
   const selected = mount()
@@ -92,7 +98,7 @@ it('runs and restores a baseline, displays all six items and opens cited source 
   )
   const group = await screen.findByRole('group', { name: '검색 항목' })
   expect(within(group).getAllByRole('button')).toHaveLength(6)
-  expect(screen.getByText(/AI 보완 검색 미실행/)).toBeVisible()
+  expect(screen.getByText(/AI 보완 탐색 상태는 아래에서 확인/)).toBeVisible()
   expect(screen.getByText(/추가 확인이 필요한 영역: 감사보고서/)).toBeVisible()
   expect(screen.getByText('약정 위반은 없습니다.')).toBeVisible()
   await user.click(screen.getByRole('button', { name: '원문에서 확인' }))
@@ -107,13 +113,24 @@ it('runs and restores a baseline, displays all six items and opens cited source 
 it('shows a stored baseline without rerunning it', async () => {
   const fetcher = vi
     .spyOn(globalThis, 'fetch')
-    .mockResolvedValue(new Response(JSON.stringify({ run: baseline })))
+    .mockImplementation(
+      async (url) =>
+        new Response(
+          JSON.stringify(
+            String(url).endsWith('/agent')
+              ? { available: false, run: null }
+              : { run: baseline },
+          ),
+        ),
+    )
   mount()
   await screen.findByRole('group', { name: '검색 항목' })
   expect(
     screen.queryByRole('button', { name: '6항목 기본 검색' }),
   ).not.toBeInTheDocument()
-  expect(fetcher).toHaveBeenCalledTimes(1)
+  expect(
+    fetcher.mock.calls.filter(([url]) => String(url).endsWith('/baseline')),
+  ).toHaveLength(1)
 })
 
 it('rejects a cached response from another source revision', async () => {
@@ -142,7 +159,9 @@ it('paginates candidates and retries a failed next page without losing the first
         : item,
     ),
   }
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (_, init) => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+    if (String(url).endsWith('/agent'))
+      return new Response(JSON.stringify({ available: false, run: null }))
     if (init?.method !== 'POST')
       return new Response(JSON.stringify({ run: paginated }))
     calls += 1

@@ -8,7 +8,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import Settings
 from app.core.database import Database
 from app.core.runtime import process_health, run
+from app.integrations.agents.runtime import AgentError
 from app.integrations.messaging.rabbitmq import JobMessage, channel_and_queue, connect
+from app.modules.evidence import agent as evidence_agent
 from app.modules.evidence import dart_service
 from app.modules.evidence import service as evidence
 from app.modules.evidence.dart_collector import CollectionError
@@ -29,6 +31,8 @@ async def execute(
         return await evidence.prepare(database, settings, job_id)
     if task_type == "DART_COLLECT" and settings is not None:
         return await dart_service.prepare(database, settings, job_id, job.owner_token)
+    if task_type == "NOTE_AGENT" and settings is not None:
+        return await evidence_agent.prepare(database, settings, job_id)
     if task_type != "PIPELINE_CHECK":
         raise ValueError("unsupported_task_type")
     # Real financial analysis handlers will be added in the next implementation stage.
@@ -45,19 +49,30 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
         # A live owner or a completed/stale generation exists. Lease recovery is Relay's job.
         return
 
+    execution = asyncio.create_task(execute(database, message.job_id, settings))
+    lease_lost = False
+
     async def maintain_lease():
+        nonlocal lease_lost
         while True:
             await asyncio.sleep(settings.job_lease_seconds / 3)
             if not await service.heartbeat(database, settings, message.job_id, owner):
+                lease_lost = True
+                execution.cancel()
                 return
 
     keeper = asyncio.create_task(maintain_lease())
     try:
-        result = await execute(database, message.job_id, settings)
+        result = await execution
         if isinstance(result, PreparedNotes):
             await evidence.complete(database, message.job_id, owner, result)
         else:
             await service.finish(database, message.job_id, owner, result)
+    except asyncio.CancelledError:
+        if not lease_lost:
+            raise
+    except AgentError as failure:
+        await service.fail(database, settings, message.job_id, owner, failure.code, False)
     except CollectionError as failure:
         await service.fail(
             database, settings, message.job_id, owner, failure.code, failure.retryable
@@ -67,6 +82,8 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
     except Exception:
         await service.fail(database, settings, message.job_id, owner, "handler_failed", False)
     finally:
+        execution.cancel()
+        await asyncio.gather(execution, return_exceptions=True)
         keeper.cancel()
         with suppress(asyncio.CancelledError):
             await keeper

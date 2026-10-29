@@ -105,7 +105,41 @@ Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구�
 
 `note_search_run`에 6항목별 검색어·검색 완료 여부·후보 수·상위 5개 후보·추가 조회 위치·미확보 영역·출처/버전을 저장합니다. 같은 실행의 중복 요청은 유일 제약과 충돌 처리로 하나의 결과를 반환합니다. 전체 보고서 검색 범위는 `PARTIAL`, AI는 `NOT_RUN`, 검수는 `PENDING`입니다. 후보가 없으면 `NO_MATCH`이며 ‘공시상 없음’으로 바꾸지 않습니다. 실행 전체가 실패하면 부분 결과를 완료로 저장하지 않습니다. 수동 도구 조회 이력·LLM 탐색 이력 저장은 후속입니다.
 
-향후 공급자 연결은 `NoteSearchTools.owned(...)`로 권한을 확인한 실행 범위를 만든 뒤 `definitions()`의 JSON Schema와 `call(name, arguments)`를 사용합니다. 도구는 `list_note_sections`, `search_note_segments`, `read_note_context`만 허용하며 Workspace·SQL·파일 경로 같은 추가 인자를 거부합니다. `validate_citations()`는 같은 revision의 실제 구간·발췌 일치를 검사하는 내부 함수이며 의미 검수를 대신하지 않습니다. Codex/OpenAI API 실행·시점 기준 예측 검색·사실 추출·검수 저장은 아직 연결하지 않았습니다. [설계](../docs/design/03_ai-integration.md#evidence-search)와 [검증 기록](../docs/reviews/13_note-evidence-search-validation.md)을 참고합니다.
+공급자 연결은 `NoteSearchTools.owned(...)`로 권한을 확인한 실행 범위를 만든 뒤 `definitions()`의 JSON Schema와 `call(name, arguments)`를 사용합니다. 도구는 `list_note_sections`, `search_note_segments`, `read_note_context`만 허용하며 Workspace·SQL·파일 경로 같은 추가 인자를 거부합니다. `validate_citations()`는 같은 revision의 실제 구간·발췌 일치를 검사하는 내부 함수이며 의미 검수를 대신하지 않습니다. Codex 연결은 [보완 탐색](#note-agent)을 따릅니다. OpenAI API 실행·시점 기준 예측 검색·담당자 사실 검수 저장은 후속입니다. [기본 검색 검증 기록](../docs/reviews/13_note-evidence-search-validation.md)을 참고합니다.
+
+<a id="note-agent"></a>
+### Codex 에이전트 보완 탐색
+
+`POST /api/v1/me/note-imports/{structure_id}/search/agent`는 허용된 Origin·Workspace 소유권을 확인하고 `NOTE_AGENT` 작업·Outbox를 등록해 202를 반환합니다. `GET`은 `{available, run}`을 반환하며 `run`에는 상태·오류 코드·완료 결과가 들어갑니다. 브라우저 연결과 독립적으로 Worker가 기본 검색을 먼저 확보하고 보완 탐색을 실행합니다. 결과 화면에서 실행·상태 복원·항목별 사실 후보·인용 원문 이동을 제공합니다.
+
+`integrations/agents/runtime.py`의 `AgentRuntime`은 프롬프트·도구 정의·도구 호출 콜백·출력 스키마를 받고 공급자 응답을 반환합니다. 현재 어댑터는 [Codex App Server](https://learn.chatgpt.com/docs/app-server)의 stdio JSON-RPC를 사용합니다. SDK가 제어하는 것과 같은 App Server를 Python에서 직접 연결하며 Node 브리지나 외부 HTTP 포트를 추가하지 않습니다. 동적 도구는 실험 API이므로 이미지의 CLI는 `0.165.0`에 고정했습니다. 공급자 추가 시 어댑터와 `runtime_for()` 선택만 확장하고 업무 검증·DB·화면 계약은 유지합니다. OpenAI 어댑터는 아직 없습니다.
+
+각 도구 호출에는 `category_key`가 필요하고, 서버가 이를 기록한 뒤 기존 도구로 전달합니다. 여섯 항목의 기본 검색은 필수이며, 추가 검색을 수행하지 않은 항목은 완료로 인정하지 않습니다. 사실 후보에는 해당 항목에서 문맥을 읽은 구간의 실제 인용이 필요합니다. UUID·revision·원문 문자열 일치를 검사하지만 의미의 정확성·담당자 검수를 대체하지 않습니다. 모든 결과는 `evidence_verified=false`, `review_status=PENDING`, 보고서 전체 범위는 `PARTIAL`입니다. 원문에 포함된 지시는 데이터로 취급합니다.
+
+실행 설정은 API와 Worker에 동일하게 지정합니다. `LOANSIGHT_NOTE_AGENT_PROVIDER` 기본값은 `codex`이며, `LOANSIGHT_CODEX_HOME`과 시간·도구 호출 제한이 없으면 실행을 제공하지 않습니다. 모델 미지정 시 인증 계정의 Codex 기본 모델을 쓰고 실제 사용 모델을 결과에 기록합니다. 재현과 캐시 구분이 필요하면 모델을 명시합니다. 아래 수치는 로컬 시험 예시이며 운영 정책은 평가 후 정합니다.
+
+```dotenv
+LOANSIGHT_NOTE_AGENT_PROVIDER=codex
+LOANSIGHT_CODEX_HOME=C:/private/loansight-codex
+LOANSIGHT_NOTE_AGENT_TIMEOUT_SECONDS=180
+LOANSIGHT_NOTE_AGENT_MAX_TOOL_CALLS=24
+# LOANSIGHT_CODEX_BINARY=codex
+# LOANSIGHT_NOTE_AGENT_MODEL=계정에서-사용-가능한-모델
+```
+
+Native 실행은 해당 서버 계정에서 `CODEX_HOME`을 같은 전용 디렉터리로 지정하고 `codex login`을 수행합니다. 기존 개발자의 설정·MCP·앱을 복사하지 않고 서버용 인증만 준비합니다. 인증정보는 프롬프트·DB·이미지·Git에 넣지 않습니다. 별도 빈 작업 디렉터리·일시적 thread·읽기 전용 sandbox를 쓰며 shell·patch·다중 에이전트·앱·웹 검색을 비활성화합니다. 예상하지 않은 승인 요청이나 실행 이벤트는 실패로 종료합니다. 일반 사용자의 Codex 계정 인증을 받는 SaaS 기능은 포함하지 않습니다.
+
+Compose는 Worker에 전용 `codex-home` 볼륨을 연결합니다. 루트에서 다음 명령으로 배포 이미지 빌드와 서버 계정 로그인을 준비합니다. 로그인은 계정 소유자가 안내에 따라 완료해야 합니다. `backend/.env`에는 시간·호출 제한을 지정하고, Native용 `LOANSIGHT_CODEX_HOME` 경로는 Compose에서 컨테이너 경로로 덮어씁니다.
+
+```powershell
+docker compose -f deploy/compose.yaml build worker
+docker compose -f deploy/compose.yaml run --rm --no-deps worker codex login --device-auth
+docker compose -f deploy/compose.yaml up -d --build --wait
+```
+
+Workspace·원문 revision/hash·모델 설정·프롬프트·사전·도구·출력 버전·실행 제한이 같은 완료/진행 작업은 재사용합니다. 모델을 지정하지 않은 완료 결과는 계정의 기본 모델 변경을 자동 감지하지 못하므로 모델을 명시하거나 설정을 변경해 새 실행을 만듭니다. 실패/미완료 작업은 사용자 재실행 때만 새로 등록합니다. 동일 도구·인자 반복, 제한 소진, 인증 실패, 인용 오류는 중단 사유와 도구 이력·부분 범위를 남기고 작업을 `PARTIAL_SUCCEEDED`로 종료합니다. 불완전한 출력을 사실 후보로 저장하지 않습니다. 기본 검색 결과는 별도 불변 스냅샷이므로 `agent_status=NOT_RUN`을 유지하며 실제 보완 상태는 `/search/agent`에서 조회합니다. Lease를 잃거나 Worker가 취소되면 Codex 프로세스를 종료합니다.
+
+검증 범위와 미검증 항목은 [Codex 연동 검증](../docs/reviews/14_codex-note-agent-validation.md)을 참고합니다.
 
 ## DART 원문 자동 수집
 

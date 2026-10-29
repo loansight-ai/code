@@ -75,3 +75,15 @@ class NoteSearchRun(Base):
     tool_version: Mapped[str] = mapped_column(String(40))
     result: Mapped[dict] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NoteAgentRun(Base):
+    __tablename__ = "note_agent_run"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspace.id"))
+    structure_id: Mapped[UUID] = mapped_column(ForeignKey("note_structure.id"), index=True)
+    job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_job.id"), unique=True)
+    config_key: Mapped[str] = mapped_column(String(64), index=True)
+    config: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

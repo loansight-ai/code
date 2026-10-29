@@ -7,7 +7,7 @@
 - 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. 실제 재무/위험 분석·검토 내용의 서버 저장은 후속 구현이며 기업 분석 화면은 예시입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
-주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. Codex/OpenAI API를 통한 보완 검색·사실 추출은 후속입니다.
+주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. [Codex 보완 탐색](backend/README.md#note-agent)은 서버 인증·실행 제한 설정 후 사용할 수 있으며, 인용을 검증한 사실 후보를 검수 전 상태로 저장합니다. OpenAI API 어댑터와 담당자 사실 검수 저장은 후속입니다.
 
 ## 서비스 범위
 
