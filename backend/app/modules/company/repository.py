@@ -153,7 +153,12 @@ class CompanyRepository:
         return True
 
     async def search(
-        self, query: str, offset: int, limit: int, industry: Industry | None = None
+        self,
+        query: str,
+        offset: int,
+        limit: int,
+        industry: Industry | None = None,
+        market: str | None = None,
     ) -> dict:
         if not self.ready:
             await self.import_sources()
@@ -183,6 +188,8 @@ class CompanyRepository:
             )
         if industry:
             conditions.append(CompanyRecord.industry == industry)
+        if market:
+            conditions.append(CompanyRecord.corp_cls == market)
         async with self.database.transaction() as session:
             # Keep count/page on one MVCC snapshot during a concurrent import.
             await session.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))

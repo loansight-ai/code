@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Path, Query, Request
 from pydantic import BaseModel
@@ -23,9 +23,10 @@ async def search_companies(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 10,
     industry: Industry | None = None,
+    market: Literal["Y", "K", "N", "E"] | None = None,
 ) -> dict:
     try:
-        return await request.app.state.company_repository.search(q, offset, limit, industry)
+        return await request.app.state.company_repository.search(q, offset, limit, industry, market)
     except CatalogUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from None
 

@@ -199,6 +199,7 @@ def structure_payload(revision: NoteStructure, artifact: SourceArtifact, job: Jo
         "encoding": artifact.encoding,
         "source_sha256": artifact.sha256,
         "source_bytes": artifact.byte_length,
+        "source_saved_at": artifact.created_at,
         "dart_note_id": str(artifact.dart_note_id) if artifact.dart_note_id else None,
         "input_origin": "dart_viewer_note_html"
         if artifact.dart_note_id

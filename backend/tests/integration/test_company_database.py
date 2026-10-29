@@ -199,3 +199,24 @@ async def test_api_startup_imports_without_waiting_for_a_search(catalog, environ
             await completed.wait()
         async with database.transaction() as session:
             assert (await session.get(CompanyImport, 1)).company_count == len(rows)
+
+
+async def test_market_filter_applies_before_count_and_pagination(catalog, environment, client):
+    from sqlalchemy import update
+
+    repository, _, rows = catalog
+    _, _, database = environment
+    await repository.import_sources()
+    async with database.transaction() as db:
+        await db.execute(update(CompanyRecord).values(corp_cls=None))
+        for code, market in ((rows[0][0], "Y"), (rows[1][0], "Y"), (rows[2][0], "K")):
+            record = await db.get(CompanyRecord, code)
+            record.corp_cls = market
+    first = await client.get("/api/v1/companies", params={"market": "Y", "limit": 1})
+    assert first.status_code == 200
+    assert first.json()["total"] == 2
+    assert len(first.json()["items"]) == 1
+    assert first.json()["items"][0]["corp_cls"] == "Y"
+    last = await client.get("/api/v1/companies", params={"market": "Y", "offset": 2})
+    assert last.json()["total"] == 2 and last.json()["items"] == []
+    assert (await client.get("/api/v1/companies", params={"market": "invalid"})).status_code == 422
