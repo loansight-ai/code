@@ -193,10 +193,10 @@ export function ReviewWorkspace({ context }: { context: DemoContext }) {
     }
   }
   return (
-    <>
+    <div className="demo-review-workspace">
       <div className="notice">
-        아래 확인 항목 3개와 검토 초안은 가상 예시입니다. 17항목 원자료, 실제 AI
-        생성·서버 검토 저장·재생성 작업은 미연동입니다.
+        아래 확인 항목 3개와 검토 초안은 가상 예시입니다. 23개 RISK 후보 원자료,
+        실제 AI 생성·서버 검토 저장·재생성 작업은 미연동입니다.
       </div>
       <section className="panel analysis-section" aria-label="담당자 확인 항목">
         <div className="panel-heading">
@@ -340,10 +340,10 @@ export function ReviewWorkspace({ context }: { context: DemoContext }) {
         </section>
         <aside>
           <section className="panel evidence-body">
-            <h2>17항목 점검표</h2>
+            <h2>23개 RISK 후보 점검표</h2>
             <p>
-              원자료와 승인 기준이 확정되지 않았습니다. 예시 확인 3항목을
-              17항목으로 간주하지 않습니다.
+              원자료와 승인 기준이 확정되지 않았습니다. 예시 확인 3항목을 전체
+              점검표로 간주하지 않습니다.
             </p>
             <StatusBadge>원자료 연결 대기</StatusBadge>
             <hr />
@@ -486,6 +486,6 @@ export function ReviewWorkspace({ context }: { context: DemoContext }) {
           <Button onClick={merge}>선택한 내용으로 병합·저장</Button>
         </Modal>
       )}
-    </>
+    </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
-import { Building2, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { COMPANY_PAGE_SIZE, searchCompanies, type DartCompany } from './api'
 import { Button } from '../../shared/components/button'
 import { StatePanel } from '../../shared/components/state-panel'
@@ -18,7 +18,11 @@ export function LiveCompanyPage() {
     Number.isSafeInteger(rawOffset) && rawOffset >= 0 ? rawOffset : 0
   const [input, setInput] = useState({ query, value: query })
   const [composing, setComposing] = useState(false)
-  const [selected, setSelected] = useState<DartCompany | null>(null)
+  const [selection, setSelected] = useState<DartCompany | null>(null)
+  const marketValue = params.get('market')
+  const market = ['Y', 'K', 'N', 'E'].includes(marketValue ?? '')
+    ? (marketValue as 'Y' | 'K' | 'N' | 'E')
+    : undefined
   if (input.query !== query) setInput({ query, value: query })
   useEffect(() => {
     if (composing || input.value === query) return
@@ -37,10 +41,24 @@ export function LiveCompanyPage() {
     return () => window.clearTimeout(timeout)
   }, [composing, input.value, query, setParams])
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['dart', 'companies', query, offset, industry],
-    queryFn: ({ signal }) => searchCompanies(query, offset, signal, industry),
+    queryKey: ['dart', 'companies', query, offset, industry, market],
+    queryFn: ({ signal }) =>
+      searchCompanies(query, offset, signal, industry, market),
     retry: false,
   })
+  const restored = useQuery({
+    queryKey: ['dart', 'workspace-company', params.get('corp')],
+    queryFn: ({ signal }) => searchCompanies(params.get('corp')!, 0, signal),
+    enabled: !!params.get('corp') && !selection,
+    staleTime: 60_000,
+    retry: false,
+  })
+  const selected =
+    selection ??
+    restored.data?.items.find(
+      (item) => item.corp_code === params.get('corp'),
+    ) ??
+    null
   function page(nextOffset: number) {
     setParams((previous) => {
       const next = new URLSearchParams(previous)
@@ -50,8 +68,7 @@ export function LiveCompanyPage() {
   }
   return (
     <main id="main" className="page">
-      <div className="page-eyebrow">COMPANY EXPLORER</div>
-      <h1>어떤 기업을 검토할까요?</h1>
+      <h1>기업 검색</h1>
       <p className="page-description">
         DART 공시 대상 기업을 기업명·종목코드·고유번호로 검색하세요.
       </p>
@@ -70,23 +87,48 @@ export function LiveCompanyPage() {
             <h2 id="company-heading">기업 검색</h2>
             <span>OpenDART</span>
           </div>
-          <label className="search-field">
-            <Search size={20} />
-            <input
-              aria-label="기업명 또는 종목코드"
-              placeholder="기업명, 종목코드 또는 DART 고유번호"
-              value={input.value}
-              maxLength={200}
-              onChange={(event) =>
-                setInput({ query, value: event.target.value })
-              }
-              onCompositionStart={() => setComposing(true)}
-              onCompositionEnd={(event) => {
-                setInput({ query, value: event.currentTarget.value })
-                setComposing(false)
-              }}
-            />
-          </label>
+          <div className="company-search-toolbar">
+            <label className="search-field">
+              <Search size={20} />
+              <input
+                aria-label="기업명 또는 종목코드"
+                placeholder="기업명, 종목코드 또는 DART 고유번호"
+                value={input.value}
+                maxLength={200}
+                onChange={(event) =>
+                  setInput({ query, value: event.target.value })
+                }
+                onCompositionStart={() => setComposing(true)}
+                onCompositionEnd={(event) => {
+                  setInput({ query, value: event.currentTarget.value })
+                  setComposing(false)
+                }}
+              />
+            </label>
+            <label className="market-select">
+              시장
+              <select
+                aria-label="시장"
+                value={market ?? ''}
+                onChange={(event) => {
+                  setParams((previous) => {
+                    const next = new URLSearchParams(previous)
+                    if (event.target.value)
+                      next.set('market', event.target.value)
+                    else next.delete('market')
+                    next.delete('offset')
+                    return next
+                  })
+                }}
+              >
+                <option value="">전체</option>
+                <option value="Y">유가증권</option>
+                <option value="K">코스닥</option>
+                <option value="N">코넥스</option>
+                <option value="E">기타</option>
+              </select>
+            </label>
+          </div>
           <div className="industry-filters" aria-label="업종 필터">
             {['전체', ...industries].map((item) => (
               <button
@@ -99,6 +141,7 @@ export function LiveCompanyPage() {
                     if (item === '전체') next.delete('industry')
                     else next.set('industry', item)
                     next.delete('offset')
+                    next.delete('corp')
                     return next
                   })
                 }}
@@ -107,6 +150,11 @@ export function LiveCompanyPage() {
               </button>
             ))}
           </div>
+          <p className="search-scope-note">
+            대상 업종: 제조·건설·도소매·부동산 임대.
+            렌탈·운수창고·금융보험·지주·스팩·부동산 관리중개는 대상 범위에서
+            제외합니다. 업종 분류만으로 최종 대상 여부를 확정하지 않습니다.
+          </p>
           <div className="results-heading">
             <span>
               기업 목록{' '}
@@ -157,35 +205,91 @@ export function LiveCompanyPage() {
               }}
             />
           ) : (
-            <div className="company-list">
-              {data?.items.map((company) => (
-                <button
-                  key={company.corp_code}
-                  className={`company-row ${selected?.corp_code === company.corp_code ? 'selected' : ''}`}
-                  aria-pressed={selected?.corp_code === company.corp_code}
-                  onClick={() => setSelected(company)}
-                >
-                  <span className="company-avatar">
-                    <Building2 size={23} />
-                  </span>
-                  <span className="company-info">
-                    <strong>{company.corp_name}</strong>
-                    <small>
-                      DART {company.corp_code} ·{' '}
-                      {company.stock_code
-                        ? `종목 ${company.stock_code}`
-                        : '종목코드 없음'}
-                    </small>
-                    <small>
-                      {company.ksic11_code
-                        ? `KSIC11 ${company.ksic11_code} · ${company.ksic11_name}`
-                        : 'KSIC11 미매칭'}
-                      {company.ksic11_status === 'review_required' &&
-                        ' · 재검토 필요'}
-                    </small>
-                  </span>
-                </button>
-              ))}
+            <div className="table-scroll company-list">
+              <table
+                className="company-results-table"
+                aria-label="기업 검색 결과"
+              >
+                <thead>
+                  <tr>
+                    <th>회사명</th>
+                    <th>종목코드</th>
+                    <th>시장</th>
+                    <th>업종·코드</th>
+                    <th>세부분류</th>
+                    <th>결산</th>
+                    <th>확인 상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data?.items.map((company) => (
+                    <tr
+                      key={company.corp_code}
+                      className={
+                        selected?.corp_code === company.corp_code
+                          ? 'selected'
+                          : ''
+                      }
+                    >
+                      <td>
+                        <button
+                          className="company-name-button"
+                          aria-pressed={
+                            selected?.corp_code === company.corp_code
+                          }
+                          onClick={() => {
+                            setSelected(company)
+                            setParams(
+                              (previous) => {
+                                const next = new URLSearchParams(previous)
+                                next.set('corp', company.corp_code)
+                                if (
+                                  (selected &&
+                                    selected.corp_code !== company.corp_code) ||
+                                  (previous.get('corp') &&
+                                    previous.get('corp') !== company.corp_code)
+                                )
+                                  next.delete('report')
+                                return next
+                              },
+                              { replace: true },
+                            )
+                          }}
+                        >
+                          <strong>{company.corp_name}</strong>
+                          <small>DART {company.corp_code}</small>
+                        </button>
+                      </td>
+                      <td>{company.stock_code ?? '—'}</td>
+                      <td>
+                        {company.corp_cls
+                          ? {
+                              Y: '유가증권',
+                              K: '코스닥',
+                              N: '코넥스',
+                              E: '기타',
+                            }[company.corp_cls]
+                          : '미확보'}
+                      </td>
+                      <td>
+                        {company.industry ?? '미분류'}
+                        <small>{company.ksic11_code ?? '코드 미매칭'}</small>
+                      </td>
+                      <td>{company.ksic11_name ?? '미확보'}</td>
+                      <td>{company.acc_mt ? `${company.acc_mt}월` : '—'}</td>
+                      <td>
+                        <span className="classification-tag">
+                          {company.ksic11_status === 'review_required'
+                            ? '재검토'
+                            : company.industry
+                              ? '분류 확인'
+                              : '미분류'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
           {data && !isError && (
@@ -218,7 +322,14 @@ export function LiveCompanyPage() {
         </section>
         <CompanyCriteriaPanel
           company={selected}
-          onClear={() => setSelected(null)}
+          onClear={() => {
+            setSelected(null)
+            setParams((previous) => {
+              const next = new URLSearchParams(previous)
+              next.delete('corp')
+              return next
+            })
+          }}
         />
       </div>
     </main>

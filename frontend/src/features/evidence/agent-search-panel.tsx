@@ -1,48 +1,11 @@
 import { useContext, useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { z } from 'zod'
+import { getAgentRun } from './agent-api'
 import { Button } from '../../shared/components/button'
 import { ApiError, errorMessage, request } from '../session/api'
 import { SessionContext } from '../session/session-context'
 import { TaskContext } from '../tasks/task-context'
 
-const resultSchema = z.object({
-  structure_id: z.string().uuid(),
-  source_sha256: z.string(),
-  execution_status: z.enum(['COMPLETED', 'INCOMPLETE']),
-  evidence_verified: z.literal(false),
-  stop_reason: z.string().nullable().optional(),
-  items: z
-    .array(
-      z.object({
-        key: z.string(),
-        search_status: z.enum(['COMPLETED', 'INCOMPLETE']),
-        limitations: z.string(),
-        findings: z.array(
-          z.object({
-            statement: z.string(),
-            citations: z.array(
-              z.object({ segment_id: z.string().uuid(), quote: z.string() }),
-            ),
-          }),
-        ),
-      }),
-    )
-    .length(6),
-})
-const savedSchema = z.object({
-  available: z.boolean(),
-  provider: z.string().default('codex'),
-  run: z
-    .object({
-      run_id: z.string().uuid(),
-      structure_id: z.string().uuid(),
-      status: z.string(),
-      error_code: z.string().nullable(),
-      result: resultSchema.nullable(),
-    })
-    .nullable(),
-})
 const titles: Record<string, string> = {
   audit: '감사의견·계속기업',
   borrowing: '차입 만기·재무약정',
@@ -77,20 +40,7 @@ export function AgentSearchPanel({
   const key = ['server', workspaceId, 'note-agent', id, hash]
   const saved = useQuery({
     queryKey: key,
-    queryFn: async ({ signal }) => {
-      const data = savedSchema.parse(
-        await request(`/me/note-imports/${id}/search/agent`, { signal }),
-      )
-      if (
-        data.run &&
-        (data.run.structure_id !== id ||
-          (data.run.result &&
-            (data.run.result.structure_id !== id ||
-              data.run.result.source_sha256 !== hash)))
-      )
-        throw new Error('Agent source mismatch')
-      return data
-    },
+    queryFn: ({ signal }) => getAgentRun(id, hash, signal),
     refetchInterval: (query) =>
       query.state.data?.run && !terminal.includes(query.state.data.run.status)
         ? 1500
@@ -179,21 +129,43 @@ export function AgentSearchPanel({
                 {titles[item.key] ?? item.key}
                 {item.search_status === 'INCOMPLETE' ? ' · 미완료' : ''}
               </h4>
-              <p>{item.limitations}</p>
+              {!item.findings.length && (
+                <p>
+                  {item.limitations} · 근거 후보 없음은 해당 사항 없음 판정이
+                  아닙니다.
+                </p>
+              )}
               {item.findings.map((finding, index) => (
-                <div key={index}>
-                  <p>{finding.statement}</p>
-                  {finding.citations.map((citation, n) => (
-                    <div key={`${citation.segment_id}:${n}`}>
-                      <blockquote>{citation.quote}</blockquote>
-                      <Button
-                        variant="outline"
-                        onClick={() => onSelect(citation.segment_id)}
-                      >
-                        인용 원문에서 확인
-                      </Button>
-                    </div>
-                  ))}
+                <div key={index} className="evidence-summary-grid">
+                  <section>
+                    <h5>사실 후보 · 검수 전</h5>
+                    <p>{finding.statement}</p>
+                  </section>
+                  <section>
+                    <h5>원문 근거</h5>
+                    {finding.citations.map((citation, n) => (
+                      <div key={`${citation.segment_id}:${n}`}>
+                        <blockquote>{citation.quote}</blockquote>
+                        <Button
+                          variant="outline"
+                          onClick={() => onSelect(citation.segment_id)}
+                        >
+                          인용 원문에서 확인
+                        </Button>
+                      </div>
+                    ))}
+                  </section>
+                  <section>
+                    <h5>범위와 한계</h5>
+                    <p>{item.limitations}</p>
+                  </section>
+                  <section>
+                    <h5>담당자 추가 확인</h5>
+                    <p>
+                      인용 원문과 대상·기간을 대조하고, 미확보 영역과 내부
+                      자료를 확인해야 합니다.
+                    </p>
+                  </section>
                 </div>
               ))}
             </div>

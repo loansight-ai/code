@@ -100,8 +100,9 @@ it('loads saved notes, flags unresolved structure and preserves node and table f
   const fetcher = fixtures()
   const router = mount()
   expect(
-    await screen.findByRole('heading', { name: '주석 구조화 결과' }),
+    await screen.findByRole('heading', { name: '주석 확인과 위험징후' }),
   ).toBeVisible()
+  await userEvent.click(screen.getByText('목차·구간·원문 상세'))
   expect(await screen.findByText('구조 확인 필요')).toBeVisible()
   expect(await screen.findByTitle('저장된 주석 원문')).toHaveAttribute(
     'sandbox',

@@ -10,6 +10,11 @@ import {
 import { RatioPanel } from '../features/financial/ratio-panel'
 import { StatePanel } from '../shared/components/state-panel'
 import { StatusBadge } from '../shared/components/status-badge'
+import {
+  FinancialOverview,
+  IndustryMetrics,
+  PredictionWorkspace,
+} from '../features/analysis/workspace-panels'
 
 const FinancialView = lazy(() =>
   import('../features/financial/financial-view').then((module) => ({
@@ -35,8 +40,8 @@ const titles: Record<string, string> = {
   summary: '핵심 재무 요약',
   cashflow: '실적 변동·현금흐름',
   evidence: '주석·위험징후',
-  prediction: '12개월 위험 예측',
-  review: '담당자 검토',
+  prediction: '위험 사건 예측과 근거',
+  review: '체크·검토 메모',
 }
 
 export function AnalysisPage() {
@@ -96,7 +101,6 @@ function AnalysisContent({
       </Link>
       <div className="page-title-row">
         <div>
-          <div className="page-eyebrow">COMPANY ANALYSIS</div>
           <h1>{titles[section]}</h1>
           <p className="page-description">
             {company.name}의 재무와 검토 근거를 한곳에서 확인합니다.
@@ -104,7 +108,7 @@ function AnalysisContent({
         </div>
         <span className="demo-label">예시 분석</span>
       </div>
-      <div className="source-strip">
+      <div className="source-strip legacy-source-strip">
         <strong>{company.name}</strong>
         {[
           company.code,
@@ -135,25 +139,13 @@ function AnalysisContent({
       >
         {section === 'summary' && (
           <>
-            <div className="metric-grid">
-              {[
-                ['매출액', '1,250', '억원'],
-                ['영업이익', '100', '억원'],
-                ['영업활동현금흐름', '89', '억원'],
-                ['위험징후', '판정 전', '규칙 미연동'],
-              ].map(([label, value, unit]) => (
-                <section className="panel metric" key={label}>
-                  <span>{label}</span>
-                  <strong>
-                    {value}
-                    <small>{unit}</small>
-                  </strong>
-                  <p>2025년 레이아웃 예시 · 검증 전</p>
-                </section>
-              ))}
-            </div>
-            <FinancialView />
+            <FinancialOverview demo lease={context.lease} />
             <RatioPanel context={context} />
+            <IndustryMetrics industry={context.industry} />
+            <details className="supplementary-data" open>
+              <summary>3개년 실적·주요 재무 계정</summary>
+              <FinancialView />
+            </details>
           </>
         )}
         {section === 'cashflow' && <CashflowView />}
@@ -164,25 +156,28 @@ function AnalysisContent({
           <ReviewWorkspace key={contextKey(context)} context={context} />
         )}
         {section === 'prediction' && (
-          <section className="panel">
-            <StatePanel
-              state="pending"
-              title="외부 모델과 검증 결과가 연결되지 않았습니다"
-              description="모델·입력 계약·검증 보고서 확인 후 확률을 표시합니다. 현재 위험징후와 미래 12개월 위험 사건 예측은 별도로 확인합니다."
-            >
-              <StatusBadge tone="caution">예측 보류</StatusBadge>
-              <div className="pending-grid">
-                <div>
-                  기준 모델<strong>미연동</strong>
+          <section className="prediction-page">
+            <PredictionWorkspace />
+            <div className="prediction-availability">
+              <StatePanel
+                state="pending"
+                title="외부 모델과 검증 결과가 연결되지 않았습니다"
+                description="모델·입력 계약·검증 보고서 확인 후 확률을 표시합니다. 현재 위험징후와 미래 12개월 위험 사건 예측은 별도로 확인합니다."
+              >
+              <StatusBadge tone="caution">모델 미연동</StatusBadge>
+                <div className="pending-grid">
+                  <div>
+                    기준 모델<strong>미연동</strong>
+                  </div>
+                  <div>
+                    결합 모델<strong>미연동</strong>
+                  </div>
+                  <div>
+                    예측 공시일<strong>미확보</strong>
+                  </div>
                 </div>
-                <div>
-                  결합 모델<strong>미연동</strong>
-                </div>
-                <div>
-                  예측 공시일<strong>미확보</strong>
-                </div>
-              </div>
-            </StatePanel>
+              </StatePanel>
+            </div>
           </section>
         )}
       </Suspense>

@@ -20,6 +20,7 @@ export const noteStructureSchema = z.object({
   period: z.string(),
   source_sha256: z.string(),
   source_bytes: z.number(),
+  source_saved_at: z.string().nullable().optional(),
   parser_version: z.string(),
   input_origin: z.string(),
   segment_count: z.number().nullable(),

@@ -167,6 +167,25 @@ export function CompanyCriteriaPanel({
         </div>
       </fieldset>
       <DisclosureCollectControl corpCode={company?.corp_code ?? null} />
+      <div className="criteria-extensions">
+        <Button
+          variant="outline"
+          disabled
+          aria-describedby="criteria-extension-status"
+        >
+          업종 수동 변경
+        </Button>
+        <Button
+          variant="outline"
+          disabled
+          aria-describedby="criteria-extension-status"
+        >
+          공시 조회가 안 되나요? 직접 입력
+        </Button>
+        <p className="selection-note" id="criteria-extension-status">
+          업종 변경 이력과 직접 입력 저장 기능은 준비 중입니다.
+        </p>
+      </div>
     </section>
   )
 }

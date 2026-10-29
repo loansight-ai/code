@@ -5,12 +5,15 @@ import type { SourceView } from './live-api'
 export function LiveSourceViewer({
   source,
   segmentId,
+  onViewed,
 }: {
   source: SourceView
   segmentId: string | null
+  onViewed?: (segmentId: string) => void
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
   const [loaded, setLoaded] = useState(false)
+  const reported = useRef<string | null>(null)
   const document = useMemo(() => sourceDocument(source.html), [source.html])
   const anchor = segmentId ? source.anchors[segmentId] : undefined
   useEffect(() => {
@@ -23,7 +26,11 @@ export function LiveSourceViewer({
     const target = content?.getElementById(anchor)
     target?.classList.add('source-active')
     target?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
-  }, [anchor, loaded])
+    if (target && segmentId && reported.current !== segmentId) {
+      reported.current = segmentId
+      onViewed?.(segmentId)
+    }
+  }, [anchor, loaded, segmentId, onViewed])
   return (
     <>
       <p className="note-view-hint">

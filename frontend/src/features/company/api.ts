@@ -34,6 +34,7 @@ export async function searchCompanies(
   offset: number,
   signal: AbortSignal,
   industry?: Industry,
+  market?: 'Y' | 'K' | 'N' | 'E',
 ) {
   const params = new URLSearchParams({
     q: query,
@@ -41,6 +42,7 @@ export async function searchCompanies(
     limit: String(COMPANY_PAGE_SIZE),
   })
   if (industry) params.set('industry', industry)
+  if (market) params.set('market', market)
   return resultsSchema.parse(await request(`/companies?${params}`, { signal }))
 }
 

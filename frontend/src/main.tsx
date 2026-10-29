@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router'
 import { router } from './app/router'
 import { SessionProvider } from './features/session/session-provider'
 import './styles.css'
+import './screen-design.css'
 
 const queryClient = new QueryClient()
 

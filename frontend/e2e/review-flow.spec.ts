@@ -62,15 +62,15 @@ test('company selection, analysis navigation, source confirmation and local memo
       name: '약정 위반 사유 발생 문구 확인 · 담당자 확인',
     })
     .check()
-  await page.getByRole('link', { name: /담당자 검토/ }).click()
+  await page.getByRole('link', { name: /체크·검토 메모/ }).click()
   await page.getByLabel('검토 메모').fill('추가 확인할 사항을 기록합니다.')
   await page.getByRole('button', { name: '브라우저에 저장' }).click()
   await page.reload()
   await expect(page.getByLabel('검토 메모')).toHaveValue(
     '추가 확인할 사항을 기록합니다.',
   )
-  await page.getByRole('link', { name: /12개월 위험 예측/ }).click()
-  await expect(page.getByText('예측 보류')).toBeVisible()
+  await page.getByRole('link', { name: /위험 사건 예측/ }).click()
+  await expect(page.getByText('예측 보류', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: '내 분석 작업' }).click()
   await expect(page.getByRole('dialog')).toContainText(
     '코드 발급 또는 재접속 후 내 작업을 확인할 수 있습니다.',
@@ -122,7 +122,7 @@ test('shows classification reasons and prevents analysis of unresolved or exclud
     '분석 기준을 확인해 주세요',
   )
   await page.getByRole('button', { name: '분석 기준 초기화' }).click()
-  await expect(page).toHaveURL('http://127.0.0.1:5173/')
+  await expect(page).toHaveURL('http://127.0.0.1:5173/?data=demo')
   await expect(
     page.getByRole('button', { name: '예시 분석 열기' }),
   ).toBeDisabled()

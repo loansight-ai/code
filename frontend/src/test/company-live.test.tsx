@@ -84,7 +84,7 @@ it('searches the server, preserves IME composition and selects a real company wi
   const input = screen.getByRole('textbox', { name: '기업명 또는 종목코드' })
   fireEvent.compositionStart(input)
   fireEvent.change(input, { target: { value: '삼성' } })
-  expect(router.state.location.search).toBe('')
+  expect(new URLSearchParams(router.state.location.search).has('q')).toBe(false)
   fireEvent.compositionEnd(input, { data: '삼성' })
   await vi.waitFor(() => expect(router.state.location.search).toContain('q='))
   await vi.waitFor(() =>

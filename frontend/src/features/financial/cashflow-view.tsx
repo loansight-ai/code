@@ -1,6 +1,7 @@
 import { Chart } from '../../shared/components/chart'
 import { StatusBadge } from '../../shared/components/status-badge'
 import { cashflowRows, profitBridge } from './financial-data'
+import { financialRows } from '../company/demo-data'
 
 const waterfall = {
   color: ['#FFBC00', '#60584C'],
@@ -46,7 +47,8 @@ const waterfall = {
       data: profitBridge.map((step, index) => ({
         value: step.value,
         itemStyle: {
-          color: index === 2 || index === 3 ? '#60584C' : '#FFBC00',
+          color: index === 2 || index === 3 ? '#B42318' : '#60584C',
+          borderType: step.label === '기타·조정' ? 'dashed' : 'solid',
         },
       })),
     },
@@ -68,6 +70,36 @@ const cashChart = {
     type: 'bar',
     data: [previous, current],
   })),
+}
+
+const comparisonChart = {
+  color: ['#60584C', '#FFBC00'],
+  tooltip: { trigger: 'axis' },
+  legend: { bottom: 0 },
+  grid: { left: 48, right: 20, top: 25, bottom: 60 },
+  xAxis: { type: 'category', data: ['2023', '2024', '2025'] },
+  yAxis: { type: 'value', name: '억원' },
+  series: [
+    {
+      name: '영업이익',
+      type: 'bar',
+      data: [
+        financialRows[1].y2023,
+        financialRows[1].y2024,
+        financialRows[1].y2025,
+      ],
+    },
+    {
+      name: '영업활동현금흐름',
+      type: 'bar',
+      data: [
+        financialRows[3].y2023,
+        financialRows[3].y2024,
+        financialRows[3].y2025,
+      ],
+      markLine: { silent: true, data: [{ yAxis: 0 }] },
+    },
+  ],
 }
 
 export function CashflowView() {
@@ -108,13 +140,20 @@ export function CashflowView() {
         </section>
         <section className="panel">
           <div className="panel-heading">
-            <h2>현금흐름 구성</h2>
+            <h2>영업이익과 영업활동현금흐름</h2>
             <span className="muted">공통 레이아웃 예시 · 억원</span>
           </div>
           <Chart
-            option={cashChart}
-            label="현금흐름 예시. 2024년 영업81, 투자-60, 재무-10억원. 2025년 영업89, 투자-50, 재무-20억원. 순증감은 11억원과 19억원이며 아래 표에 같은 값이 표시됩니다."
+            option={comparisonChart}
+            label="3개년 예시. 영업이익 87·94·100억원, 영업활동현금흐름 72·81·89억원. 0 기준선으로 이익과 현금의 차이를 확인합니다."
           />
+          <details className="cash-composition">
+            <summary>현금흐름 구성 상세</summary>
+            <Chart
+              option={cashChart}
+              label="영업·투자·재무 현금흐름 구성 예시"
+            />
+          </details>
           <div className="table-scroll">
             <table aria-label="현금흐름 구성">
               <thead>

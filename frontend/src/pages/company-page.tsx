@@ -122,6 +122,7 @@ export function DemoCompanyPage() {
   function resetCriteria() {
     setParams(
       (previous) => {
+        previous.set('data', 'demo')
         for (const key of ['company', 'report', 'scope', 'lease'])
           previous.delete(key)
         return previous

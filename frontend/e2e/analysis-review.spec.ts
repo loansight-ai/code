@@ -30,7 +30,7 @@ test('financial formulas, cashflow, evidence and review generation remain consis
   await expect(
     page.getByRole('table', { name: '영업이익 변동 분해' }),
   ).toBeVisible()
-  await expect(page.getByRole('img', { name: /현금흐름 예시/ })).toBeVisible()
+  await expect(page.getByRole('img', { name: /3개년 예시/ })).toBeVisible()
   await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({
     path: testInfo.outputPath('cashflow.png'),
@@ -64,7 +64,7 @@ test('financial formulas, cashflow, evidence and review generation remain consis
     path: testInfo.outputPath('evidence-notes.png'),
     fullPage: true,
   })
-  await page.getByRole('link', { name: /담당자 검토/ }).click()
+  await page.getByRole('link', { name: /체크·검토 메모/ }).click()
   await expect(
     page.getByRole('checkbox', { name: /약정 위반.*담당자 확인/ }),
   ).toBeChecked()

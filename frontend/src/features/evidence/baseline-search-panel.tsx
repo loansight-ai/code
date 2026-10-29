@@ -21,11 +21,13 @@ export function BaselineSearchPanel({
   workspaceId,
   hash,
   onSelect,
+  showAgent = true,
 }: {
   id: string
   workspaceId: string
   hash: string
   onSelect: (id: string) => void
+  showAgent?: boolean
 }) {
   const session = useContext(SessionContext)
   const cache = useQueryClient()
@@ -95,39 +97,67 @@ export function BaselineSearchPanel({
               })}{' '}
               (한국 시각) · AI 보완 탐색 상태는 아래에서 확인
             </p>
-            <div
-              className="baseline-categories"
-              role="group"
-              aria-label="검색 항목"
-            >
-              {saved.data.items.map((value) => (
-                <button
-                  key={value.key}
-                  aria-pressed={value.key === active}
-                  onClick={() => setActive(value.key)}
-                >
-                  {value.title}
-                  <span>{value.total}개 후보</span>
-                </button>
-              ))}
+            <div className="baseline-overview-grid">
+              <div
+                className="baseline-categories"
+                role="group"
+                aria-label="검색 항목"
+              >
+                <table className="extraction-table">
+                  <thead>
+                    <tr>
+                      <th>추출 항목</th>
+                      <th>구분</th>
+                      <th>상태·후보 수</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {saved.data.items.map((value) => (
+                      <tr
+                        key={value.key}
+                        className={value.key === active ? 'selected' : ''}
+                      >
+                        <td>
+                          <button
+                            key={value.key}
+                            aria-pressed={value.key === active}
+                            onClick={() => setActive(value.key)}
+                          >
+                            {value.title}
+                          </button>
+                        </td>
+                        <td>공통</td>
+                        <td>
+                          <span className="classification-tag">
+                            {value.total ? '후보 있음' : '미검출'}
+                          </span>{' '}
+                          {value.total}개 후보
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {item && (
+                <CategoryResults
+                  key={`${saved.data.run_id}:${item.key}`}
+                  item={item}
+                  runId={saved.data.run_id}
+                  id={id}
+                  workspaceId={workspaceId}
+                  hash={hash}
+                  onSelect={onSelect}
+                />
+              )}
             </div>
-            {item && (
-              <CategoryResults
-                key={`${saved.data.run_id}:${item.key}`}
-                item={item}
-                runId={saved.data.run_id}
+            {showAgent && (
+              <AgentSearchPanel
                 id={id}
-                workspaceId={workspaceId}
                 hash={hash}
+                workspaceId={workspaceId}
                 onSelect={onSelect}
               />
             )}
-            <AgentSearchPanel
-              id={id}
-              hash={hash}
-              workspaceId={workspaceId}
-              onSelect={onSelect}
-            />
           </>
         )}
       </div>

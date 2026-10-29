@@ -10,6 +10,7 @@ import { SourceViewer } from '../evidence/source-viewer'
 import { useReviewChecks } from '../review/use-review-checks'
 import { axes, severityTone, signals } from './demo-signals'
 import { SignalList } from './signal-list'
+import { IndustryMetrics, RiskCharts } from '../analysis/workspace-panels'
 
 export function RiskEvidenceView({ context }: { context: DemoContext }) {
   const [params, setParams] = useSearchParams()
@@ -55,7 +56,7 @@ export function RiskEvidenceView({ context }: { context: DemoContext }) {
           </button>
         ))}
       </div>
-      {tab === 'signals' && (
+      {tab === 'signals' && (<>
         <section className="panel">
           <div className="panel-heading">
             <h2>현재 위험징후 · 예시</h2>
@@ -132,7 +133,7 @@ export function RiskEvidenceView({ context }: { context: DemoContext }) {
             업종 핵심 지표·5개년 추세·만기 사다리는 검증된 원천과 구간별 금액
             역할 확보 후 표시합니다. 현재 자료 없음이며 0으로 계산하지 않습니다.
           </p>
-        </section>
+        </section><IndustryMetrics industry={context.industry} /><RiskCharts /></>
       )}
       {tab === 'notes' && (
         <section className="panel">

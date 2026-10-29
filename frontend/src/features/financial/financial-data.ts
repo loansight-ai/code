@@ -178,5 +178,6 @@ export const profitBridge = [
   { label: '매출 증가', base: 94, value: 60, change: '+60' },
   { label: '원가 증가', base: 112, value: 42, change: '−42' },
   { label: '판관비 증가', base: 100, value: 12, change: '−12' },
+  { label: '기타·조정', base: 100, value: 0, change: '0' },
   { label: '2025 영업이익', base: 0, value: 100, change: '100' },
 ]

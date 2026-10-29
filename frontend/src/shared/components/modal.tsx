@@ -9,6 +9,7 @@ export function Modal({
   onOpenChange,
   children,
   onCloseAutoFocus,
+  variant = 'modal',
 }: {
   title: string
   description: string
@@ -16,13 +17,14 @@ export function Modal({
   onOpenChange: (open: boolean) => void
   children: ReactNode
   onCloseAutoFocus?: (event: Event) => void
+  variant?: 'modal' | 'drawer'
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="modal-overlay" />
         <Dialog.Content
-          className="modal-content"
+          className={`modal-content ${variant === 'drawer' ? 'source-drawer' : ''}`}
           onCloseAutoFocus={onCloseAutoFocus}
         >
           <Dialog.Title>{title}</Dialog.Title>
