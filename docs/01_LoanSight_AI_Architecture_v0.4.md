@@ -106,7 +106,7 @@ API·Worker·Relay는 같은 Backend 이미지의 실행 명령을 구분한다.
 
 실제 기업의 사업보고서 한 건을 수집 → 정규화 → 재무지표 → 주석 근거 → 규칙 판정 → 화면 조회까지 연결하는 수직 기능부터 구현한다. 상세 단계와 아직 결정할 정책은 [개발·제공 동작 계획](design/06_delivery-and-validation.md#roadmap)을 따른다.
 
-[기능 명세서 v0.0.5](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md)와 [화면설계서](<02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>)를 참조한다. 외부 문서의 모델 개발 항목은 이 저장소의 구현 범위에 포함하지 않는다. PDF의 파일명/표지 버전 차이와 원본 해시는 검토 기록에 남긴다.
+[기능 명세서 v0.0.5](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md)와 [화면설계서](<02_LoanSight AI_화면설계서_v0.0.1.pdf>)를 참조한다. 외부 문서의 모델 개발 항목은 이 저장소의 구현 범위에 포함하지 않는다. PDF의 파일명/표지 버전 차이와 원본 해시는 검토 기록에 남긴다.
 
 ## v0.4 기획 반영
 

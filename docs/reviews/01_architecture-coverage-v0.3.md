@@ -5,7 +5,7 @@
 ## 대상과 결론
 
 - [기능 명세서 v0.0.4](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md): N-F01~41, blob `5dad72a65c14672a3ff61ed31cb4931cb9e07d87`.
-- [화면설계서 PDF](<../02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>): 물리 페이지 1~11. SHA256 `8ad2880327e7697212a16241009c2e90a27e966e093db8496098fabd7225e640`.
+- [화면설계서 PDF](<../02_LoanSight AI_화면설계서_v0.0.1.pdf>): 물리 페이지 1~11. SHA256 `8ad2880327e7697212a16241009c2e90a27e966e093db8496098fabd7225e640`.
 - [전체 아키텍처](../01_LoanSight_AI_Architecture_v0.3.md): 최초 검토는 커밋 `d1df9f3` 기준. 이후 범위 정정과 주제별 분리를 반영했다.
 
 React·FastAPI·Worker·PostgreSQL·RabbitMQ·SSE 구조로 필요한 기능을 수용할 수 있다. 발견한 부족 사항은 아래 주제별 설계로 반영했다. **문서 반영은 구현·실행·모델 품질 검증 완료를 의미하지 않는다.**

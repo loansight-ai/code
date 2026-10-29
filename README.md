@@ -32,7 +32,7 @@
 | [개발·제공 동작 계획](docs/design/06_delivery-and-validation.md) | 구현 순서·현행 기능 37개 연결·검수·미정 항목 |
 | [커버리지 검토](docs/reviews/01_architecture-coverage-v0.4.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
 
-기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.2_261026.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.3](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
+기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.3](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
 
 ## 구현·실행
 
