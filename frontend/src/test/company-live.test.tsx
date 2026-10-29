@@ -136,7 +136,7 @@ it('restores the criteria panel, defaults to separate accounts and preserves cri
   })
   expect(panel.getByRole('radio', { name: /별도/ })).toBeChecked()
   expect(
-    panel.getByRole('button', { name: '원문 수집·주석 구조화' }),
+    panel.getByRole('checkbox', { name: '주석 구조화·Codex 데이터 보완' }),
   ).toBeDisabled()
   await user.click(panel.getByRole('button', { name: '기업 선택 해제' }))
   expect(panel.getByRole('combobox', { name: '보고서' })).toBeDisabled()

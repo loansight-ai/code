@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { FormulaDialog } from './formula-dialog'
+import { FinancialFactEvidence } from './note-progress'
 import { MetricValue, MetricStatus } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
 import {
@@ -154,6 +155,18 @@ export function LiveFormulaDialog({
         : metric.basis,
     },
     { label: '단위', value: `${metric.unit} · 소수 첫째 자리 표시` },
+    {
+      label: '입력 근거',
+      value: metric.inputs.map((key) => (
+        <FinancialFactEvidence
+          key={key}
+          sources={
+            result.facts.find((f) => f.key === key && f.period === 'current')
+              ?.sources ?? []
+          }
+        />
+      )),
+    },
     {
       label: '당기 결과',
       value: <MetricValue metric={metric} result={result} />,

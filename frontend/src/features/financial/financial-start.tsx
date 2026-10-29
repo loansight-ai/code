@@ -22,6 +22,7 @@ export function FinancialStart({
   const navigate = useNavigate()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
+  const [enrichNotes, setEnrichNotes] = useState(false)
   const activeWorkspace = useRef<string | null>(null)
   const workspace =
     session?.phase === 'ready' ? session.session?.workspace_id : undefined
@@ -53,6 +54,19 @@ export function FinancialStart({
     !!session.session
   return (
     <div className="financial-start">
+      <label className="financial-note-option">
+        <input
+          type="checkbox"
+          checked={enrichNotes}
+          disabled={!ready || pending}
+          onChange={(event) => setEnrichNotes(event.target.checked)}
+        />{' '}
+        주석 구조화·Codex 데이터 보완
+      </label>
+      <p className="selection-note">
+        선택하면 원문 수집·주석 구조화 후 부족한 재무값을 Codex로 탐색합니다.
+        검증된 값만 반영하고 구조화된 주석 근거를 제공합니다.
+      </p>
       <Button
         disabled={!ready || pending}
         onClick={async () => {
@@ -65,6 +79,7 @@ export function FinancialStart({
               receipt_no: receipt!,
               scope: scope as 'OFS' | 'CFS',
               lease: 'include',
+              enrich_notes: enrichNotes,
             })
             if (owner !== activeWorkspace.current) return
             tasks?.refresh()

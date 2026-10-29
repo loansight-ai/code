@@ -54,7 +54,7 @@ function TaskPanel() {
     selected && ['SUCCEEDED', 'PARTIAL_SUCCEEDED'].includes(selected.status)
       ? z
           .object({
-            kind: z.literal('FINANCIAL_ANALYSIS'),
+            kind: z.enum(['FINANCIAL_ANALYSIS', 'FINANCIAL_NOTE_ENRICHMENT']),
             analysis_run_id: z.string().uuid(),
           })
           .safeParse(selected.result)
@@ -159,7 +159,9 @@ function TaskPanel() {
                               ? '주석 근거 보완 탐색'
                               : task.task_type === 'FINANCIAL_ANALYSIS'
                                 ? '핵심 재무 분석'
-                                : task.task_type}
+                                : task.task_type === 'FINANCIAL_NOTE_ENRICHMENT'
+                                  ? '재무 주석 데이터 보완'
+                                  : task.task_type}
                     </strong>
                     <span>{statusLabels[task.status] ?? task.status}</span>
                   </div>

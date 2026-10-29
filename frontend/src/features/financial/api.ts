@@ -11,6 +11,7 @@ const contextSchema = z.object({
   receipt_date: z.string(),
   scope: z.enum(['OFS', 'CFS']),
   lease: z.enum(['include', 'exclude']),
+  enrich_notes: z.boolean().optional().default(false),
   refresh_key: z.string().nullable(),
 })
 export type FinancialContext = z.infer<typeof contextSchema>
@@ -103,7 +104,56 @@ const runSchema = taskSchema.extend({
   analysis_run_id: z.string().uuid(),
   context: contextSchema,
   result: resultSchema.nullable(),
+  note_workflow: z
+    .object({
+      stage: z.enum([
+        'BASE_ANALYSIS',
+        'WAITING_STRUCTURE',
+        'ENRICHING',
+        'COMPLETED',
+        'PARTIAL',
+        'FAILED',
+      ]),
+      structure_id: z.string().uuid().nullable(),
+      job_status: z.string().nullable(),
+      limitations: z.string().nullable().optional().default(null),
+      error_code: z.string().nullable(),
+      candidates: z.array(
+        z.object({
+          id: z.string().uuid(),
+          status: z.string(),
+          key: z.string(),
+          period: z.string(),
+          account_name: z.string(),
+          value: z.string().nullable(),
+          reason: z.string().nullable(),
+          rationale: z.string(),
+          structure_id: z.string().uuid(),
+          source_sha256: z.string(),
+          row_index: z.number().int().nonnegative(),
+          amount_column: z.number().int().nonnegative(),
+          citation: z.object({
+            segment_id: z.string().uuid(),
+            quote: z.string(),
+          }),
+          citations_valid: z.boolean().optional().default(false),
+          period_citation: z.object({
+            segment_id: z.string().uuid(),
+            quote: z.string(),
+          }),
+          unit_citation: z.object({
+            segment_id: z.string().uuid(),
+            quote: z.string(),
+          }),
+        }),
+      ),
+      completed_at: z.string().nullable(),
+    })
+    .nullable()
+    .optional()
+    .default(null),
 })
+export type FinancialNoteWorkflow = z.infer<typeof runSchema>['note_workflow']
 export async function getFinancialRun(id: string, signal: AbortSignal) {
   const run = runSchema.parse(
     await request(`/me/financial-analyses/${id}`, { signal }),
@@ -115,6 +165,7 @@ export async function getFinancialRun(id: string, signal: AbortSignal) {
         run.result.context.corp_code !== run.context.corp_code ||
         run.result.context.receipt_no !== run.context.receipt_no ||
         run.result.context.scope !== run.context.scope ||
+        run.result.context.enrich_notes !== run.context.enrich_notes ||
         run.result.context.lease !== run.context.lease))
   )
     throw new Error('financial_response_mismatch')
@@ -124,7 +175,7 @@ export async function startFinancialRun(
   input: Pick<
     FinancialContext,
     'corp_code' | 'receipt_no' | 'scope' | 'lease'
-  > & { refresh_key?: string },
+  > & { refresh_key?: string; enrich_notes?: boolean },
 ) {
   return taskSchema.extend({ analysis_run_id: z.string().uuid() }).parse(
     await request('/me/financial-analyses', {

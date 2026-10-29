@@ -2,7 +2,6 @@ import { FileText } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { CompanyReportSelect } from './company-report-select'
-import { DisclosureCollectControl } from './disclosure-collect-control'
 import { FinancialStart } from '../financial/financial-start'
 import type { DartCompany } from './api'
 import { Button } from '../../shared/components/button'
@@ -167,7 +166,6 @@ export function CompanyCriteriaPanel({
           ))}
         </div>
       </fieldset>
-      <DisclosureCollectControl corpCode={company?.corp_code ?? null} />
       <FinancialStart
         key={`${company?.corp_code}:${params.get('report')}:${scope}`}
         corpCode={company?.corp_code ?? null}

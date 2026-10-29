@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { expect, it } from 'vitest'
 import { LiveSourceViewer } from '../features/evidence/live-source-viewer'
 import { sourceDocument } from '../features/evidence/source-document'
+import { findSourceCell } from '../features/evidence/source-cell'
 
 it('removes executable markup and external resources while preserving source anchors and table spans', () => {
   const html = sourceDocument(
@@ -41,4 +42,16 @@ it('uses an iframe sandbox without script privileges', () => {
     'allow-same-origin',
   )
   expect(screen.getByTitle('저장된 주석 원문')).not.toHaveAttribute('src')
+})
+
+it('locates expanded span coordinates and refuses oversized source spans', () => {
+  const doc = new DOMParser().parseFromString(
+    '<table><tr><td rowspan="2">계정</td><td colspan="2">당기</td></tr><tr><td>장부금액</td><td>123</td></tr></table>',
+    'text/html',
+  )
+  const table = doc.querySelector('table')!
+  expect(findSourceCell(table, 1, 2)?.textContent).toBe('123')
+  expect(findSourceCell(table, 1, 0)?.textContent).toBe('계정')
+  table.rows[0].cells[0].rowSpan = 65534
+  expect(findSourceCell(table, 1, 2)).toBeNull()
 })

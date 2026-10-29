@@ -29,6 +29,10 @@ import {
   MetricValue,
 } from '../features/financial/data-status'
 import '../financial-summary.css'
+import {
+  FinancialFactEvidence,
+  FinancialNoteProgress,
+} from '../features/financial/note-progress'
 
 export function FinancialSummaryPage() {
   const { financialId = '', section = 'summary' } = useParams()
@@ -66,7 +70,10 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
     retry: false,
     refetchInterval: (q) =>
       q.state.data &&
-      ['QUEUED', 'RUNNING', 'RETRY_WAIT'].includes(q.state.data.status)
+      (['QUEUED', 'RUNNING', 'RETRY_WAIT'].includes(q.state.data.status) ||
+        ['BASE_ANALYSIS', 'WAITING_STRUCTURE', 'ENRICHING'].includes(
+          q.state.data.note_workflow?.stage ?? '',
+        ))
         ? 1000
         : false,
   })
@@ -122,6 +129,11 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
     scope: context.scope,
   })
   const running = ['QUEUED', 'RUNNING', 'RETRY_WAIT'].includes(status)
+  const supplementing = [
+    'BASE_ANALYSIS',
+    'WAITING_STRUCTURE',
+    'ENRICHING',
+  ].includes(run.data.note_workflow?.stage ?? '')
   async function start(lease: 'include' | 'exclude', refresh = false) {
     if (!run.data) return
     const owner = activeWorkspace.current
@@ -133,6 +145,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
         receipt_no: context.receipt_no,
         scope: context.scope,
         lease,
+        ...(context.enrich_notes ? { enrich_notes: true } : {}),
         ...(refresh
           ? { refresh_key: crypto.randomUUID() }
           : context.refresh_key
@@ -166,7 +179,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
         </div>
         <Button
           variant="outline"
-          disabled={running || pending}
+          disabled={running || supplementing || pending}
           onClick={() => {
             void start(context.lease, true)
           }}
@@ -245,6 +258,10 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
               description="다른 회계 범위의 값으로 대체하지 않았습니다. 보고서와 회계 범위를 확인해 주세요."
             />
           )}
+          <FinancialNoteProgress
+            workflow={run.data.note_workflow}
+            result={result}
+          />
           {section === 'summary' ? (
             <Summary
               result={result}
@@ -915,6 +932,7 @@ function SourceFacts({ result }: { result: FinancialResult }) {
                     <summary>
                       <DataStatus value={fact} />
                     </summary>
+                    <FinancialFactEvidence sources={fact.sources} />
                     <p>매핑: {fact.mapping_method ?? '미확정'}</p>
                     {fact.sources.map((s, i) => (
                       <p key={i}>

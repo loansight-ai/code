@@ -12,6 +12,7 @@ export function NoteSourceDrawer({
   workspaceId,
   hash,
   segmentId,
+  focusCell,
   onClose,
   onViewed,
 }: {
@@ -19,6 +20,7 @@ export function NoteSourceDrawer({
   workspaceId: string
   hash: string
   segmentId: string | null
+  focusCell?: { row: number; column: number }
   onClose: () => void
   onViewed?: (id: string) => void
 }) {
@@ -61,6 +63,7 @@ export function NoteSourceDrawer({
           key={`${id}:${hash}`}
           source={source.data}
           segmentId={segmentId}
+          focusCell={focusCell}
           onViewed={onViewed}
         />
       )}

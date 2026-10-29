@@ -10,6 +10,7 @@ import {
 } from '../features/session/session-context'
 import { resultSchema } from '../features/financial/api'
 import fixture from './fixtures/financial-result.json'
+import { FinancialStart } from '../features/financial/financial-start'
 
 vi.mock('../shared/components/chart', () => ({
   Chart: ({ label }: { label: string }) => (
@@ -320,4 +321,132 @@ it('shows monetary changes and transition status instead of growth percentages w
   expect(row).toHaveTextContent('증감 -2억원')
   expect(row).toHaveTextContent('계산 불가')
   expect(row).not.toHaveTextContent('-200%')
+})
+
+it.each([false, true])(
+  'submits structure and Codex enrichment only when selected: %s',
+  async (selected) => {
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => response(detail()))
+    const router = createMemoryRouter([
+      {
+        path: '/',
+        element: (
+          <FinancialStart
+            corpCode={fixture.context.corp_code}
+            receiptNo={fixture.context.receipt_no}
+            scope="OFS"
+          />
+        ),
+      },
+      { path: '/financials/:id/summary', element: <p>분석 시작됨</p> },
+    ])
+    render(
+      <SessionContext.Provider value={session}>
+        <QueryClientProvider client={new QueryClient()}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </SessionContext.Provider>,
+    )
+    const checkbox = screen.getByRole('checkbox', {
+      name: '주석 구조화·Codex 데이터 보완',
+    })
+    expect(checkbox).not.toBeChecked()
+    if (selected) await userEvent.setup().click(checkbox)
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: '핵심 재무 분석' }))
+    await screen.findByText('분석 시작됨')
+    const post = fetch.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(JSON.parse(String(post[1]?.body))).toMatchObject({
+      enrich_notes: selected,
+      scope: 'OFS',
+      lease: 'include',
+    })
+  },
+)
+
+it('keeps basic results visible while structured note enrichment is pending', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+    response({
+      ...detail(),
+      note_workflow: {
+        stage: 'WAITING_STRUCTURE',
+        structure_id: other,
+        job_status: null,
+        error_code: null,
+        candidates: [],
+        completed_at: null,
+      },
+    }),
+  )
+  mount()
+  expect(await screen.findByText('주석 구조화 중')).toBeVisible()
+  expect(
+    screen.getByRole('heading', { name: '공통 핵심 5개 비율' }),
+  ).toBeVisible()
+  expect(
+    screen.getByRole('link', { name: '구조화된 주석 열기 →' }),
+  ).toHaveAttribute('href', `/notes/${other}`)
+  expect(screen.getByRole('button', { name: '다시 수집·분석' })).toBeDisabled()
+})
+
+it('opens a validated candidate in the existing structured source drawer', async () => {
+  const segment = '33333333-3333-4333-8333-333333333333'
+  const candidate = {
+    id: segment,
+    key: 'assets',
+    period: 'current',
+    account_name: '자산총계',
+    value: '40000000000',
+    status: 'APPLIED',
+    reason: null,
+    rationale: '자본관리 주석의 직접 금액',
+    structure_id: other,
+    source_sha256: fixture.source_sha256,
+    row_index: 1,
+    amount_column: 1,
+    citations_valid: true,
+    citation: { segment_id: segment, quote: '자산총계 40,000,000' },
+    period_citation: { segment_id: segment, quote: '당기' },
+    unit_citation: { segment_id: segment, quote: '단위: 천원' },
+  }
+  const fetch = vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(async (input) =>
+      String(input).includes('/source-view')
+        ? response({
+            structure_id: other,
+            source_sha256: fixture.source_sha256,
+            html: '<table id="source-table"><tr><td>구분</td><td>당기</td></tr><tr><td>자산총계</td><td>40,000,000</td></tr></table>',
+            anchors: { [segment]: 'source-table' },
+            view_kind: 'derived',
+          })
+        : response({
+            ...detail(),
+            note_workflow: {
+              stage: 'COMPLETED',
+              structure_id: other,
+              job_status: 'SUCCEEDED',
+              error_code: null,
+              candidates: [candidate],
+              completed_at: fixture.collected_at,
+            },
+          }),
+    )
+  mount()
+  const table = await screen.findByRole('table', {
+    name: '주석 재무 보완 후보',
+  })
+  expect(table).toHaveTextContent('담당자 검수 전')
+  await userEvent
+    .setup()
+    .click(within(table).getByRole('button', { name: '주석 보완 · 근거 보기' }))
+  expect(await screen.findByTitle('저장된 주석 원문')).toBeVisible()
+  expect(
+    fetch.mock.calls.some(([input]) =>
+      String(input).includes(`/note-imports/${other}/source-view`),
+    ),
+  ).toBe(true)
 })
