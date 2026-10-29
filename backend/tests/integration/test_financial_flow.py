@@ -11,15 +11,169 @@ from pydantic import SecretStr
 from sqlalchemy import func, select
 
 from app.core.storage import LocalArtifactStore
+from app.integrations.agents.runtime import AgentResponse
 from app.integrations.messaging.rabbitmq import JobMessage
 from app.modules.company.models import CompanyRecord
 from app.modules.company.reports import AnnualReport, AnnualReports
 from app.modules.evidence.dart_collector import CollectionError
-from app.modules.financial.models import FinancialFact, FinancialRun
-from app.modules.tasks.models import Outbox, TaskEvent
+from app.modules.evidence.models import NoteStructure, SourceSegment
+from app.modules.financial.models import (
+    FinancialFact,
+    FinancialNoteCandidate,
+    FinancialNoteWorkflow,
+    FinancialRun,
+)
+from app.modules.financial.workflow import advance
+from app.modules.tasks.models import Job, Outbox, TaskEvent
 from app.worker.main import run_job
 
 INPUT = {"corp_code": "00141529", "receipt_no": "20260318000621", "scope": "OFS"}
+
+NOTE_HTML = """<html><body><p>재무제표 주석</p><p>1. 자본관리</p><p>당기 (단위 : 천원)</p>
+<table><tr><td>구분</td><td>금액</td></tr><tr><td>자산총계</td><td>40,000,000</td></tr></table></body></html>""".encode()
+
+
+class FinancialRuntime:
+    mode = "valid"
+
+    async def run(self, prompt, definitions, call, output_schema):
+        assert '"missing"' in prompt and len(definitions) == 3
+        if self.mode == "timeout":
+            raise TimeoutError
+        found = await call("search_note_segments", {"terms": ["자산총계"], "kind": "table"})
+        sid = found["candidates"][0]["segment_id"]
+        context = await call("read_note_context", {"segment_id": sid})
+        caption = next(
+            s
+            for s in context["segments"]
+            if "단위" in s["excerpt"]["text"] and s["segment_id"] != sid
+        )
+        candidate = {
+            "key": "assets",
+            "period": "current",
+            "account_name": "자산총계",
+            "raw_amount": "40,000,000",
+            "currency": "KRW",
+            "unit_multiplier": 1000,
+            "row_index": 1,
+            "label_column": 0,
+            "amount_column": 1,
+            "citation": {
+                "segment_id": sid,
+                "quote": "자산총계" if self.mode != "bad_quote" else "없는 인용",
+            },
+            "period_citation": {"segment_id": caption["segment_id"], "quote": "당기"},
+            "unit_citation": {"segment_id": caption["segment_id"], "quote": "단위 : 천원"},
+            "rationale": "자본관리 주석의 자산총계 직접 금액",
+        }
+        return AgentResponse(
+            json.dumps(
+                {
+                    "candidates": [candidate],
+                    "limitations": "테스트 문서의 직접 금액만 확인. 담당자 검수 전.",
+                }
+            ),
+            "test-model",
+            "test-thread",
+        )
+
+
+@pytest.fixture
+def enrichment_ready(environment, financial, monkeypatch, tmp_path):
+    _, settings, _ = environment
+    settings.codex_home = tmp_path / "codex"
+    settings.note_agent_timeout_seconds = 10
+    settings.note_agent_max_tool_calls = 10
+    digest = LocalArtifactStore(settings.artifact_root).put(NOTE_HTML)
+
+    async def notes(*args):
+        return None, SimpleNamespace(id=None, sha256=digest, encoding="utf-8"), NOTE_HTML
+
+    monkeypatch.setattr("app.modules.financial.service.ensure_source", notes)
+    raw = json.loads(financial[0])
+    raw["list"].append(
+        {
+            **raw["list"][0],
+            "account_id": "ifrs-full_Equity",
+            "account_nm": "자본총계",
+            "thstrm_amount": "20000000000",
+        }
+    )
+    monkeypatch.setattr(
+        "app.modules.financial.service.download", lambda *args: json.dumps(raw).encode()
+    )
+    runtime = FinancialRuntime()
+    monkeypatch.setattr("app.modules.financial.enrichment.runtime_for", lambda *args: runtime)
+    return runtime
+
+
+@pytest.mark.parametrize(
+    "mode,stage", [("valid", "COMPLETED"), ("bad_quote", "PARTIAL"), ("timeout", "PARTIAL")]
+)
+async def test_optional_structure_then_enrichment_with_snapshot_and_evidence(
+    client, environment, financial, enrichment_ready, mode, stage
+):
+    enrichment_ready.mode = mode
+    await client.post("/api/v1/users")
+    submitted = await client.post(
+        "/api/v1/me/financial-analyses", json={**INPUT, "enrich_notes": True}
+    )
+    assert submitted.status_code == 202, submitted.text
+    item = submitted.json()
+    url = "/api/v1/me/financial-analyses/" + item["analysis_run_id"]
+    await execute(environment, item)
+    baseline = (await client.get(url)).json()
+    assert baseline["status"] == "SUCCEEDED", baseline
+    assert baseline["note_workflow"]["stage"] == "WAITING_STRUCTURE", baseline
+    database = environment[2]
+    await advance(database)
+    async with database.transaction() as db:
+        workflow = await db.get(FinancialNoteWorkflow, UUID(item["analysis_run_id"]))
+        assert workflow.job_id is None  # Parsing has not completed yet.
+        structure = await db.get(NoteStructure, workflow.structure_id)
+        structure_job_id = structure.job_id
+    await execute(environment, {"job_id": str(structure_job_id)})
+    await asyncio.gather(advance(database), advance(database))
+    async with database.transaction() as db:
+        workflow = await db.get(FinancialNoteWorkflow, UUID(item["analysis_run_id"]))
+        assert workflow.stage == "ENRICHING", workflow.error_code
+        agent_job_id = workflow.job_id
+        assert (
+            await db.scalar(
+                select(func.count())
+                .select_from(Job)
+                .where(Job.task_type == "FINANCIAL_NOTE_ENRICHMENT")
+            )
+            == 1
+        )
+    await execute(environment, {"job_id": str(agent_job_id)})
+    final = (await client.get(url)).json()
+    assert final["note_workflow"]["stage"] == stage, final["note_workflow"]
+    asset = next(
+        f for f in final["result"]["facts"] if f["key"] == "assets" and f["period"] == "current"
+    )
+    async with database.transaction() as db:
+        original = await db.get(FinancialRun, UUID(item["analysis_run_id"]))
+        assert next(f for f in original.result["facts"] if f["key"] == "assets")["value"] is None
+        if mode == "valid":
+            assert asset["value"] == "40000000000"
+            assert asset["mapping_method"] == "codex_verified_note_cell"
+            assert (
+                next(m for m in final["result"]["metrics"] if m["key"] == "equity_ratio")["values"][
+                    0
+                ]["value"]
+                == "50.0000"
+            )
+            row = await db.scalar(select(FinancialNoteCandidate))
+            assert row.status == "APPLIED" and str(row.amount) == "40000000000.000000"
+            assert row.data["period"] == "current"
+            assert row.data["review_status"] == "PENDING" and row.data["evidence_verified"] is False
+            segment = await db.get(SourceSegment, UUID(row.data["citation"]["segment_id"]))
+            assert row.data["citation"]["quote"] in segment.text
+        else:
+            assert asset["value"] is None
+    await execute(environment, {"job_id": str(agent_job_id)})
+    assert (await client.get(url)).json()["note_workflow"] == final["note_workflow"]
 
 
 @pytest.fixture
@@ -146,6 +300,52 @@ async def test_full_flow_atomic_facts_provenance_and_workspace_isolation(
         await other.post("/api/v1/users")
         assert (await other.get(url)).status_code == 404
         assert (await other.get(url + "/source")).status_code == 404
+
+
+async def test_optional_source_failure_keeps_baseline(client, environment, financial):
+    await client.post("/api/v1/users")
+    item = (
+        await client.post("/api/v1/me/financial-analyses", json={**INPUT, "enrich_notes": True})
+    ).json()
+    await execute(environment, item)
+    await advance(environment[2])
+    result = (await client.get("/api/v1/me/financial-analyses/" + item["analysis_run_id"])).json()
+    assert result["status"] == "SUCCEEDED"
+    assert result["result"] is not None
+    assert result["note_workflow"]["stage"] == "FAILED"
+    assert result["note_workflow"]["error_code"] == "dart_note_scope_missing"
+
+
+async def test_failed_structure_does_not_schedule_codex(
+    client, environment, financial, enrichment_ready, monkeypatch
+):
+    async def failed(*args):
+        raise ValueError("structure_failure")
+
+    monkeypatch.setattr("app.modules.evidence.service.prepare", failed)
+    await client.post("/api/v1/users")
+    item = (
+        await client.post("/api/v1/me/financial-analyses", json={**INPUT, "enrich_notes": True})
+    ).json()
+    await execute(environment, item)
+    async with environment[2].transaction() as db:
+        workflow = await db.get(FinancialNoteWorkflow, UUID(item["analysis_run_id"]))
+        structure = await db.get(NoteStructure, workflow.structure_id)
+        structure_job = structure.job_id
+    await execute(environment, {"job_id": str(structure_job)})
+    await advance(environment[2])
+    result = (await client.get("/api/v1/me/financial-analyses/" + item["analysis_run_id"])).json()
+    assert result["status"] == "SUCCEEDED" and result["result"] is not None
+    assert result["note_workflow"]["stage"] == "FAILED"
+    async with environment[2].transaction() as db:
+        assert (
+            await db.scalar(
+                select(func.count())
+                .select_from(Job)
+                .where(Job.task_type == "FINANCIAL_NOTE_ENRICHMENT")
+            )
+            == 0
+        )
 
 
 async def test_concurrent_deduplication_option_revision_and_refresh(client, environment, financial):

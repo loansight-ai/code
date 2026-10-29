@@ -202,7 +202,13 @@ async def claim(
         job.stage = (
             job.task_type
             if job.task_type
-            in {"NOTE_STRUCTURE", "DART_COLLECT", "NOTE_AGENT", "FINANCIAL_ANALYSIS"}
+            in {
+                "NOTE_STRUCTURE",
+                "DART_COLLECT",
+                "NOTE_AGENT",
+                "FINANCIAL_ANALYSIS",
+                "FINANCIAL_NOTE_ENRICHMENT",
+            }
             else "DISPATCH"
         )
         job.state_version += 1
@@ -235,7 +241,10 @@ async def finish(database: Database, job_id: UUID, owner: UUID, result: dict) ->
 
 async def complete_job(db: AsyncSession, job: Job, result: dict) -> None:
     """Caller must hold the Job lock and validate the active execution lease."""
-    partial = result.get("kind") == "NOTE_AGENT" and result.get("execution_status") != "COMPLETED"
+    partial = (
+        result.get("kind") in {"NOTE_AGENT", "FINANCIAL_NOTE_ENRICHMENT"}
+        and result.get("execution_status") != "COMPLETED"
+    )
     partial = partial or (
         result.get("kind") == "FINANCIAL_ANALYSIS" and result.get("availability") == "NO_DATA"
     )

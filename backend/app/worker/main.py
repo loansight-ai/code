@@ -15,7 +15,9 @@ from app.modules.evidence import dart_service
 from app.modules.evidence import service as evidence
 from app.modules.evidence.dart_collector import CollectionError
 from app.modules.evidence.parser import PreparedNotes
+from app.modules.financial import enrichment
 from app.modules.financial import service as financial
+from app.modules.financial.enrichment import PreparedEnrichment
 from app.modules.financial.service import PreparedFinancials
 from app.modules.tasks import service
 from app.modules.tasks.models import Job
@@ -25,7 +27,7 @@ logger = structlog.get_logger()
 
 async def execute(
     database: Database, job_id, settings: Settings | None = None
-) -> dict | PreparedNotes | PreparedFinancials:
+) -> dict | PreparedNotes | PreparedFinancials | PreparedEnrichment:
     async with database.transaction() as db:
         job = await db.get(Job, job_id)
         task_type = job.task_type
@@ -37,6 +39,8 @@ async def execute(
         return await evidence_agent.prepare(database, settings, job_id)
     if task_type == "FINANCIAL_ANALYSIS" and settings is not None:
         return await financial.prepare(database, settings, job_id)
+    if task_type == "FINANCIAL_NOTE_ENRICHMENT" and settings is not None:
+        return await enrichment.prepare(database, settings, job_id)
     if task_type != "PIPELINE_CHECK":
         raise ValueError("unsupported_task_type")
     return {
@@ -71,6 +75,8 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
             await evidence.complete(database, message.job_id, owner, result)
         elif isinstance(result, PreparedFinancials):
             await financial.complete(database, message.job_id, owner, result)
+        elif isinstance(result, PreparedEnrichment):
+            await enrichment.complete(database, message.job_id, owner, result)
         else:
             await service.finish(database, message.job_id, owner, result)
     except asyncio.CancelledError:

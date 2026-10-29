@@ -24,13 +24,15 @@ from app.modules.financial.domain import (
     map_facts,
     note_borrowing_summaries,
 )
-from app.modules.financial.models import FinancialFact, FinancialRun
+from app.modules.financial.models import FinancialFact, FinancialNoteWorkflow, FinancialRun
 from app.modules.financial.notes import NOTE_VERSION, extract_note_candidates, supplement
 from app.modules.tasks import service as tasks
 from app.modules.tasks.models import Job, Outbox, UserTask
 
 
 async def submit(database, settings, identity, context):
+    from app.modules.financial.workflow import agent_config
+
     if settings.job_max_attempts is None:
         raise HTTPException(503, "job_policy_not_configured")
     key = fingerprint(
@@ -40,6 +42,7 @@ async def submit(database, settings, identity, context):
             "mapping": MAPPING_VERSION,
             "formula": FORMULA_VERSION,
             "notes": NOTE_VERSION,
+            "enrichment": agent_config(settings) if context.get("enrich_notes") else None,
         }
     )
     async with database.transaction() as db:
@@ -54,6 +57,12 @@ async def submit(database, settings, identity, context):
             task = UserTask(workspace_id=identity.workspace_id, job_id=job.id)
             db.add_all([run, task, Outbox(job_id=job.id, generation=job.generation)])
             await db.flush()
+            if context.get("enrich_notes"):
+                db.add(
+                    FinancialNoteWorkflow(
+                        run_id=run.id, stage="BASE_ANALYSIS", config=agent_config(settings)
+                    )
+                )
             await tasks.emit(db, job, "task.created", [task])
         else:
             run = await db.scalar(select(FinancialRun).where(FinancialRun.job_id == job.id))
@@ -69,6 +78,8 @@ async def submit(database, settings, identity, context):
 class PreparedFinancials:
     result: dict
     source_sha256: str
+    structure_id: UUID | None = None
+    structure_error: str | None = None
 
 
 async def prepare(database, settings, job_id):
@@ -97,7 +108,7 @@ async def prepare(database, settings, job_id):
     note_error = None
     # Reuse the existing ZIP/XML and scope-specific HTML collector. Note
     # failures must not discard valid financial API data.
-    if note is None and rows:
+    if note is None and (rows or context.get("enrich_notes")):
         try:
             _, note, _ = await ensure_source(database, settings, context)
         except CollectionError as exc:
@@ -116,6 +127,35 @@ async def prepare(database, settings, job_id):
             note_state = "PROCESSED"
         except (OSError, ValueError):
             note_state = "FAILED"
+    structure_id, structure_error = None, None
+    if context.get("enrich_notes"):
+        from app.modules.evidence.schemas import NoteInput
+        from app.modules.evidence.service import submit_for_workspace
+
+        if note is None:
+            structure_error = note_error or "note_source_unavailable"
+        else:
+            try:
+                source = await asyncio.to_thread(
+                    LocalArtifactStore(settings.artifact_root).read, note.sha256
+                )
+                item = await submit_for_workspace(
+                    database,
+                    settings,
+                    run.workspace_id,
+                    source,
+                    NoteInput(
+                        corp_code=context["corp_code"],
+                        receipt_no=context["receipt_no"],
+                        scope=context["scope"],
+                        period=context["period"],
+                        encoding=note.encoding,
+                    ),
+                    dart_note_id=note.id,
+                )
+                structure_id = UUID(item["structure_id"])
+            except (OSError, ValueError, HTTPException):
+                structure_error = "note_structure_submission_failed"
     metrics, totals = calculate(facts, context["lease"])
     changes, bridge = comparisons(facts)
     terms = [
@@ -150,7 +190,7 @@ async def prepare(database, settings, job_id):
             "각 기간 길이와 비교 가능성은 원문 확인 필요."
         ),
     }
-    return PreparedFinancials(result, digest)
+    return PreparedFinancials(result, digest, structure_id, structure_error)
 
 
 async def complete(database, job_id, owner, prepared):
@@ -163,6 +203,13 @@ async def complete(database, job_id, owner, prepared):
         run.result = prepared.result
         run.source_sha256 = prepared.source_sha256
         run.completed_at = now
+        workflow = await db.get(FinancialNoteWorkflow, run.id)
+        if workflow is not None:
+            workflow.structure_id = prepared.structure_id
+            workflow.error_code = prepared.structure_error
+            workflow.stage = "WAITING_STRUCTURE" if prepared.structure_id else "FAILED"
+            if not prepared.structure_id:
+                workflow.completed_at = now
         for fact in prepared.result["facts"]:
             db.add(
                 FinancialFact(
@@ -201,9 +248,14 @@ async def read(database, identity, run_id: UUID):
                 UserTask.job_id == job.id, UserTask.workspace_id == identity.workspace_id
             )
         )
+        from app.modules.financial.workflow import payload
+
+        workflow = await db.get(FinancialNoteWorkflow, run.id)
+        enrichment = await payload(db, workflow) if workflow else None
         return {
             **tasks.task_payload(task, job),
             "analysis_run_id": str(run.id),
             "context": run.context,
-            "result": run.result,
+            "result": workflow.result if workflow and workflow.result else run.result,
+            "note_workflow": enrichment,
         }

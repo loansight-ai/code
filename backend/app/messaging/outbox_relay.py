@@ -8,6 +8,7 @@ from app.core.config import Settings
 from app.core.database import Database
 from app.core.runtime import process_health, run
 from app.integrations.messaging.rabbitmq import JobMessage, channel_and_queue, connect, publish
+from app.modules.financial.workflow import advance
 from app.modules.tasks.models import Outbox
 from app.modules.tasks.service import recover_expired
 
@@ -66,6 +67,7 @@ async def main() -> None:
                     async with process_health(database, connection, channel, "relay"):
                         while True:
                             await recover_expired(database, settings)
+                            await advance(database)
                             found = await relay_once(database, settings, publisher)
                             if not found:
                                 await asyncio.sleep(settings.relay_interval_seconds)

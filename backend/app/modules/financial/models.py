@@ -30,3 +30,27 @@ class FinancialFact(Base):
     period: Mapped[str] = mapped_column(String(24))
     amount: Mapped[Decimal | None] = mapped_column(Numeric(38, 6))
     provenance: Mapped[dict] = mapped_column(JSONB)
+
+
+class FinancialNoteWorkflow(Base):
+    __tablename__ = "financial_note_workflow"
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("financial_run.id"), primary_key=True)
+    structure_id: Mapped[UUID | None] = mapped_column(ForeignKey("note_structure.id"))
+    job_id: Mapped[UUID | None] = mapped_column(ForeignKey("analysis_job.id"), unique=True)
+    stage: Mapped[str] = mapped_column(String(40), index=True)
+    config: Mapped[dict] = mapped_column(JSONB)
+    error_code: Mapped[str | None] = mapped_column(String(80))
+    result: Mapped[dict | None] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class FinancialNoteCandidate(Base):
+    __tablename__ = "financial_note_candidate"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("financial_note_workflow.run_id"), index=True)
+    account_key: Mapped[str] = mapped_column(String(64))
+    period: Mapped[str] = mapped_column(String(24))
+    amount: Mapped[Decimal | None] = mapped_column(Numeric(38, 6))
+    status: Mapped[str] = mapped_column(String(32))
+    data: Mapped[dict] = mapped_column(JSONB)

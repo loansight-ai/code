@@ -20,6 +20,7 @@ class FinancialInput(BaseModel):
     receipt_no: str = Field(pattern=r"^[0-9]{14}$")
     scope: Literal["OFS", "CFS"] = "OFS"
     lease: Literal["include", "exclude"] = "include"
+    enrich_notes: bool = False
     refresh_key: UUID | None = None
 
 
@@ -57,6 +58,7 @@ async def submit(
         "scope": body.scope,
         "lease": body.lease,
         "refresh_key": str(body.refresh_key) if body.refresh_key else None,
+        "enrich_notes": body.enrich_notes,
     }
     return await service.submit(
         request.app.state.database, request.app.state.settings, identity, context
