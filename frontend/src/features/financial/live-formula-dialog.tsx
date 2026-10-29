@@ -91,7 +91,14 @@ export function LiveFormulaDialog({
   } else if (metric.key === 'operating_roa') {
     rows.push(
       { label: '분자', value: fact('operating_profit') },
-      { label: '분모', value: '총자산 · 기말/평균잔액 기준 미정' },
+      {
+        label: '분모',
+        value: metric.inputs.includes('assets') ? (
+          <>기말 자산총계{fact('assets')}</>
+        ) : (
+          '기존 산식의 잔액 기준 미정 · 다시 수집·분석 필요'
+        ),
+      },
     )
   } else if (
     [

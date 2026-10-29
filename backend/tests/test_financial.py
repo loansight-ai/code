@@ -114,8 +114,47 @@ def test_lease_option_missing_components_and_negative_denominator():
     )
     assert (
         next(m for m in metrics if m["key"] == "operating_roa")["values"][0]["reason"]
-        == "balance_policy_unset"
+        == "missing_input"
     )
+
+
+def test_operating_roa_uses_each_period_closing_assets_without_average_or_lease_adjustment():
+    facts = map_facts(
+        [
+            row("ifrs-full_Assets", "1000", "100", bfefrmtrm_amount="500"),
+            row("dart_OperatingIncomeLoss", "100", "20", "IS", bfefrmtrm_amount="50"),
+        ]
+    )
+    metrics, _ = calculate(facts)
+    roa = next(m for m in metrics if m["key"] == "operating_roa")
+    assert [v["value"] for v in roa["values"]] == ["10.0000", "20.0000", "10.0000"]
+    assert roa["inputs"] == ["operating_profit", "assets"]
+    assert roa["formula"] == "영업이익 ÷ 기말 자산총계 × 100"
+    assert "기말 자산총계" in roa["basis"]
+    assert next(m for m in calculate(facts, "exclude")[0] if m["key"] == "operating_roa") == roa
+    fact(facts, "assets", "previous")["value"] = None
+    roa = next(m for m in calculate(facts)[0] if m["key"] == "operating_roa")
+    assert roa["values"][0]["value"] == "10.0000"
+    assert roa["values"][1]["reason"] == "missing_input"
+
+
+@pytest.mark.parametrize(
+    "assets,profit,value,reason",
+    [
+        ("0", "100", None, "nonpositive_denominator"),
+        ("-1000", "100", None, "nonpositive_denominator"),
+        ("-", "100", None, "missing_input"),
+        ("1000", "-50", "-5.0000", None),
+        ("1000", "0", "0.0000", None),
+    ],
+)
+def test_operating_roa_preserves_negative_profit_zero_and_missing(assets, profit, value, reason):
+    facts = map_facts(
+        [row("ifrs-full_Assets", assets), row("dart_OperatingIncomeLoss", profit, statement="IS")]
+    )
+    roa = next(m for m in calculate(facts)[0] if m["key"] == "operating_roa")
+    assert roa["values"][0]["value"] == value
+    assert roa["values"][0]["reason"] == reason
 
 
 def test_exact_bridge_and_transition_with_no_growth_on_negative_base():

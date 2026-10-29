@@ -4,7 +4,7 @@ import re
 from decimal import Decimal, InvalidOperation, localcontext
 
 MAPPING_VERSION = "financial-accounts-v2"
-FORMULA_VERSION = "financial-formulas-v2"
+FORMULA_VERSION = "financial-formulas-v3"
 PERIODS = ("current", "previous", "before_previous")
 AMOUNT_KEYS = ("thstrm_amount", "frmtrm_amount", "bfefrmtrm_amount")
 TERM_KEYS = ("thstrm_nm", "frmtrm_nm", "bfefrmtrm_nm")
@@ -264,6 +264,7 @@ RATIOS = [
     ("debt_ratio", "부채비율", "레버리지", "liabilities", "equity", "%"),
     ("equity_ratio", "자기자본비율", "레버리지", "equity", "assets", "%"),
     ("operating_margin", "매출액영업이익률", "수익성", "operating_profit", "revenue", "%"),
+    ("operating_roa", "총자산영업이익률", "수익성", "operating_profit", "assets", "%"),
     ("gross_margin", "매출총이익률", "수익성", "gross_profit", "revenue", "%"),
     ("cost_ratio", "매출원가율", "수익성", "cost_of_sales", "revenue", "%"),
     ("interest_coverage", "이자보상비율", "수익성", "operating_profit", "interest_expense", "배"),
@@ -278,13 +279,6 @@ RATIOS = [
     ),
 ]
 PENDING = [
-    (
-        "operating_roa",
-        "총자산영업이익률",
-        "수익성",
-        "영업이익 ÷ 적용 총자산 × 100",
-        "balance_policy_unset",
-    ),
     (
         "inventory_days",
         "재고자산 회전일수",
@@ -451,7 +445,19 @@ def _calculate(facts, lease):
         formula = f"{labels[numerator]} ÷ {labels[denominator]}" + (" × 100" if unit == "%" else "")
         if key == "debt_ratio" and lease == "exclude":
             formula = "(부채총계 − 유동 리스부채 − 비유동 리스부채) ÷ 자본총계 × 100"
-        add(key, label, group, unit, formula, inputs, values)
+        if key == "operating_roa":
+            add(
+                key,
+                label,
+                group,
+                unit,
+                "영업이익 ÷ 기말 자산총계 × 100",
+                inputs,
+                values,
+                "각 비교기간의 영업이익 · 해당 기간 기말 자산총계 기준",
+            )
+        else:
+            add(key, label, group, unit, formula, inputs, values)
 
     debt_keys = [
         "short_borrowings",
@@ -559,7 +565,6 @@ def _calculate(facts, lease):
             else "%"
             if key
             in {
-                "operating_roa",
                 "pf_equity",
                 "pf_within_year",
                 "debt_within_year",

@@ -85,7 +85,11 @@ it('renders official filing values, policy holds and exact note provenance in th
       `${fixture.company_name} · ${fixture.context.report_name} · 별도 기준`,
     ),
   ).toBeVisible()
-  expect(screen.getByText('기말/평균잔액 기준 미정')).toBeVisible()
+  const roa = screen
+    .getByRole('button', { name: '총자산영업이익률' })
+    .closest('.financial-core-item')!
+  expect(roa).toHaveTextContent('확정')
+  expect(roa).not.toHaveTextContent('기말/평균잔액 기준 미정')
   await userEvent
     .setup()
     .click(screen.getByRole('button', { name: '이자보상비율' }))
@@ -112,6 +116,25 @@ it('hides previous company values while another analysis loads', async () => {
       `${fixture.company_name} · ${fixture.context.report_name} · 별도 기준`,
     ),
   ).not.toBeInTheDocument()
+})
+
+it('shows closing total assets and its actual value in the operating ROA formula', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
+    response(detail()),
+  )
+  mount()
+  const opener = await screen.findByRole('button', { name: '총자산영업이익률' })
+  expect(opener.closest('.financial-core-item')).toHaveTextContent('3.4%')
+  await userEvent.setup().click(opener)
+  const dialog = screen.getByRole('dialog', { name: '총자산영업이익률 산식' })
+  expect(dialog).toHaveTextContent('영업이익 ÷ 기말 자산총계 × 100')
+  const denominator = within(dialog)
+    .getByRole('rowheader', { name: '분모' })
+    .closest('tr')!
+  expect(denominator).toHaveTextContent('기말 자산총계')
+  expect(denominator).toHaveTextContent('자산총계:')
+  expect(dialog).toHaveTextContent('해당 기간 기말 자산총계 기준')
+  expect(dialog).toHaveTextContent('financial-formulas-v3')
 })
 
 it('creates an isolated server result when the lease option changes', async () => {

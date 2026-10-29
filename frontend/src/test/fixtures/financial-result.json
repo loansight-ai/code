@@ -17,7 +17,7 @@
   "source_url": "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=20260318000621",
   "collected_at": "2026-10-29T03:00:00+00:00",
   "mapping_version": "financial-accounts-v2",
-  "formula_version": "financial-formulas-v2",
+  "formula_version": "financial-formulas-v3",
   "periods": [
     {
       "key": "current",
@@ -2470,6 +2470,37 @@
       "change_unit": "%p"
     },
     {
+      "key": "operating_roa",
+      "label": "총자산영업이익률",
+      "group": "수익성",
+      "unit": "%",
+      "formula": "영업이익 ÷ 기말 자산총계 × 100",
+      "inputs": ["operating_profit", "assets"],
+      "basis": "각 비교기간의 영업이익 · 해당 기간 기말 자산총계 기준",
+      "values": [
+        {
+          "period": "current",
+          "value": "3.4451",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "previous",
+          "value": "4.7289",
+          "state": "CONFIRMED",
+          "reason": null
+        },
+        {
+          "period": "before_previous",
+          "value": "6.4152",
+          "state": "CONFIRMED",
+          "reason": null
+        }
+      ],
+      "change": "-1.2838",
+      "change_unit": "%p"
+    },
+    {
       "key": "gross_margin",
       "label": "매출총이익률",
       "group": "수익성",
@@ -2991,37 +3022,6 @@
           "value": null,
           "state": "NOT_COMPUTABLE",
           "reason": "missing_input"
-        }
-      ],
-      "change": null,
-      "change_unit": "%p"
-    },
-    {
-      "key": "operating_roa",
-      "label": "총자산영업이익률",
-      "group": "수익성",
-      "unit": "%",
-      "formula": "영업이익 ÷ 적용 총자산 × 100",
-      "inputs": [],
-      "basis": "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
-      "values": [
-        {
-          "period": "current",
-          "value": null,
-          "state": "NOT_COMPUTABLE",
-          "reason": "balance_policy_unset"
-        },
-        {
-          "period": "previous",
-          "value": null,
-          "state": "NOT_COMPUTABLE",
-          "reason": "balance_policy_unset"
-        },
-        {
-          "period": "before_previous",
-          "value": null,
-          "state": "NOT_COMPUTABLE",
-          "reason": "balance_policy_unset"
         }
       ],
       "change": null,
