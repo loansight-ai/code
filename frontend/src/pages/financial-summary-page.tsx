@@ -29,6 +29,7 @@ import {
   MetricValue,
 } from '../features/financial/data-status'
 import '../financial-summary.css'
+import { analysisMenus } from '../app/analysis-menu'
 import {
   FinancialFactEvidence,
   FinancialNoteProgress,
@@ -60,7 +61,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
   }, [activeOwner])
   const valid =
     z.string().uuid().safeParse(id).success &&
-    ['summary', 'cashflow'].includes(section)
+    analysisMenus.some(([key]) => key === section)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   const run = useQuery({
@@ -169,9 +170,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
       </Link>
       <div className="page-title-row">
         <div>
-          <h1>
-            {section === 'summary' ? '핵심 재무 요약' : '실적 변동·현금흐름'}
-          </h1>
+          <h1>{analysisMenus.find(([key]) => key === section)?.[1]}</h1>
           <p className="page-description">
             {result?.company_name ?? context.corp_code} · {context.report_name}{' '}
             · {context.scope === 'OFS' ? '별도' : '연결'} 기준
@@ -269,8 +268,33 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
                 void start(lease)
               }}
             />
-          ) : (
+          ) : section === 'cashflow' ? (
             <Cashflow result={result} />
+          ) : (
+            <StatePanel
+              state="empty"
+              title={
+                section === 'prediction'
+                  ? '예측 결과가 없습니다'
+                  : run.data.note_workflow?.structure_id
+                    ? '구조화된 주석에서 확인할 수 있습니다'
+                    : '구조화된 주석 결과가 필요합니다'
+              }
+              description={
+                section === 'prediction'
+                  ? '외부 모델의 예측 결과가 확보되면 이 화면에서 확인할 수 있습니다.'
+                  : '기업 검색에서 주석 구조화·Codex 데이터 보완 옵션을 선택해 분석할 수 있습니다.'
+              }
+            >
+              {run.data.note_workflow?.structure_id && (
+                <Link
+                  to={`/notes/${run.data.note_workflow.structure_id}/${section}`}
+                >
+                  구조화된 주석 화면으로 이동 →
+                </Link>
+              )}
+              <Link to={`/?${search}`}>기업·분석 옵션 선택 →</Link>
+            </StatePanel>
           )}
           <SourceFacts result={result} />
           <div className="workspace-next">

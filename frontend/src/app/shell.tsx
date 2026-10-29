@@ -10,14 +10,7 @@ import { SessionControls } from '../features/session/session-controls'
 import { TaskControls } from '../features/tasks/task-controls'
 import { useSession } from '../features/session/session-context'
 import { getFinancialRun } from '../features/financial/api'
-
-const menus = [
-  ['summary', '핵심 재무 요약'],
-  ['cashflow', '실적 변동·현금흐름'],
-  ['evidence', '주석·위험징후'],
-  ['prediction', '위험 사건 예측'],
-  ['review', '체크·검토 메모'],
-] as const
+import { analysisMenus } from './analysis-menu'
 
 export function Shell() {
   const { analysisId, structureId, financialId, section } = useParams()
@@ -63,14 +56,15 @@ export function Shell() {
       ? `/?${new URLSearchParams({ q: financialContext.corp_code, corp: financialContext.corp_code, report: financialContext.receipt_no, scope: financialContext.scope })}`
       : metadata
         ? `/?${new URLSearchParams({ q: metadata.corp_code, corp: metadata.corp_code, report: metadata.receipt_no, scope: metadata.scope })}`
-        : '/'
+        : `/${location.search}`
   const [helpOpen, setHelpOpen] = useState(false)
-  const ready = !!company || !!metadata?.hierarchy || !!financialContext
   const base = financialId
     ? `/financials/${financialId}`
     : company
       ? `/analyses/${analysisId}`
-      : `/notes/${structureId}`
+      : structureId
+        ? `/notes/${structureId}`
+        : '/workspace'
   const active = section ?? (structureId ? 'evidence' : 'summary')
   const scope =
     financialContext?.scope ??
@@ -91,30 +85,19 @@ export function Shell() {
           <NavLink
             to={searchPath}
             end
-            className={`nav-item ${!analysisId && !structureId && !financialId ? 'active' : ''}`}
+            className={`nav-item ${location.pathname === '/' ? 'active' : ''}`}
           >
             기업 검색
           </NavLink>
-          {menus.map(([path, label]) =>
-            ready &&
-            (!financialId || ['summary', 'cashflow'].includes(path)) ? (
-              <NavLink
-                key={path}
-                to={`${base}/${path}${location.search}`}
-                className={`nav-item ${active === path ? 'active' : ''}`}
-              >
-                {label}
-              </NavLink>
-            ) : (
-              <span
-                key={path}
-                className="nav-item disabled"
-                aria-disabled="true"
-              >
-                {label}
-              </span>
-            ),
-          )}
+          {analysisMenus.map(([path, label]) => (
+            <NavLink
+              key={path}
+              to={`${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`}
+              className={`nav-item ${location.pathname !== '/' && active === path ? 'active' : ''}`}
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
         <div className="sidebar-secondary">
           <span>관련 뉴스 · 후순위</span>
@@ -199,7 +182,7 @@ export function Shell() {
           </div>
         </div>
         <div className="top-actions">
-          {ready && (
+          {(company || metadata || financialContext) && (
             <NavLink className="context-change" to={searchPath}>
               기업 변경
             </NavLink>

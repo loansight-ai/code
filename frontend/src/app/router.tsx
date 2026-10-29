@@ -4,12 +4,14 @@ import { CompanyPage } from '../pages/company-page'
 import { AnalysisPage } from '../pages/analysis-page'
 import { LiveAnalysisPage } from '../pages/live-analysis-page'
 import { FinancialSummaryPage } from '../pages/financial-summary-page'
+import { AnalysisEntryPage } from '../pages/analysis-entry-page'
 
 export const router = createBrowserRouter([
   {
     element: <Shell />,
     children: [
       { path: '/', element: <CompanyPage /> },
+      { path: '/workspace/:section', element: <AnalysisEntryPage /> },
       { path: '/analyses/:analysisId/:section?', element: <AnalysisPage /> },
       { path: '/notes/:structureId/:section?', element: <LiveAnalysisPage /> },
       {
