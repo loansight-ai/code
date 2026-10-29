@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import type { DemoContext } from '../analysis/demo-context'
 import { demoVersions } from '../analysis/demo-context'
 import { Button } from '../../shared/components/button'
-import { Modal } from '../../shared/components/modal'
+import { FormulaDialog } from './formula-dialog'
 import { StatePanel } from '../../shared/components/state-panel'
 import { StatusBadge } from '../../shared/components/status-badge'
 import { borrowingRows, ratioGroups, ratiosForLease } from './financial-data'
@@ -181,36 +181,29 @@ export function RatioPanel({ context }: { context: DemoContext }) {
         </section>
       </div>
       {formula && (
-        <Modal
-          open
+        <FormulaDialog
           title={`${formula.name} · 예시 산식`}
           description={`${demoVersions.financial} · 실제 산식 정책 승인 또는 수집된 값이 아닙니다.`}
-          onOpenChange={(open) => {
-            if (!open) setFormulaId(null)
-          }}
+          formula={formula.formula}
+          state="example"
+          rows={[
+            { label: '분자', value: formula.numerator },
+            { label: '분모', value: formula.denominator },
+            { label: '잔액 기준', value: formula.basis },
+            { label: '단위', value: `${formula.unit} · 소수 첫째 자리 표시` },
+            { label: '버전', value: demoVersions.financial },
+            {
+              label: '출처',
+              value: `${formula.source} · 계정 매핑 demo-account-v1 · 실제 접수번호 미연동`,
+            },
+          ]}
+          reason={formula.reason}
+          onClose={() => setFormulaId(null)}
           onCloseAutoFocus={(event) => {
             event.preventDefault()
             opener.current?.focus()
           }}
-        >
-          <dl className="formula-details">
-            <dt>산식</dt>
-            <dd>{formula.formula}</dd>
-            <dt>분자</dt>
-            <dd>{formula.numerator}</dd>
-            <dt>분모</dt>
-            <dd>{formula.denominator}</dd>
-            <dt>잔액·기간·정밀도</dt>
-            <dd>{formula.basis}</dd>
-            <dt>자료 상태·근사</dt>
-            <dd>{formula.reason}</dd>
-            <dt>근거</dt>
-            <dd>
-              {formula.source} · 계정 매핑 demo-account-v1 · 실제 접수번호
-              미연동
-            </dd>
-          </dl>
-        </Modal>
+        />
       )}
     </>
   )

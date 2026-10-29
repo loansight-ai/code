@@ -1,0 +1,164 @@
+.modal-content.formula-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 24px;
+  border: 1px solid #d9dcd5;
+  border-radius: 8px;
+  box-shadow: 0 16px 48px #15181d24;
+  color: #15181d;
+}
+.formula-dialog .modal-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 28px;
+}
+.formula-dialog .modal-heading h2 {
+  padding: 0;
+  font-size: calc(16px * var(--font-scale));
+  line-height: 1.5;
+}
+.formula-dialog > p {
+  margin: 8px 0 20px;
+  color: #73776e;
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.65;
+}
+.formula-dialog .modal-close {
+  top: 20px;
+  right: 16px;
+  color: #60584c;
+  border-radius: 4px;
+}
+.formula-dialog .modal-close:hover {
+  background: #f3f4f1;
+}
+.formula-state {
+  flex-shrink: 0;
+  border: 1px solid #d9dcd5;
+  border-radius: 4px;
+  background: #f3f4f1;
+  color: #60584c;
+  padding: 2px 7px;
+  font-size: calc(9px * var(--font-scale));
+  font-weight: 600;
+  white-space: nowrap;
+}
+.formula-state-pending {
+  color: #9a5b06;
+  background: #fff8e8;
+  border-color: #e9d4a5;
+}
+.formula-state-example {
+  color: #355c86;
+  background: #f0f5fa;
+  border-color: #d4dfeb;
+}
+.formula-expression {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: #f7f7f4;
+  border-left: 3px solid #ffbc00;
+}
+.formula-expression > span {
+  color: #60584c;
+  font-size: calc(9px * var(--font-scale));
+}
+.formula-expression strong {
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.formula-definition {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: calc(10.5px * var(--font-scale));
+  line-height: 1.65;
+}
+.formula-definition th,
+.formula-definition td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7df;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.formula-definition thead th {
+  background: #f3f4f1;
+  border-top: 1px solid #d9dcd5;
+  color: #60584c;
+  font-size: calc(9.5px * var(--font-scale));
+  font-weight: 600;
+}
+.formula-definition thead th:first-child {
+  width: 92px;
+}
+.formula-definition tbody th {
+  color: #60584c;
+  font-weight: 500;
+}
+.formula-definition tbody td {
+  color: #15181d;
+}
+.formula-definition td > span {
+  display: block;
+}
+.formula-definition td small {
+  display: block;
+  margin-top: 3px;
+  color: #73776e;
+  font-size: calc(9px * var(--font-scale));
+}
+.formula-explanation {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #f7f7f4;
+  border: 1px solid #e5e7df;
+  border-radius: 4px;
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.7;
+  color: #60584c;
+}
+.formula-explanation.is-pending {
+  background: #fffbf1;
+  border-color: #ecdfbf;
+  color: #9a5b06;
+}
+.formula-explanation strong {
+  font-weight: 600;
+}
+.formula-explanation p {
+  margin: 4px 0 0;
+}
+.formula-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: calc(10px * var(--font-scale));
+  color: #60584c;
+  text-underline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .modal-content.formula-dialog {
+    padding: 20px 16px;
+    max-height: calc(100dvh - 32px);
+  }
+  .formula-dialog .modal-heading {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  .formula-definition thead th:first-child {
+    width: 80px;
+  }
+  .formula-definition th,
+  .formula-definition td {
+    padding: 9px 8px;
+  }
+}

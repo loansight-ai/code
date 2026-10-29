@@ -10,6 +10,8 @@ export function Modal({
   children,
   onCloseAutoFocus,
   variant = 'modal',
+  className = '',
+  headerAside,
 }: {
   title: string
   description: string
@@ -18,16 +20,25 @@ export function Modal({
   children: ReactNode
   onCloseAutoFocus?: (event: Event) => void
   variant?: 'modal' | 'drawer'
+  className?: string
+  headerAside?: ReactNode
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="modal-overlay" />
         <Dialog.Content
-          className={`modal-content ${variant === 'drawer' ? 'source-drawer' : ''}`}
+          className={`modal-content ${variant === 'drawer' ? 'source-drawer' : ''} ${className}`}
           onCloseAutoFocus={onCloseAutoFocus}
         >
-          <Dialog.Title>{title}</Dialog.Title>
+          {headerAside ? (
+            <div className="modal-heading">
+              <Dialog.Title>{title}</Dialog.Title>
+              {headerAside}
+            </div>
+          ) : (
+            <Dialog.Title>{title}</Dialog.Title>
+          )}
           <Dialog.Description>{description}</Dialog.Description>
           <Dialog.Close className="modal-close" aria-label="닫기">
             <X size={20} />
