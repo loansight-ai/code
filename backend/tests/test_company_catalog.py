@@ -97,8 +97,9 @@ async def test_endpoint_errors_pagination_and_validation(tmp_path, monkeypatch):
     app = create_app(settings(tmp_path))
     async with app.router.lifespan_context(app):
 
-        async def search(*args):
-            return app.state.company_catalog.search(*args)
+        async def search(q, offset, limit, industry, market):
+            assert market is None  # Market filtering is covered by the DB repository tests.
+            return app.state.company_catalog.search(q, offset, limit, industry)
 
         # Router contract only; PostgreSQL behavior is covered by integration tests.
         monkeypatch.setattr(app.state.company_repository, "search", search)
@@ -133,8 +134,9 @@ async def test_industry_filters_use_hierarchy_before_pagination(tmp_path, monkey
     app = create_app(config)
     async with app.router.lifespan_context(app):
 
-        async def search(*args):
-            return app.state.company_catalog.search(*args)
+        async def search(q, offset, limit, industry, market):
+            assert market is None
+            return app.state.company_catalog.search(q, offset, limit, industry)
 
         monkeypatch.setattr(app.state.company_repository, "search", search)
         catalog = app.state.company_catalog
