@@ -3,7 +3,7 @@
 기업 여신 검토를 지원하는 공시 기반 재무·주석·위험징후 분석 서비스 **LoanSight AI**의 실행 코드와 운영 환경을 관리하는 저장소입니다.
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
-- 기획 기준: 기획안 v2.2 · 요구사항 v0.0.6 · PRD/기능명세서 v0.0.5 · WBS v1.3
+- 기획 기준: 기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4
 - 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 위험규칙·외부 모델·검토 내용의 서버 저장은 후속입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
@@ -34,7 +34,7 @@
 | [개발·제공 동작 계획](docs/design/06_delivery-and-validation.md) | 구현 순서·현행 기능 37개 연결·검수·미정 항목 |
 | [커버리지 검토](docs/reviews/01_architecture-coverage-v0.4.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
 
-기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.3](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
+기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.4](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
 
 ## 구현·실행
 
@@ -106,3 +106,7 @@ Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 기본 화면은 실제 DART �
 팀 품질관리 자료는 [별도 Notion 페이지](https://app.notion.com/p/40680be201ba81ddb717d75d409cde98)에서 관리한다. 설계 목표의 갱신이며 위 실제 구현 상태를 바꾸지 않는다.
 
 문서 개정 Issue·PR: https://github.com/loansight-ai/code/issues/15 · https://github.com/loansight-ai/code/pull/16
+
+## 2026.10.29 기획 기준 개정
+
+기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4 기준입니다. 연결(CFS) 우선·없으면 별도(OFS) 전환과 새 징후 기준을 적용합니다. 복합 위험 7유형·23개 후보·별도 기준 모델 비교는 현행 범위에서 제외합니다. 기존 설계·구현 이력과 화면설계서는 보존하며, 이 README 개정만으로 실행 코드의 실제 회계 선택·위험규칙이 바뀌었다고 주장하지 않습니다. 기존 시스템 설계와 충돌하는 기획 범위는 [현재 상세 기획](https://github.com/loansight-ai/docs/blob/main/01-planning/README.md)을 우선 확인합니다.
