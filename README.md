@@ -4,7 +4,7 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.2 · 요구사항 v0.0.6 · PRD/기능명세서 v0.0.5 · WBS v1.3
-- 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. 실제 재무/위험 분석·검토 내용의 서버 저장은 후속 구현이며 기업 분석 화면은 예시입니다.
+- 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 위험규칙·외부 모델·검토 내용의 서버 저장은 후속입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
 주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. [Codex 보완 탐색](backend/README.md#note-agent)은 서버 인증·실행 제한 설정 후 사용할 수 있으며, 인용을 검증한 사실 후보를 검수 전 상태로 저장합니다. OpenAI API 어댑터와 담당자 사실 검수 저장은 후속입니다.
@@ -40,7 +40,7 @@ React + Vite + TypeScript, FastAPI·Python Worker, PostgreSQL, RabbitMQ와 SSE�
 
 패키지 관리는 프론트엔드 **pnpm**, 백엔드 **uv**를 사용합니다. 상세 라이브러리는 [프론트엔드 구성](docs/design/04_ui-and-review.md#frontend-stack)과 [백엔드 구성](docs/design/05_project-and-deployment.md#backend-stack)을 따릅니다.
 
-백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 프론트의 사용자·세션·작업 API 연동은 [프론트엔드 안내](frontend/README.md#서버-세션작업-연동)를 참고합니다. 실제 재무 분석은 후속 구현입니다.
+백엔드 의존성·버전·설정·실행·검증 명령은 [백엔드 실행 안내](backend/README.md)에서 관리합니다. 프론트의 사용자·세션·작업 API 연동은 [프론트엔드 안내](frontend/README.md#서버-세션작업-연동)를 참고합니다. 실제 핵심 재무 분석은 [재무 API](backend/README.md#financial-api)를 사용합니다.
 
 [재무제표 주석 구조화 패키지 사용방법](backend/app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)의 v0.8.4 wheel을 pip로 설치할 수 있습니다. 연결·별도 주석 HTML의 번호 계층·본문·표 문맥과 선택적 당기·전기 표 연결을 제공합니다. 저장소 내 설치·실행은 [백엔드 안내](backend/README.md#note-hierarchy), 서비스 근거 데이터로 연결할 때의 경계는 [주석 설계](docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
 
@@ -66,7 +66,7 @@ PowerShell 또는 명령 프롬프트에서 프로젝트 루트의 스크립트�
 
 `--backend`와 `--frontend`는 상호 배타적입니다. 선택하지 않으면 양쪽을 대상으로 합니다. `--restart`는 시작 스크립트에서만 사용할 수 있습니다. 실행 중인 대상은 알림만 출력하며, `--restart`를 지정하면 재시작합니다. 종료된 대상을 다시 종료하면 이미 종료되었다고 안내합니다. 한쪽 실행 실패 시 다른 쪽도 처리하고 종료 코드 1을 반환합니다.
 
-백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 실행합니다. 시작 스크립트는 `.tools/`의 프로젝트 전용 Node.js·pnpm을 우선 사용하고, 없으면 PATH의 도구를 확인합니다. 도구가 없거나 버전이 맞지 않으면 `.\setup-frontend.cmd`를 안내합니다. 프론트의 코드 접속·작업 알림은 백엔드에 연결되며 기업 분석 화면은 예시 데이터를 사용합니다.
+백엔드 5개 서비스는 API·PostgreSQL·RabbitMQ·Worker·Relay이며 종료·재시작 시 DB·MQ 볼륨을 유지합니다. 프론트엔드는 `frontend/package.json`의 Vite용 `dev` 스크립트를 실행합니다. 시작 스크립트는 `.tools/`의 프로젝트 전용 Node.js·pnpm을 우선 사용하고, 없으면 PATH의 도구를 확인합니다. 도구가 없거나 버전이 맞지 않으면 `.\setup-frontend.cmd`를 안내합니다. 프론트의 코드 접속·작업 알림은 백엔드에 연결되며 실제 핵심 재무 분석과 별도의 예시 분석 화면을 제공합니다.
 
 기본 주소는 API `http://localhost:8000/docs`, 프론트엔드 `http://localhost:5173`입니다. PowerShell의 `$env:LOANSIGHT_API_PORT = '8001'`, `$env:LOANSIGHT_FRONTEND_PORT = '5174'`로 포트를 바꿀 수 있습니다. 이미 실행 중인 대상의 포트를 바꾸려면 `--restart`를 함께 사용합니다.
 

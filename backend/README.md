@@ -2,9 +2,46 @@
 
 [Issue #9](https://github.com/loansight-ai/code/issues/9)의 실행 기반과 [Issue #11](https://github.com/loansight-ai/code/issues/11)의 사용자·세션·비동기 작업 흐름을 제공합니다.
 
-Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업코드 수집·검색을 구현했으며 공시 수집·재무 분석·외부 모델 연동은 후속 구현입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
+Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업 검색·원문 수집과 [핵심 재무 분석](#financial-api)을 구현했으며 위험규칙·외부 모델 연동은 후속입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
 로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 저장된 결과는 프론트 원문 뷰어에 연결했으며 사실 추출·검수는 후속 작업입니다.
+
+<a id="financial-api"></a>
+
+## 핵심 재무 수집·분석 API
+
+기업·사업보고서 선택 후 `POST /api/v1/me/financial-analyses`를 호출합니다. 세션과 허용 Origin이 필요하며 작업 정책(`job_max_attempts`)을 먼저 설정해야 합니다. API는 작업·분석·사용자 연결·Outbox를 함께 저장하고, 기존 RabbitMQ Worker와 SSE를 사용합니다. 주석 구조화 완료를 요청의 전제 조건으로 두지 않습니다.
+
+```json
+{
+  "corp_code": "00141529",
+  "receipt_no": "20260318000621",
+  "scope": "OFS",
+  "lease": "include"
+}
+```
+
+| API | 동작 |
+|---|---|
+| `POST /api/v1/me/financial-analyses` | 202. `analysis_run_id`, 작업 식별자·상태·`reused` 반환 |
+| `GET /api/v1/me/financial-analyses/{id}` | 본인 Workspace의 기준·작업 상태·결과 스냅샷 조회. 진행/실패 시 `result:null` |
+| `GET /api/v1/me/financial-analyses/{id}/source` | 동일 권한으로 수집한 원본 JSON 다운로드. 해시를 검증하며 미완료/파일 손상·누락은 409 |
+
+`scope`는 OFS 기본/CFS 분리, `lease`는 include 기본/exclude입니다. 같은 Workspace·접수번호·옵션·계정/산식/주석 파서 버전은 재사용합니다. 새 수집은 선택적 UUID `refresh_key`로 구분하며 같은 키는 중복 생성하지 않습니다. 옵션 변경은 새 분석을 생성하거나 같은 조건의 기존 결과를 재사용합니다. 자동 수집만 지원하며 직접 입력·업종 override는 이 API의 범위 밖입니다.
+
+**수집·보존:** [단일회사 전체 재무제표 공식 API](https://opendart.fss.or.kr/guide/detail.do?apiGrpCd=DS003&apiId=2019020)의 사업보고서(`11011`, 2015년 이후)를 사용합니다. 기업 보고서 목록의 최신 접수번호를 검증하고 실제 응답의 기업·사업연도·보고서 종류·접수번호·회계 범위를 점검합니다. API가 다른 정정본을 반환하면 `financial_receipt_mismatch`로 실패하며 선택한 공시를 조용히 대체하지 않습니다. 상태 013은 해당 범위 자료 없음으로 보존하고 CFS 실패를 OFS로 대체하지 않습니다.
+
+원본 JSON은 `artifact_root/financial/originals`에 SHA-256 주소로 보존합니다. 기존 DART 수집기를 재사용해 XML/ZIP과 회계 범위별 주석 HTML도 보존하며, 수치 보완은 현재 주석 HTML의 표를 사용합니다. XML 전체를 범용 재무 숫자 파서로 해석하지는 않습니다. 주석 수집·파싱 실패는 `note_state`·`note_error`로 남기고 확보한 정형 재무 결과를 제공합니다. 저장소 백업은 기존 원문과 새 JSON 경로를 함께 포함해야 합니다.
+
+**매핑·검증:** 표준 계정 ID 우선이며 비표준 계정만 정확한 이름 사전으로 보완합니다. 매출채권과 기타채권 합계, 차입 집계와 구성 항목, 금융원가와 이자비용을 혼용하지 않습니다. 중복 후보가 다른 금액이면 `ambiguous_account`, 다른 통화는 `unsupported_currency`로 미확보 처리합니다. 빈값·대시는 0으로 만들지 않습니다. 주석은 병합 셀 좌표·당기/전기 열 또는 별도 기간 캡션·원 단위·합계 열을 검증합니다. 양수 이자비용 원천 없이 음수 손익 기여분을 절댓값으로 바꾸지 않으며 충돌 금액은 보완하지 않습니다. 원래 계정명·금액 필드·행 번호 또는 표/셀 XPath·원본 해시·규칙 버전을 보존합니다. 이는 담당자 사실 검수 완료와는 구분합니다.
+
+**저장·계산:** `financial_run`은 Workspace·Job·입력 기준·결과 JSONB 스냅샷을, `financial_fact`는 계정×비교기간별 `Numeric(38,6)` 금액과 출처/매핑 상태를 저장합니다. 계산은 Decimal로 수행하고 지표는 소수 4자리 문자열로 저장하며 UI에서 소수 1자리로 표시합니다. 원본 금액은 원 단위로 유지합니다. Worker가 소유 토큰과 실행 임대를 검사한 뒤 재무값·결과·작업 완료·이벤트를 같은 트랜잭션으로 확정합니다. 중복 전달이나 만료된 실행은 결과를 추가 저장하지 않습니다.
+
+공통 재무·운전자본·투자 지출을 함께 저장하고 핵심 비율·증감·영업이익 변동 분해를 서버에서 계산합니다. 차입 합계는 필요한 구성 금액이 모두 확보된 경우만 산출하며, 리스 제외는 부채비율과 총차입금 계산에 적용합니다. 임대보증금은 별도로 표시합니다. ROA의 잔액 기준, 회전일수의 기간/첫해 정책, EBITDA·CAPEX·현금보상·금융비용 범위는 미정이므로 `NOT_COMPUTABLE`과 사유를 반환합니다. PF·금리·만기 상세, 비교군·한국은행 통계는 아직 검증된 데이터가 없어 보류합니다.
+
+현재 추세는 **선택한 보고서의 당기·전기·전전기 비교금액**입니다. 이를 무조건 3개 연간 기간으로 해석하지 않습니다. 특히 리츠·결산 변경은 실제 보고기간과 비교 가능성 확인이 필요합니다. 별도 과거 보고서의 최신 정정값을 합쳐 만든 5개년 시계열은 후속입니다.
+
+대표 4기업·양 회계 범위의 공식 응답, 주석 보완, DB·화면 검증은 [재무 분석 검증](../docs/reviews/16_financial-summary-validation.md)을 참고합니다.
 
 <a id="note-hierarchy"></a>
 
@@ -329,7 +366,7 @@ docker compose -f deploy/compose.yaml down
 
 세션 TTL·진입 제한·최대 작업 시도 횟수는 운영 정책이 미정이므로 코드에 기본값을 두지 않았습니다. `.env.example`과 Compose의 수치는 **로컬 개발 예시**이며 운영 정책 확정을 뜻하지 않습니다. 설정이 빠진 기능은 503으로 거부합니다. 허용 Origin도 명시적으로 설정하며 프록시의 임의 헤더로 IP나 권한을 신뢰하지 않습니다.
 
-현재 지원 작업은 연결 점검 `PIPELINE_CHECK`와 주석 구조화 `NOTE_STRUCTURE`입니다. 연결 점검 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 주석 접수는 [별도 API](#note-import-api)를 사용하고 Workspace별로 격리합니다. 두 작업 모두 결과에 `financial_analysis_performed:false`를 명시합니다. 실제 `/analyses` API와 재무 분석 핸들러는 후속 구현입니다.
+현재 작업 종류는 연결 점검 `PIPELINE_CHECK`, 주석 구조화 `NOTE_STRUCTURE`, 원문 수집 `DART_COLLECT`, 보완 탐색 `NOTE_AGENT`, 재무 분석 `FINANCIAL_ANALYSIS`입니다. 연결 점검 요청은 `{"check_key":"UUID","shared":false}`입니다. 같은 키·범위는 실행과 내 작업 연결을 재사용하며 `shared:true`는 개인 입력이 없는 점검 작업의 사용자 간 실행 재사용을 검증합니다. 주석 접수는 [별도 API](#note-import-api)를 사용하고 Workspace별로 격리합니다. 연결 점검·주석 구조화는 `financial_analysis_performed:false`이며 실제 재무 작업은 [재무 API](#financial-api)로 요청합니다. 위험규칙·외부 모델은 포함하지 않습니다.
 
 SSE는 내장 FastAPI SSE와 API 프로세스별 전용 PostgreSQL LISTEN 연결을 사용합니다. 연결 시작 시 주석을 즉시 전송하여 유휴 스트림도 프록시를 거쳐 연결을 확정합니다. cursor는 Workspace 스트림 ID·커밋 순번이며 권한 증명이 아닙니다. `Last-Event-ID`가 `after`보다 우선합니다. 잘못된·다른 사용자 cursor나 재생 한도(`LOANSIGHT_EVENT_BATCH_SIZE`, 기본 100건) 초과 시 `reset`을 보내며 작업 목록을 다시 조회해야 합니다. 현재 이벤트는 삭제하지 않고 보존합니다. 자동 삭제·운영 보존 기간은 후속 정책 결정 사항입니다. 프론트엔드 연결 UI는 [프론트엔드 안내](../frontend/README.md#서버-세션작업-연동)를 참고합니다.
 
