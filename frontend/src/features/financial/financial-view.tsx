@@ -16,6 +16,7 @@ import {
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { financialRows } from '../company/demo-data'
+import { scaleChartFonts } from '../../shared/typography'
 
 registerCharts([
   BarChart,
@@ -50,45 +51,51 @@ export function FinancialView() {
   const chartRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const chart = init(chartRef.current!)
-    chart.setOption({
-      color: ['#FFBC00', '#60584C'],
-      tooltip: { trigger: 'axis' },
-      legend: { bottom: 0, icon: 'circle' },
-      grid: { left: 50, right: 45, top: 30, bottom: 60 },
-      xAxis: {
-        type: 'category',
-        data: ['2023', '2024', '2025'],
-        axisTick: { show: false },
-        axisLine: { lineStyle: { color: '#d9dbd5' } },
-      },
-      yAxis: [
-        {
-          type: 'value',
-          name: '매출액 (억원)',
-          splitLine: { lineStyle: { color: '#eceee8' } },
+    chart.setOption(
+      scaleChartFonts({
+        color: ['#FFBC00', '#60584C'],
+        tooltip: { trigger: 'axis' },
+        legend: { bottom: 0, icon: 'circle' },
+        grid: { left: 50, right: 45, top: 30, bottom: 60 },
+        xAxis: {
+          type: 'category',
+          data: ['2023', '2024', '2025'],
+          axisTick: { show: false },
+          axisLine: { lineStyle: { color: '#d9dbd5' } },
         },
-        { type: 'value', name: '영업이익 (억원)', splitLine: { show: false } },
-      ],
-      series: [
-        {
-          name: '매출액',
-          type: 'bar',
-          barWidth: 38,
-          data: [
-            financialRows[0].y2023,
-            financialRows[0].y2024,
-            financialRows[0].y2025,
-          ],
-        },
-        {
-          name: '영업이익',
-          type: 'line',
-          yAxisIndex: 1,
-          symbolSize: 8,
-          data: [87, 94, 100],
-        },
-      ],
-    })
+        yAxis: [
+          {
+            type: 'value',
+            name: '매출액 (억원)',
+            splitLine: { lineStyle: { color: '#eceee8' } },
+          },
+          {
+            type: 'value',
+            name: '영업이익 (억원)',
+            splitLine: { show: false },
+          },
+        ],
+        series: [
+          {
+            name: '매출액',
+            type: 'bar',
+            barWidth: 38,
+            data: [
+              financialRows[0].y2023,
+              financialRows[0].y2024,
+              financialRows[0].y2025,
+            ],
+          },
+          {
+            name: '영업이익',
+            type: 'line',
+            yAxisIndex: 1,
+            symbolSize: 8,
+            data: [87, 94, 100],
+          },
+        ],
+      }),
+    )
     const observer = new ResizeObserver(() => chart.resize())
     observer.observe(chartRef.current!)
     return () => {

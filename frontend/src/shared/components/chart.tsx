@@ -11,6 +11,7 @@ import {
   TooltipComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
+import { scaleChartFonts } from '../typography'
 
 registerCharts([
   BarChart,
@@ -31,7 +32,7 @@ export function Chart({
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const chart = init(container.current!)
-    chart.setOption(option)
+    chart.setOption(scaleChartFonts(option))
     const observer = new ResizeObserver(() => chart.resize())
     observer.observe(container.current!)
     return () => {
