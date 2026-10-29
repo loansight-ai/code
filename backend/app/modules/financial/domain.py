@@ -3,8 +3,8 @@
 import re
 from decimal import Decimal, InvalidOperation, localcontext
 
-MAPPING_VERSION = "financial-accounts-v1"
-FORMULA_VERSION = "financial-formulas-v1"
+MAPPING_VERSION = "financial-accounts-v2"
+FORMULA_VERSION = "financial-formulas-v2"
 PERIODS = ("current", "previous", "before_previous")
 AMOUNT_KEYS = ("thstrm_amount", "frmtrm_amount", "bfefrmtrm_amount")
 TERM_KEYS = ("thstrm_nm", "frmtrm_nm", "bfefrmtrm_nm")
@@ -86,6 +86,7 @@ ACCOUNTS = [
         ["사채"],
     ),
     ("current_bonds", "유동성사채", "BS", ["dart_CurrentPortionOfBonds"], ["유동성사채"]),
+    ("note_borrowing_subtotal", "주석 차입금 소계 (리스 제외)", "BS", [], []),
     (
         "current_lease",
         "유동 리스부채",
@@ -469,6 +470,21 @@ def _calculate(facts, lease):
             if all(v is not None and v >= 0 for v in components)
             else None
         )
+    note_summaries = note_borrowing_summaries(facts, lease)
+    note_totals = {p: amount(note_summaries[p]["adjusted_subtotal"]) for p in PERIODS}
+    note_inputs = ["note_borrowing_subtotal"]
+    if lease == "include":
+        note_inputs += ["current_lease", "noncurrent_lease"]
+    add(
+        "note_borrowing_ratio",
+        "주석 차입금 소계/총자산",
+        "레버리지",
+        "%",
+        "주석 차입금 소계(리스 옵션 적용) ÷ 총자산 × 100",
+        note_inputs + ["assets"],
+        [divide(note_totals[p], get("assets", p)) for p in PERIODS],
+        "회사 자본관리 주석의 검산된 구성 범위 · 전체 차입 범위와 구분",
+    )
     add(
         "borrowing_ratio",
         "차입금의존도",
@@ -557,6 +573,41 @@ def _calculate(facts, lease):
             "자료·산식 정책 확보 후 계산 · 임의 근사하지 않음",
         )
     return result, {p: str(v) if v is not None else None for p, v in totals.items()}
+
+
+def note_borrowing_summaries(facts, lease):
+    lookup = {(f["key"], f["period"]): f for f in facts}
+    summaries = {}
+    with localcontext() as ctx:
+        ctx.prec = 60
+        for period in PERIODS:
+            fact = lookup.get(("note_borrowing_subtotal", period), {})
+            base = amount(fact.get("value"))
+            source = next(iter(fact.get("sources", [])), {})
+            current_lease = lookup.get(("current_lease", period), {})
+            noncurrent_lease = lookup.get(("noncurrent_lease", period), {})
+            adjusted = base
+            reason = fact.get("reason", "account_not_found")
+            if base is not None and lease == "include":
+                amounts = [amount(f.get("value")) for f in (current_lease, noncurrent_lease)]
+                adjusted = (
+                    base + sum(amounts) if all(v is not None and v >= 0 for v in amounts) else None
+                )
+                if adjusted is None:
+                    reason = "missing_lease_input"
+            summaries[period] = {
+                "base_subtotal": str(base) if base is not None else None,
+                "adjusted_subtotal": str(adjusted) if adjusted is not None else None,
+                "lease": lease,
+                "state": "RECONCILED_SUBTOTAL" if base is not None else "MISSING",
+                "reason": reason,
+                "components": source.get("components", []),
+                "reconciliation": source.get("control"),
+                "source_xpath": source.get("source_xpath"),
+                "source_sha256": source.get("source_sha256"),
+                "scope": source.get("scope"),
+            }
+    return summaries
 
 
 def comparisons(facts):

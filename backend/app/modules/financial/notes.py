@@ -2,12 +2,13 @@
 
 import re
 from decimal import localcontext
+from itertools import islice
 
 from lxml import html
 
 from app.modules.financial.domain import amount, clean_name
 
-NOTE_VERSION = "financial-note-tables-v1"
+NOTE_VERSION = "financial-note-tables-v2"
 NOTE_ACCOUNTS = {
     "이자비용": "interest_expense",
     "이자비용(금융원가)": "interest_expense",
@@ -51,8 +52,12 @@ def table_grid(table):
     return list(zip(rows, grid, strict=True))
 
 
+def preceding_elements(table):
+    return (s for s in table.itersiblings(preceding=True) if isinstance(s.tag, str))
+
+
 def nearest_caption(table):
-    for sibling in table.itersiblings(preceding=True):
+    for sibling in preceding_elements(table):
         text = " ".join(sibling.text_content().split())
         if text:
             # Do not jump over another data table to borrow its period or unit.
@@ -87,7 +92,7 @@ def extract_note_candidates(source: bytes, encoding: str, digest: str):
             if len(caption_periods) == 1
             else None
         )
-        section = " ".join(s.text_content() for s in list(table.itersiblings(preceding=True))[:12])
+        section = " ".join(s.text_content() for s in islice(preceding_elements(table), 12))
         columns = {}
         for _, cells in grid:
             names = [clean_name(c.text_content()) if c is not None else "" for c in cells]
@@ -160,6 +165,132 @@ def extract_note_candidates(source: bytes, encoding: str, digest: str):
                         "parser_version": NOTE_VERSION,
                     }
                 )
+    candidates.extend(extract_borrowing_subtotals(root, digest))
+    return candidates
+
+
+def extract_borrowing_subtotals(root, digest):
+    """Derive only the issuer's reconciled capital-management subtotal.
+
+    This is not evidence that undisclosed bonds are zero. The normalized fact
+    has a separate key and never replaces the calculator's full borrowing total.
+    """
+    borrowings = {"단기차입금", "유동성장기차입금", "장기차입금"}
+    reductions = {
+        "현금및현금성자산",
+        "당기손익인식금융자산",
+        "기타포괄손익인식금융자산",
+        "상각후원가로측정하는금융자산",
+    }
+    controls = {"순부채(순자산)", "순차입금(순현금)"}
+    tree, candidates = root.getroottree(), []
+    for table in root.xpath("//table"):
+        if table.xpath(".//table"):
+            continue
+        text = clean_name(table.text_content())
+        if not all(name in text for name in borrowings) or not any(
+            name in text for name in controls
+        ):
+            continue
+        caption = nearest_caption(table)
+        context = " ".join(s.text_content() for s in islice(preceding_elements(table), 12))
+        if "자본관리" not in caption + context:
+            continue
+        periods = set(re.findall(r"(?<![가-힣])(전전기|전기|당기)(?:말)?(?![가-힣])", caption))
+        if len(periods) != 1:
+            continue
+        period = {"당기": "current", "전기": "previous", "전전기": "before_previous"}[
+            next(iter(periods))
+        ]
+        units = set(re.findall(r"단위\s*[:：]?\s*(백만원|천원|원)", caption))
+        if len(units) != 1:
+            continue
+        multiplier = {"원": 1, "천원": 1000, "백만원": 1000000}[next(iter(units))]
+        grid = table_grid(table)
+        if not grid:
+            continue
+        # Only an explicit single amount column is supported here. Currency,
+        # rate, maturity and instrument-category columns are not summed.
+        header = [
+            i
+            for i, c in enumerate(grid[0][1])
+            if c is not None and clean_name(c.text_content()) == "공시금액"
+        ]
+        if len(header) != 1:
+            continue
+        column = header[0]
+        entries, control, invalid = [], None, False
+        for row, cells in grid[1:]:
+            if column >= len(cells) or cells[column] is None:
+                invalid = True
+                break
+            label = clean_name(cells[0].text_content()) if cells[0] is not None else ""
+            raw = cells[column].text_content().strip()
+            value = amount(raw)
+            if label in controls:
+                control = {"label": label, "value": value, "source_xpath": tree.getpath(row)}
+                break
+            if label not in borrowings | reductions or value is None:
+                invalid = True
+                break
+            if (label in borrowings and value < 0) or (label in reductions and value > 0):
+                invalid = True
+                break
+            entries.append(
+                {
+                    "label": label,
+                    "value": value,
+                    "raw_amount": raw,
+                    "source_xpath": tree.getpath(row),
+                    "source_cell_xpath": tree.getpath(cells[column]),
+                }
+            )
+        if invalid or control is None or control["value"] is None:
+            continue
+        labels = [entry["label"] for entry in entries]
+        if len(set(labels)) != len(labels) or not borrowings.issubset(labels):
+            continue
+        with localcontext() as ctx:
+            ctx.prec = 60
+            # No accounting tolerance is invented: the displayed table must
+            # reconcile exactly in its disclosed unit.
+            if sum((e["value"] for e in entries), start=amount("0")) != control["value"]:
+                continue
+            subtotal = sum(
+                (e["value"] for e in entries if e["label"] in borrowings), start=amount("0")
+            )
+            normalized = str(subtotal * multiplier)
+            if amount(normalized) is None:
+                continue
+            serialized = [
+                {
+                    **e,
+                    "value": str(e["value"] * multiplier),
+                    "kind": "borrowing" if e["label"] in borrowings else "reduction",
+                }
+                for e in entries
+            ]
+        candidates.append(
+            {
+                "key": "note_borrowing_subtotal",
+                "period": period,
+                "value": normalized,
+                "raw_amount": str(subtotal),
+                "account_name": "주석 차입금 소계",
+                "source_sha256": digest,
+                "source_xpath": tree.getpath(table),
+                "period_caption": caption,
+                "unit_multiplier": multiplier,
+                "components": serialized,
+                "control": {**control, "value": str(control["value"] * multiplier)},
+                "derived": True,
+                "method": "note_reconciled_subtotal",
+                "eligible": True,
+                "validation": "capital_management_exact_reconciliation",
+                "scope": "issuer_disclosed_borrowing_components_excluding_lease",
+                "parser_version": NOTE_VERSION,
+            }
+        )
     return candidates
 
 
@@ -196,7 +327,7 @@ def supplement(facts, candidates):
             value=next(iter(values)),
             state="CONFIRMED",
             reason=None,
-            mapping_method="note_exact_table",
+            mapping_method=eligible[0].get("method", "note_exact_table"),
             sources=eligible,
         )
     return facts

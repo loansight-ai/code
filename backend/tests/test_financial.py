@@ -7,7 +7,13 @@ import pytest
 
 from app.modules.evidence.dart_collector import CollectionError
 from app.modules.financial.collector import download, parse_response
-from app.modules.financial.domain import amount, calculate, comparisons, map_facts
+from app.modules.financial.domain import (
+    amount,
+    calculate,
+    comparisons,
+    map_facts,
+    note_borrowing_summaries,
+)
 from app.modules.financial.notes import extract_note_candidates, supplement
 
 CONTEXT = {
@@ -205,3 +211,45 @@ def test_separate_period_caption_and_signed_corroboration_never_create_expense_f
     assert fact(supplement(map_facts([]), candidates), "interest_expense")["value"] == "25000"
     negative = [c for c in candidates if not c["eligible"]]
     assert fact(supplement(map_facts([]), negative), "interest_expense")["value"] is None
+
+
+def test_ottogi_capital_note_subtotal_reconciles_without_filling_missing_bonds():
+    source = (Path(__file__).parent / "fixtures/ottogi-capital-notes.html").read_bytes()
+    candidates = extract_note_candidates(source, "utf-8", "a" * 64)
+    rows = [
+        row("ifrs-full_Assets", "2594463552213"),
+        row("ifrs-full_CurrentLeaseLiabilities", "3611991272"),
+        row("ifrs-full_NoncurrentLeaseLiabilities", "4430387738"),
+    ]
+    facts = supplement(map_facts(rows), candidates)
+    assert fact(facts, "note_borrowing_subtotal")["value"] == "419636531000"
+    assert fact(facts, "note_borrowing_subtotal", "previous")["value"] == "395650256000"
+    assert fact(facts, "note_borrowing_subtotal")["mapping_method"] == "note_reconciled_subtotal"
+    assert fact(facts, "bonds")["value"] is None
+    assert fact(facts, "current_bonds")["value"] is None
+    assert calculate(facts)[1]["current"] is None
+    excluded = note_borrowing_summaries(facts, "exclude")["current"]
+    included = note_borrowing_summaries(facts, "include")["current"]
+    assert excluded["adjusted_subtotal"] == "419636531000"
+    assert included["adjusted_subtotal"] == "427678910010"
+    assert included["reconciliation"]["value"] == "-37382782000"
+    assert len([c for c in included["components"] if c["kind"] == "borrowing"]) == 3
+
+
+def test_note_subtotal_requires_exact_reconciliation_and_explicit_won_unit():
+    source = (Path(__file__).parent / "fixtures/ottogi-capital-notes.html").read_bytes()
+    wrong_control = source.replace(b"37,382,782", b"37,382,781").replace(
+        b"84,626,801", b"84,626,800"
+    )
+    wrong_unit = source.replace("천원".encode(), b"USD")
+    for invalid in (wrong_control, wrong_unit):
+        candidates = extract_note_candidates(invalid, "utf-8", "a" * 64)
+        assert not any(c["key"] == "note_borrowing_subtotal" for c in candidates)
+
+
+def test_missing_lease_keeps_valid_note_base_but_withholds_adjusted_subtotal():
+    source = (Path(__file__).parent / "fixtures/ottogi-capital-notes.html").read_bytes()
+    facts = supplement(map_facts([]), extract_note_candidates(source, "utf-8", "a" * 64))
+    summary = note_borrowing_summaries(facts, "include")["current"]
+    assert summary["base_subtotal"] == "419636531000"
+    assert summary["adjusted_subtotal"] is None and summary["reason"] == "missing_lease_input"

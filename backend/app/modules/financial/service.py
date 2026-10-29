@@ -22,6 +22,7 @@ from app.modules.financial.domain import (
     calculate,
     comparisons,
     map_facts,
+    note_borrowing_summaries,
 )
 from app.modules.financial.models import FinancialFact, FinancialRun
 from app.modules.financial.notes import NOTE_VERSION, extract_note_candidates, supplement
@@ -142,6 +143,7 @@ async def prepare(database, settings, job_id):
         "note_error": note_error,
         "note_candidates": candidates,
         "borrowing_totals": totals,
+        "note_borrowing_summaries": note_borrowing_summaries(facts, context["lease"]),
         "availability": "AVAILABLE" if rows else "NO_DATA",
         "comparison_basis": (
             "선택한 보고서의 당기·전기·전전기 비교금액. "

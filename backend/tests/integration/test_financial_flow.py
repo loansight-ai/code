@@ -1,6 +1,8 @@
 import asyncio
 import json
 from datetime import UTC, datetime
+from pathlib import Path
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
@@ -187,3 +189,40 @@ async def test_response_correction_fails_without_saving_wrong_facts(
     assert result["result"] is None
     async with environment[2].transaction() as db:
         assert await db.scalar(select(func.count()).select_from(FinancialFact)) == 0
+
+
+async def test_reconciled_note_borrowings_are_persisted_with_scope_and_provenance(
+    client, environment, financial, monkeypatch
+):
+    source = (Path(__file__).parents[1] / "fixtures/ottogi-capital-notes.html").read_bytes()
+    store = LocalArtifactStore(environment[1].artifact_root)
+    digest = store.put(source)
+
+    async def notes(*args):
+        return None, SimpleNamespace(sha256=digest, encoding="utf-8"), source
+
+    monkeypatch.setattr("app.modules.financial.service.ensure_source", notes)
+    await client.post("/api/v1/users")
+    item = (await client.post("/api/v1/me/financial-analyses", json=INPUT)).json()
+    await execute(environment, item)
+    detail = (await client.get("/api/v1/me/financial-analyses/" + item["analysis_run_id"])).json()
+    assert detail["status"] == "SUCCEEDED", detail
+    summary = detail["result"]["note_borrowing_summaries"]["current"]
+    assert summary["base_subtotal"] == "419636531000"
+    assert summary["source_sha256"] == digest
+    assert summary["state"] == "RECONCILED_SUBTOTAL"
+    assert summary["adjusted_subtotal"] is None  # Lease inputs were not supplied.
+    assert detail["result"]["borrowing_totals"]["current"] is None
+    async with environment[2].transaction() as db:
+        saved = await db.scalar(
+            select(FinancialFact).where(
+                FinancialFact.run_id == UUID(item["analysis_run_id"]),
+                FinancialFact.account_key == "note_borrowing_subtotal",
+                FinancialFact.period == "current",
+            )
+        )
+        assert str(saved.amount) == "419636531000.000000"
+        assert (
+            saved.provenance["sources"][0]["scope"]
+            == "issuer_disclosed_borrowing_components_excluding_lease"
+        )
