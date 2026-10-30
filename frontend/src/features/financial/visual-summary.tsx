@@ -349,14 +349,6 @@ export function VisualFinancialSummary({
   }
   return (
     <div className="vs-summary">
-      <div className="vs-section-intro">
-        <span className="vs-eyebrow">FINANCIAL OVERVIEW</span>
-        <p>이익의 흐름부터 차입 구조까지, 같은 공시 기준으로 살펴봅니다.</p>
-        <span className="vs-muted">
-          {demo ? '가상 기업 · 레이아웃 예시' : result.company_name} ·{' '}
-          {result.context.scope} · 금액 단위 억원
-        </span>
-      </div>
       <div className="vs-hero-grid">
         <section
           className="vs-panel vs-profit"

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { expect, it, vi } from 'vitest'
 import { FinancialSummaryPage } from '../pages/financial-summary-page'
+import { FinancialInformation } from '../features/financial/financial-information'
 import {
   SessionContext,
   type SessionState,
@@ -81,10 +82,10 @@ it('renders official filing values, policy holds and exact note provenance in th
     await screen.findByRole('heading', { name: '핵심 재무 요약' }),
   ).toBeVisible()
   expect(
-    screen.getByText(
-      `${fixture.company_name} · ${fixture.context.report_name} · 별도 기준`,
+    screen.queryByText(
+      `${fixture.company_name} · ${fixture.context.scope} · 금액 단위 억원`,
     ),
-  ).toBeVisible()
+  ).not.toBeInTheDocument()
   const roa = screen
     .getByRole('button', { name: '총자산영업이익률' })
     .closest('.vs-core-card')!
@@ -106,16 +107,38 @@ it('hides previous company values while another analysis loads', async () => {
     String(input).includes(other) ? new Promise(() => {}) : response(detail()),
   )
   const router = mount()
-  await screen.findByText(
-    `${fixture.company_name} · ${fixture.context.report_name} · 별도 기준`,
-  )
+  await screen.findByRole('heading', { name: '공통 핵심 5개 비율' })
   await router.navigate(`/financials/${other}/summary`)
   expect(await screen.findByText('재무 분석을 불러오는 중입니다')).toBeVisible()
   expect(
-    screen.queryByText(
-      `${fixture.company_name} · ${fixture.context.report_name} · 별도 기준`,
-    ),
+    screen.queryByRole('heading', { name: '공통 핵심 5개 비율' }),
   ).not.toBeInTheDocument()
+})
+
+it('moves unique source metadata into the information dialog and restores keyboard focus', async () => {
+  const result = resultSchema.parse(fixture)
+  render(
+    <FinancialInformation id={id} context={result.context} result={result} />,
+  )
+  const button = await screen.findByRole('button', { name: '분석 추가 정보' })
+  expect(
+    screen.queryByRole('link', { name: '수집 원본 JSON' }),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.queryByText(`접수번호 ${fixture.context.receipt_no}`),
+  ).not.toBeInTheDocument()
+  await userEvent.setup().click(button)
+  const dialog = screen.getByRole('dialog', { name: '분석 추가 정보' })
+  expect(dialog).toHaveTextContent(fixture.source_sha256)
+  expect(dialog).toHaveTextContent(fixture.formula_version)
+  expect(
+    within(dialog).getByRole('link', { name: '수집 원본 JSON' }),
+  ).toHaveAttribute('href', `/api/v1/me/financial-analyses/${id}/source`)
+  expect(
+    within(dialog).getByRole('link', { name: 'DART 원문' }),
+  ).toHaveAttribute('href', fixture.source_url)
+  await userEvent.setup().keyboard('{Escape}')
+  expect(button).toHaveFocus()
 })
 
 it('shows closing total assets and its actual value in the operating ROA formula', async () => {

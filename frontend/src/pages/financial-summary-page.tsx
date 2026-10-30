@@ -157,16 +157,9 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
       id="main"
       className={`page ${section === 'summary' ? 'visual-summary-page' : ''}`}
     >
-      <Link to={`/?${search}`} className="back-link">
-        ← 기업·보고서 다시 선택
-      </Link>
       <div className="page-title-row">
-        <div>
+        <div className="financial-page-title">
           <h1>{analysisMenus.find(([key]) => key === section)?.[1]}</h1>
-          <p className="page-description">
-            {result?.company_name ?? context.corp_code} · {context.report_name}{' '}
-            · {context.scope === 'OFS' ? '별도' : '연결'} 기준
-          </p>
         </div>
         <Button
           variant="outline"
@@ -178,20 +171,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
           다시 수집·분석
         </Button>
       </div>
-      <div className="source-strip">
-        <strong>공시 기준</strong>
-        <span>{context.period} 결산</span>
-        <span>접수번호 {context.receipt_no}</span>
-        <span>제출일 {context.receipt_date}</span>
-        <span>리스 {context.lease === 'include' ? '포함' : '제외'}</span>
-        <a
-          href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${context.receipt_no}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          DART 원문
-        </a>
-      </div>
+
       {error && (
         <p role="alert" className="form-error">
           {error}
@@ -223,25 +203,6 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
         />
       ) : result ? (
         <>
-          <div className="financial-source-meta">
-            <a href={`/api/v1/me/financial-analyses/${id}/source`}>
-              수집 원본 JSON
-            </a>
-            <span>
-              수집{' '}
-              {new Date(result.collected_at).toLocaleString('ko-KR', {
-                timeZone: 'Asia/Seoul',
-              })}
-            </span>
-            <span>원본 {result.source_sha256.slice(0, 12)}</span>
-            <span>
-              {result.mapping_version} · {result.formula_version}
-            </span>
-          </div>
-          <p className="notice">
-            {result.comparison_basis} 금액은 억원으로 표시합니다. 미확보와 실제
-            0은 구분하며, 미정 산식은 보류합니다.
-          </p>
           {result.availability === 'NO_DATA' && (
             <StatePanel
               state="empty"

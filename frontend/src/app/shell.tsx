@@ -10,6 +10,7 @@ import { SessionControls } from '../features/session/session-controls'
 import { TaskControls } from '../features/tasks/task-controls'
 import { useSession } from '../features/session/session-context'
 import { getFinancialRun } from '../features/financial/api'
+import { FinancialInformation } from '../features/financial/financial-information'
 import { analysisMenus } from './analysis-menu'
 
 export function Shell() {
@@ -190,6 +191,14 @@ export function Shell() {
           </div>
         </div>
         <div className="top-actions">
+          {financial && (
+            <FinancialInformation
+              key={financial.analysis_run_id}
+              id={financial.analysis_run_id}
+              context={financial.context}
+              result={financial.result}
+            />
+          )}
           {(company || metadata || financialContext) && (
             <NavLink className="context-change" to={searchPath}>
               기업 변경

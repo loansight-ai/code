@@ -70,6 +70,19 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   await expect(
     page.getByRole('heading', { name: '공통 핵심 5개 비율' }),
   ).toBeVisible()
+  await expect(page.locator('#main .source-strip')).toHaveCount(0)
+  await expect(
+    page.locator('#main').getByRole('button', { name: '분석 추가 정보' }),
+  ).toHaveCount(0)
+  const information = page
+    .locator('.topbar')
+    .getByRole('button', { name: '분석 추가 정보' })
+  await information.click()
+  await expect(
+    page.getByRole('dialog', { name: '분석 추가 정보' }),
+  ).toContainText(result.source_sha256)
+  await page.keyboard.press('Escape')
+  await expect(information).toBeFocused()
   await page.getByRole('button', { name: '이자보상비율', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '이자보상비율 산식' })
   await expect(dialog).toContainText('이자비용: 127.52억원')

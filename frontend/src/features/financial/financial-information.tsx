@@ -1,0 +1,102 @@
+import { useRef, useState } from 'react'
+import { CircleHelp } from 'lucide-react'
+import { Button } from '../../shared/components/button'
+import { Modal } from '../../shared/components/modal'
+import type { FinancialContext, FinancialResult } from './api'
+import '../../financial-summary.css'
+
+export function FinancialInformation({
+  id,
+  context,
+  result,
+}: {
+  id: string
+  context: FinancialContext
+  result: FinancialResult | null
+}) {
+  const [informationOpen, setInformationOpen] = useState(false)
+  const informationTrigger = useRef<HTMLButtonElement>(null)
+  return (
+    <>
+      <Button
+        ref={informationTrigger}
+        variant="ghost"
+        className="financial-information-trigger"
+        aria-label="분석 추가 정보"
+        title="분석 추가 정보"
+        aria-haspopup="dialog"
+        onClick={() => setInformationOpen(true)}
+      >
+        <CircleHelp size={18} aria-hidden="true" />
+      </Button>
+      <Modal
+        title="분석 추가 정보"
+        description="공시 원문과 재무 데이터의 수집·계산 기준을 확인합니다."
+        open={informationOpen}
+        onOpenChange={setInformationOpen}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          informationTrigger.current?.focus()
+        }}
+      >
+        <dl className="financial-information-list">
+          {result && (
+            <>
+              <div>
+                <dt>재무 수집 시각</dt>
+                <dd>
+                  {new Date(result.collected_at).toLocaleString('ko-KR', {
+                    timeZone: 'Asia/Seoul',
+                  })}{' '}
+                  (한국 시각)
+                </dd>
+              </div>
+              <div>
+                <dt>원본 SHA-256</dt>
+                <dd>
+                  <code>{result.source_sha256}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>계정 매핑 버전</dt>
+                <dd>{result.mapping_version}</dd>
+              </div>
+              <div>
+                <dt>산식 버전</dt>
+                <dd>{result.formula_version}</dd>
+              </div>
+              <div>
+                <dt>비교 기준</dt>
+                <dd>{result.comparison_basis}</dd>
+              </div>
+            </>
+          )}
+        </dl>
+        <div className="financial-information-links">
+          <a
+            href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${context.receipt_no}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            DART 원문
+          </a>
+          {result && (
+            <a href={`/api/v1/me/financial-analyses/${id}/source`}>
+              수집 원본 JSON
+            </a>
+          )}
+        </div>
+        {result ? (
+          <p className="financial-information-note">
+            금액은 억원으로 표시합니다. 미확보와 실제 0은 구분하며, 미정 산식은
+            보류합니다.
+          </p>
+        ) : (
+          <p className="financial-information-note">
+            수집·계산 정보는 재무 분석 결과가 저장되면 확인할 수 있습니다.
+          </p>
+        )}
+      </Modal>
+    </>
+  )
+}
