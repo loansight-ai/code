@@ -12,6 +12,7 @@ from app.modules.evidence.dart_collector import CollectionError
 from app.modules.evidence.dart_models import DartNote
 from app.modules.evidence.dart_service import ensure_source
 from app.modules.evidence.service import fingerprint
+from app.modules.financial.bok import dataset_version, with_benchmark
 from app.modules.financial.collector import download, parse_response
 from app.modules.financial.core_assessments import with_core_assessments
 from app.modules.financial.domain import (
@@ -44,6 +45,7 @@ async def submit(database, settings, identity, context):
             + ("+collected-v1" if context.get("source_import_id") else ""),
             "formula": FORMULA_VERSION,
             "notes": NOTE_VERSION,
+            "bok": dataset_version(),
             "enrichment": agent_config(settings) if context.get("enrich_notes") else None,
         }
     )
@@ -206,7 +208,8 @@ async def complete(database, job_id, owner, prepared):
         if not job or job.status != "RUNNING" or job.owner_token != owner or job.lease_until <= now:
             return False
         run = await db.scalar(select(FinancialRun).where(FinancialRun.job_id == job_id))
-        run.result = prepared.result
+        company = await db.get(CompanyRecord, run.context["corp_code"])
+        run.result = with_benchmark(prepared.result, company.ksic11_code if company else None)
         run.source_sha256 = prepared.source_sha256
         run.completed_at = now
         workflow = await db.get(FinancialNoteWorkflow, run.id)
@@ -258,12 +261,14 @@ async def read(database, identity, run_id: UUID):
 
         workflow = await db.get(FinancialNoteWorkflow, run.id)
         enrichment = await payload(db, workflow) if workflow else None
+        result = workflow.result if workflow and workflow.result else run.result
+        company = await db.get(CompanyRecord, run.context["corp_code"]) if result else None
         return {
             **tasks.task_payload(task, job),
             "analysis_run_id": str(run.id),
             "context": run.context,
             "result": with_core_assessments(
-                workflow.result if workflow and workflow.result else run.result
+                with_benchmark(result, company.ksic11_code if company else None)
             ),
             "note_workflow": enrichment,
         }

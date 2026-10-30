@@ -187,6 +187,7 @@ async def financial(environment, monkeypatch):
                 corp_name="오뚜기",
                 modify_date="20261029",
                 ksic11_status="matched",
+                ksic11_code="10740",
                 industry="제조",
                 search_name="오뚜기",
                 search_eng_name="",
@@ -250,6 +251,34 @@ async def execute(environment, item):
         settings,
         JobMessage(message_id=uuid4(), job_id=UUID(item["job_id"]), generation=1),
     )
+
+
+async def test_bok_snapshot_persistence_and_legacy_read(client, environment, financial):
+    _, _, database = environment
+    await client.post("/api/v1/users")
+    submitted = (await client.post("/api/v1/me/financial-analyses", json=INPUT)).json()
+    await execute(environment, submitted)
+    url = "/api/v1/me/financial-analyses/" + submitted["analysis_run_id"]
+    actual = (await client.get(url)).json()["result"]["bok_benchmark"]
+    assert actual["industry_code"] == "C10"
+    current = next(m for m in actual["metrics"] if m["key"] == "current_ratio")["values"][0]
+    assert current["value"] == "131.50" and current["gap"] == "18.5000"
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        assert run.result["bok_benchmark"]["version"] == actual["version"]
+        company = await db.get(CompanyRecord, INPUT["corp_code"])
+        company.ksic11_code = "68112"
+    # A later company-master update must not change the saved comparison scope.
+    assert (await client.get(url)).json()["result"]["bok_benchmark"] == actual
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        legacy = {k: v for k, v in run.result.items() if k != "bok_benchmark"}
+        run.result = legacy
+    fallback = (await client.get(url)).json()["result"]["bok_benchmark"]
+    assert fallback["industry_code"] == "L68"
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        assert "bok_benchmark" not in run.result
 
 
 async def test_full_flow_atomic_facts_provenance_and_workspace_isolation(
