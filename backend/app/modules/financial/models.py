@@ -21,6 +21,23 @@ class FinancialRun(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class EcosObservation(Base):
+    """Immutable first-fetched official observation, shared across analyses."""
+
+    __tablename__ = "ecos_observation"
+    adapter_version: Mapped[str] = mapped_column(String(30), primary_key=True)
+    stat_code: Mapped[str] = mapped_column(String(10), primary_key=True)
+    industry_code: Mapped[str] = mapped_column(String(20), primary_key=True)
+    size_code: Mapped[str] = mapped_column(String(1), primary_key=True)
+    metric_code: Mapped[str] = mapped_column(String(10), primary_key=True)
+    year: Mapped[int] = mapped_column(primary_key=True)
+    value: Mapped[Decimal] = mapped_column(Numeric(38, 10))
+    unit: Mapped[str] = mapped_column(String(10))
+    source_row: Mapped[dict] = mapped_column(JSONB)
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class FinancialFact(Base):
     __tablename__ = "financial_fact"
     __table_args__ = (UniqueConstraint("run_id", "account_key", "period"),)

@@ -36,6 +36,7 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("LOANSIGHT_ECOS_API_KEY", "ecos_api_key"),
     )
+    ecos_timeout_seconds: float = Field(default=10, gt=0, le=30)
     open_data_api_key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices("LOANSIGHT_OPEN_DATA_API_KEY", "open_data_api_key"),
