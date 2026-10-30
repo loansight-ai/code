@@ -34,6 +34,8 @@ COLUMNS = {
     "equity": "bs_te",
     "current_assets": "bs_ca",
     "current_liabilities": "bs_cl",
+    "noncurrent_assets": "bs_nca",
+    "noncurrent_liabilities": "bs_ncl",
     "inventory": "bs_inv",
     "receivables": "bs_ar",
     "payables": "bs_ap",
@@ -41,6 +43,7 @@ COLUMNS = {
     "contract_liabilities": "bs_contract_l",
     "investment_property": "bs_ip",
     "short_borrowings": "bs_stb",
+    "current_long_borrowings": "bs_cpltd",
     "long_borrowings": "bs_ltb",
     "bonds": "bs_bond",
     "current_bonds": "bs_cbond",
@@ -54,6 +57,9 @@ COLUMNS = {
     "depreciation": "cf_dep",
     "amortisation": "cf_amort",
     "ppe_acquisition": "cf_capex",
+    "intangible_acquisition": "cf_intan_acq",
+    "interest_paid": "cf_int_paid",
+    "tax_paid": "cf_tax_paid",
 }
 
 
@@ -70,7 +76,12 @@ def collection_facts(collection, context):
     for account in ACCOUNTS:
         key, label = account[:2]
         column = COLUMNS.get(key)
-        for offset, period in enumerate(PERIODS):
+        periods = (
+            (*PERIODS, "opening_balance")
+            if key in ("assets", "inventory", "receivables", "payables")
+            else PERIODS
+        )
+        for offset, period in enumerate(periods):
             row = history.get(year - offset)
             value = row.get(column) if row and column else None
             reason = None if value is not None else "collected_account_missing"

@@ -8,6 +8,7 @@ import { displayedMetricValue, dataState } from './data-state'
 import {
   money,
   metricValue,
+  pendingMetricReasons,
   type FinancialMetric,
   type FinancialResult,
 } from './api'
@@ -28,6 +29,11 @@ const constructionItems: [string, string][] = [
   ['contract_assets_sales_gap', '계약자산 증가율 − 매출 증가율'],
   ['construction_receivable_days', '공사미수금 회수기간'],
   ['cost_ratio', '공사원가율'],
+  ['interest_coverage', '이자보상비율'],
+  ['borrowing_ratio', '차입금의존도'],
+  ['short_borrowing_ratio', '단기차입금 비중'],
+  ['debt_excluding_advances', '선수금 제외 부채비율'],
+  ['order_backlog', '수주잔고'],
   ['pf_equity', 'PF 보증·조건부 의무 ÷ 자기자본'],
   ['cash_current_liabilities', '영업CF ÷ 유동부채'],
 ]
@@ -188,7 +194,9 @@ export function IndustryHighlights({
                         ) : m ? (
                           <DataStatus value={current} />
                         ) : (
-                          <Tag tone="missing">자료 미확보</Tag>
+                          <Tag tone="missing">
+                            {pendingMetricReasons[key] ?? '자료 미확보'}
+                          </Tag>
                         )}
                       </td>
                     </tr>
@@ -199,7 +207,7 @@ export function IndustryHighlights({
           </div>
           <p className="vs-highlight-note">
             {result.industry === '건설'
-              ? '표시 부채비율 대신 선수금 제외 부채비율을 씁니다. PF 만기 사다리와 우발채무는 주석·위험징후에서 봅니다.'
+              ? '선수금 제외 부채비율은 차감 계정 범위가 확정되지 않아 보류합니다. PF 만기 사다리와 우발채무는 주석·위험징후에서 봅니다.'
               : industry?.caution}
             {demo && ' 상태·업종 수치는 화면 예시입니다.'}
           </p>

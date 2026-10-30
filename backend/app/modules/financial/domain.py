@@ -3,8 +3,8 @@
 import re
 from decimal import Decimal, InvalidOperation, localcontext
 
-MAPPING_VERSION = "financial-accounts-v3"
-FORMULA_VERSION = "financial-formulas-v3"
+MAPPING_VERSION = "financial-accounts-v4"
+FORMULA_VERSION = "financial-formulas-v4"
 PERIODS = ("current", "previous", "before_previous")
 AMOUNT_KEYS = ("thstrm_amount", "frmtrm_amount", "bfefrmtrm_amount")
 TERM_KEYS = ("thstrm_nm", "frmtrm_nm", "bfefrmtrm_nm")
@@ -43,6 +43,8 @@ ACCOUNTS = [
     ("equity", "자본총계", "BS", ["Equity"], ["자본총계"]),
     ("current_assets", "유동자산", "BS", ["CurrentAssets"], ["유동자산"]),
     ("current_liabilities", "유동부채", "BS", ["CurrentLiabilities"], ["유동부채"]),
+    ("noncurrent_assets", "비유동자산", "BS", ["NoncurrentAssets"], ["비유동자산"]),
+    ("noncurrent_liabilities", "비유동부채", "BS", ["NoncurrentLiabilities"], ["비유동부채"]),
     ("inventory", "재고자산", "BS", ["Inventories"], ["재고자산"]),
     ("receivables", "매출채권", "BS", ["TradeReceivables"], ["매출채권"]),
     ("payables", "매입채무", "BS", ["TradePayables"], ["매입채무"]),
@@ -478,6 +480,51 @@ def _calculate(facts, lease):
             )
         else:
             add(key, label, group, unit, formula, inputs, values)
+
+    for key, label, balance in (
+        ("inventory_turnover", "재고자산회전율", "inventory"),
+        ("receivables_turnover", "매출채권회전율", "receivables"),
+        ("payables_turnover", "매입채무회전율", "payables"),
+        ("asset_turnover", "총자산회전율", "assets"),
+    ):
+        values = []
+        for index, period in enumerate(PERIODS):
+            opening_period = PERIODS[index + 1] if index < 2 else "opening_balance"
+            closing, opening = get(balance, period), get(balance, opening_period)
+            revenue = get("revenue", period)
+            if closing is None or revenue is None:
+                values.append((None, "missing_input"))
+            elif opening is None:
+                values.append((None, "opening_balance_missing"))
+            elif closing < 0 or opening < 0 or revenue < 0:
+                values.append((None, "negative_turnover_input"))
+            else:
+                values.append(divide(revenue, (opening + closing) / 2, 1))
+        add(
+            key,
+            label,
+            "활동성",
+            "회",
+            f"매출액 ÷ ((기초 {labels[balance]} + 기말 {labels[balance]}) ÷ 2)",
+            ["revenue", balance],
+            values,
+            "분모 기초·기말 평균 · 분자 매출액 · 회전일수로 환산하지 않음",
+        )
+    fit_values = []
+    for period in PERIODS:
+        equity, noncurrent = get("equity", period), get("noncurrent_liabilities", period)
+        funding = equity + noncurrent if equity is not None and noncurrent is not None else None
+        fit_values.append(divide(get("noncurrent_assets", period), funding))
+    add(
+        "long_term_asset_fit",
+        "비유동장기적합률",
+        "레버리지",
+        "%",
+        "비유동자산 ÷ (자본총계 + 비유동부채) × 100",
+        ["noncurrent_assets", "equity", "noncurrent_liabilities"],
+        fit_values,
+        "기말 잔액 · 리스 옵션으로 비유동부채를 조정하지 않음",
+    )
 
     debt_keys = [
         "short_borrowings",

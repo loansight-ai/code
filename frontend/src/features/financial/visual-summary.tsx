@@ -30,6 +30,8 @@ const industrySpecs: Record<string, IndustrySpec> = {
     caution:
       '감가상각이 큰 기업은 영업이익만으로 상환능력을 해석하지 않습니다.',
     items: [
+      ['inventory_turnover', '재고자산회전율'],
+      ['receivables_turnover', '매출채권회전율'],
       ['inventory_days', '재고자산 회전일수'],
       ['receivable_days', '매출채권 회수일수'],
       ['cost_ratio', '매출원가율'],
@@ -48,6 +50,8 @@ const industrySpecs: Record<string, IndustrySpec> = {
     caution:
       '소매는 현금전환주기가 음수일 수 있습니다. 낮은 유동비율을 위험으로 단정하지 않습니다.',
     items: [
+      ['inventory_turnover', '재고자산회전율'],
+      ['receivables_turnover', '매출채권회전율'],
       ['inventory_days', '재고자산 회전일수'],
       ['receivable_days', '매출채권 회수일수'],
       ['gross_margin', '매출총이익률'],

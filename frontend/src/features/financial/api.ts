@@ -283,6 +283,8 @@ export async function startFinancialRun(
   )
 }
 export const reasonLabels: Record<string, string> = {
+  opening_balance_missing: '기초 잔액 미확보 · 평균 잔액 계산 보류',
+  negative_turnover_input: '음수 매출액 또는 음수 잔액 · 회전율 계산 보류',
   collected_account_missing: '같은 회계 범위의 수집 계정 미확보',
   collected_note_zero_unverified: '주석의 0이 공시상 없음을 뜻하는지 미확인',
   collected_financial_not_found:
@@ -322,6 +324,11 @@ export const reasonLabels: Record<string, string> = {
     '정형 재무 API는 2015년 이후 사업연도를 지원합니다.',
   dart_api_key_missing: '서버에 DART API 키를 설정해 주세요.',
   job_policy_not_configured: '서버 작업 재시도 정책을 설정해 주세요.',
+}
+export const pendingMetricReasons: Record<string, string> = {
+  debt_excluding_advances: '차감할 선수금 계정 범위 미정 · 산식 적용 보류',
+  development_capitalisation: '개발비 자산화 범위·분모 정의 미정',
+  order_backlog: '수주잔고 원천 자료 미연결',
 }
 export function financialError(error: unknown) {
   return error instanceof ApiError

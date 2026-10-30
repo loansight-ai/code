@@ -6,6 +6,7 @@ export type FinancialDataValue = {
   reason: string | null
 }
 const missingReasons = new Set([
+  'opening_balance_missing',
   'missing_input',
   'account_not_found',
   'amount_not_disclosed',

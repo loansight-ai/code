@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { Chart } from '../../shared/components/chart'
-import { metricValue, type FinancialMetric, type FinancialResult } from './api'
-import { MetricValue } from './data-status'
+import {
+  metricValue,
+  pendingMetricReasons,
+  type FinancialMetric,
+  type FinancialResult,
+} from './api'
+import { MetricStatus, MetricValue } from './data-status'
 
 export type IndustryBenchmark = {
   industry: string
@@ -45,7 +50,16 @@ const domainKeys = [
   },
   {
     label: '활동성',
-    keys: ['inventory_days', 'receivable_days', 'payable_days', 'ccc'],
+    keys: [
+      'inventory_turnover',
+      'receivables_turnover',
+      'payables_turnover',
+      'asset_turnover',
+      'inventory_days',
+      'receivable_days',
+      'payable_days',
+      'ccc',
+    ],
   },
   {
     label: '성장성',
@@ -116,7 +130,9 @@ export function IndustryPositionPanel({
         value: null,
         unit: metric?.unit ?? '%',
         percentile: null,
-        reason: metric ? '동종 비교 데이터 미확보' : '산식·원천 자료 연결 필요',
+        reason: metric
+          ? '동종 비교 데이터 미확보'
+          : (pendingMetricReasons[key] ?? '산식·원천 자료 연결 필요'),
       }
     })
   // ECharts places radar indicators counterclockwise; reverse to match the tab order clockwise.
@@ -354,6 +370,9 @@ export function IndustryPositionPanel({
                   {position == null && (
                     <span className="vs-position-reason">
                       {row.reason ?? '비교 데이터 미확보'}
+                      {metric && (
+                        <MetricStatus metric={metric} result={result} />
+                      )}
                     </span>
                   )}
                 </div>

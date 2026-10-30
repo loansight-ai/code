@@ -21,6 +21,10 @@ const operands: Record<string, [string[], string[]]> = {
   interest_coverage: [['operating_profit'], ['interest_expense']],
   cash_profit: [['operating_cashflow'], ['operating_profit']],
   cash_current_liabilities: [['operating_cashflow'], ['current_liabilities']],
+  long_term_asset_fit: [
+    ['noncurrent_assets'],
+    ['equity', 'noncurrent_liabilities'],
+  ],
 }
 
 export function LiveFormulaDialog({
@@ -120,11 +124,32 @@ export function LiveFormulaDialog({
     )
   }
   const pair = operands[metric.key]
+  const turnoverBalance: Record<string, string> = {
+    inventory_turnover: 'inventory',
+    receivables_turnover: 'receivables',
+    payables_turnover: 'payables',
+    asset_turnover: 'assets',
+  }
+  const balance = turnoverBalance[metric.key]
   const debt =
     result.borrowing_totals.current == null
       ? '총차입금 미확보 · 구성 계정 확인 필요'
       : `총차입금: ${money(result.borrowing_totals.current)}억원`
-  if (pair) {
+  if (balance) {
+    rows.push(
+      { label: '분자', value: fact('revenue') },
+      {
+        label: '분모',
+        value: (
+          <>
+            <span>아래 두 잔액의 산술평균</span>
+            <span>기초 {fact(balance, 'previous')}</span>
+            <span>기말 {fact(balance)}</span>
+          </>
+        ),
+      },
+    )
+  } else if (pair) {
     const numerator =
       metric.key === 'debt_ratio' && result.context.lease === 'exclude' ? (
         <>
