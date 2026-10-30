@@ -26,6 +26,8 @@ from app.modules.financial.domain import (
     map_facts,
     note_borrowing_summaries,
 )
+from app.modules.financial.ecos import VERSION as ECOS_VERSION
+from app.modules.financial.ecos import supplement as supplement_benchmark
 from app.modules.financial.models import FinancialFact, FinancialNoteWorkflow, FinancialRun
 from app.modules.financial.notes import NOTE_VERSION, extract_note_candidates, supplement
 from app.modules.tasks import service as tasks
@@ -46,6 +48,7 @@ async def submit(database, settings, identity, context):
             "formula": FORMULA_VERSION,
             "notes": NOTE_VERSION,
             "bok": dataset_version(),
+            "ecos": ECOS_VERSION,
             "enrichment": agent_config(settings) if context.get("enrich_notes") else None,
         }
     )
@@ -103,7 +106,11 @@ async def prepare(database, settings, job_id):
     if context.get("source_import_id"):
         from app.modules.financial.collected import prepare_collected
 
-        return await prepare_collected(database, settings, run.id, context, name, industry)
+        prepared = await prepare_collected(database, settings, run.id, context, name, industry)
+        prepared.result = await supplement_benchmark(
+            database, settings, prepared.result, company.ksic11_code if company else None
+        )
+        return prepared
     if not settings.open_dart_api_key:
         raise CollectionError("dart_api_key_missing")
     raw = await asyncio.to_thread(download, settings.open_dart_api_key.get_secret_value(), context)
@@ -198,6 +205,9 @@ async def prepare(database, settings, job_id):
             "각 기간 길이와 비교 가능성은 원문 확인 필요."
         ),
     }
+    result = await supplement_benchmark(
+        database, settings, result, company.ksic11_code if company else None
+    )
     return PreparedFinancials(result, digest, structure_id, structure_error)
 
 
@@ -242,7 +252,7 @@ async def complete(database, job_id, owner, prepared):
         return True
 
 
-async def read(database, identity, run_id: UUID):
+async def read(database, identity, run_id: UUID, settings=None):
     async with database.transaction() as db:
         run = await db.scalar(
             select(FinancialRun).where(
@@ -263,12 +273,16 @@ async def read(database, identity, run_id: UUID):
         enrichment = await payload(db, workflow) if workflow else None
         result = workflow.result if workflow and workflow.result else run.result
         company = await db.get(CompanyRecord, run.context["corp_code"]) if result else None
-        return {
+        response = {
             **tasks.task_payload(task, job),
             "analysis_run_id": str(run.id),
             "context": run.context,
-            "result": with_core_assessments(
-                with_benchmark(result, company.ksic11_code if company else None)
-            ),
             "note_workflow": enrichment,
         }
+    # External calls must not hold the result-read database transaction open.
+    response["result"] = with_core_assessments(
+        await supplement_benchmark(
+            database, settings, result, company.ksic11_code if company else None
+        )
+    )
+    return response

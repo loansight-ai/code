@@ -91,7 +91,9 @@ async def submit(
 @router.get("/{run_id}")
 async def read(run_id: UUID, request: Request, response: Response, identity: CurrentIdentity):
     response.headers["Cache-Control"] = "no-store"
-    return await service.read(request.app.state.database, identity, run_id)
+    return await service.read(
+        request.app.state.database, identity, run_id, request.app.state.settings
+    )
 
 
 @router.get("/{run_id}/source")
