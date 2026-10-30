@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { useNoteWorkspace } from '../features/analysis/use-note-workspace'
 import {
   FinancialOverview,
@@ -203,14 +203,6 @@ export function LiveAnalysisPage() {
           metadata={metadata}
           workspaceId={note.workspaceId!}
         />
-      )}
-      {section !== 'review' && (
-        <div className="workspace-next">
-          <Link to={`/notes/${id}/evidence?tab=notes`}>
-            주석 추출 근거에서 원문 확인 →
-          </Link>
-          <Link to={`/notes/${id}/review`}>체크·검토 메모 →</Link>
-        </div>
       )}
     </main>
   )

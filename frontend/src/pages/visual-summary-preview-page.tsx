@@ -49,17 +49,6 @@ export function VisualSummaryPreviewPage({
           benchmark={exampleIndustryBenchmark}
         />
       )}
-      <div className="workspace-next">
-        <Link
-          to={
-            section === 'cashflow'
-              ? '/examples/financial-summary'
-              : '/examples/financial-cashflow'
-          }
-        >
-          {section === 'cashflow' ? '핵심 재무 요약 →' : '실적 변동·현금흐름 →'}
-        </Link>
-      </div>
     </main>
   )
 }

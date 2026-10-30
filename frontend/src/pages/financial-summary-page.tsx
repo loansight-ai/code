@@ -257,15 +257,6 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
           ) : (
             <SourceFacts result={result} />
           )}
-          <div className="workspace-next">
-            <Link
-              to={`/financials/${id}/${section === 'summary' ? 'cashflow' : 'summary'}?corp=${context.corp_code}`}
-            >
-              {section === 'summary'
-                ? '실적 변동·현금흐름 →'
-                : '핵심 재무 요약 →'}
-            </Link>
-          </div>
         </>
       ) : (
         <StatePanel state="empty" title="저장된 재무 결과가 없습니다" />
