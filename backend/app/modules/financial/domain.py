@@ -3,7 +3,7 @@
 import re
 from decimal import Decimal, InvalidOperation, localcontext
 
-MAPPING_VERSION = "financial-accounts-v2"
+MAPPING_VERSION = "financial-accounts-v3"
 FORMULA_VERSION = "financial-formulas-v3"
 PERIODS = ("current", "previous", "before_previous")
 AMOUNT_KEYS = ("thstrm_amount", "frmtrm_amount", "bfefrmtrm_amount")
@@ -124,6 +124,26 @@ ACCOUNTS = [
         ["재무활동현금흐름", "재무활동으로인한현금흐름"],
     ),
     ("depreciation", "감가상각비", "CF", ["AdjustmentsForDepreciationExpense"], ["감가상각비"]),
+    (
+        "cash_beginning",
+        "기초 현금및현금성자산",
+        "CF",
+        [
+            "dart_CashAndCashEquivalentsAtBeginningOfPeriodCf",
+            "CashAndCashEquivalentsAtBeginningOfPeriod",
+        ],
+        ["기초현금및현금성자산", "기초의현금및현금성자산"],
+    ),
+    (
+        "cash_ending",
+        "기말 현금및현금성자산",
+        "CF",
+        [
+            "dart_CashAndCashEquivalentsAtEndOfPeriodCf",
+            "CashAndCashEquivalentsAtEndOfPeriod",
+        ],
+        ["기말현금및현금성자산", "기말의현금및현금성자산"],
+    ),
     (
         "amortisation",
         "무형자산상각비",
