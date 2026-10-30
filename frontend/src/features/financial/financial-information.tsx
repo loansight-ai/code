@@ -43,7 +43,11 @@ export function FinancialInformation({
           {result && (
             <>
               <div>
-                <dt>재무 수집 시각</dt>
+                <dt>
+                  {result.collection_source
+                    ? '분석 입력 스냅샷 생성 시각'
+                    : '재무 수집 시각'}
+                </dt>
                 <dd>
                   {new Date(result.collected_at).toLocaleString('ko-KR', {
                     timeZone: 'Asia/Seoul',
@@ -52,11 +56,31 @@ export function FinancialInformation({
                 </dd>
               </div>
               <div>
-                <dt>원본 SHA-256</dt>
+                <dt>
+                  {result.collection_source
+                    ? '분석 입력 SHA-256'
+                    : '원본 SHA-256'}
+                </dt>
                 <dd>
                   <code>{result.source_sha256}</code>
                 </dd>
               </div>
+              {result.collection_source && (
+                <>
+                  <div>
+                    <dt>입력 원천</dt>
+                    <dd>저장된 수집 데이터</dd>
+                  </div>
+                  <div>
+                    <dt>원천 기준일</dt>
+                    <dd>{result.collection_source.source_as_of}</dd>
+                  </div>
+                  <div>
+                    <dt>내보낸 날짜</dt>
+                    <dd>{result.collection_source.exported_on}</dd>
+                  </div>
+                </>
+              )}
               <div>
                 <dt>계정 매핑 버전</dt>
                 <dd>{result.mapping_version}</dd>

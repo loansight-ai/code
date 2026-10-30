@@ -1,5 +1,6 @@
 import { StatePanel } from '../../shared/components/state-panel'
 import { ratiosForLease } from '../financial/financial-data'
+import type { CollectedData } from '../company/collected-api'
 
 export function FinancialOverview({
   demo = false,
@@ -192,7 +193,9 @@ export function RiskCharts() {
   )
 }
 
-export function PredictionWorkspace() {
+export function PredictionWorkspace({
+  observations,
+}: { observations?: CollectedData } = {}) {
   return (
     <>
       <div className="prediction-layout">
@@ -221,13 +224,82 @@ export function PredictionWorkspace() {
         </section>
         <section className="panel">
           <div className="panel-heading">
-            <h2>대상 사건 정의</h2>
+            <h2>
+              {observations?.coverage ? '위험 사건 이력' : '대상 사건 정의'}
+            </h2>
           </div>
-          <StatePanel
-            state="pending"
-            title="모델 명세 확인 대기"
-            description="사건 정의·기간·심각도·원천은 외부 제공 모델의 명세에 따라 표시합니다."
-          />
+          {observations?.coverage ? (
+            <>
+              <p className="panel-footnote">
+                원천 기준일 {observations.source_as_of} · 회사 전체 조회 기간의
+                사건 후보이며, 선택한 결산 당시의 사실이나 예측 확률을 뜻하지
+                않습니다.
+              </p>
+              {observations.event_candidates.length > 0 ? (
+                <div className="table-scroll">
+                  <table aria-label="위험 사건 이력">
+                    <thead>
+                      <tr>
+                        <th>날짜</th>
+                        <th>사건</th>
+                        <th>확인 상태·근거</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...observations.event_candidates]
+                        .reverse()
+                        .map((event) => (
+                          <tr key={String(event.id)}>
+                            <td>
+                              {String(event.event_date)}
+                              <small>{String(event.date_basis ?? '')}</small>
+                            </td>
+                            <td>{String(event.event_type)}</td>
+                            <td>
+                              {event.verified === true
+                                ? '원문 대조됨'
+                                : '원문 확인 전 후보'}
+                              <details>
+                                <summary>근거 확인</summary>
+                                {event.detail && <p>{String(event.detail)}</p>}
+                                <a
+                                  href={`https://dart.fss.or.kr/dsaf001/main.do?rcpNo=${encodeURIComponent(String(event.rcept_no))}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  근거 공시 열기
+                                </a>
+                              </details>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p>
+                  조회 범위에서 사건 후보가 발견되지 않았습니다. 위험 없음
+                  판정은 아닙니다.
+                </p>
+              )}
+              <p className="panel-footnote">
+                공시 조회:{' '}
+                {String(observations.coverage.filings_range ?? '범위 미확보')} ·
+                주요사항 {String(observations.coverage.filings_b ?? '미확보')} ·
+                거래소 {String(observations.coverage.filings_i ?? '미확보')} ·
+                감사의견 원문{' '}
+                {String(observations.coverage.audit_doc_ok ?? '미확보')}/
+                {String(observations.coverage.audit_doc_reports ?? '미확보')}개
+                확인
+              </p>
+            </>
+          ) : (
+            <StatePanel
+              state="pending"
+              title="모델 명세 확인 대기"
+              description="사건 정의·기간·심각도·원천은 외부 제공 모델의 명세에 따라 표시합니다."
+            />
+          )}
         </section>
       </div>
       <div className="status-separation">

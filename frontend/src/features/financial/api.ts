@@ -13,6 +13,7 @@ const contextSchema = z.object({
   lease: z.enum(['include', 'exclude']),
   enrich_notes: z.boolean().optional().default(false),
   refresh_key: z.string().nullable(),
+  source_import_id: z.string().uuid().optional(),
 })
 export type FinancialContext = z.infer<typeof contextSchema>
 const valueSchema = z
@@ -125,6 +126,13 @@ export const resultSchema = z.object({
     .default({}),
   availability: z.enum(['AVAILABLE', 'NO_DATA']),
   comparison_basis: z.string(),
+  collection_source: z
+    .object({
+      import_id: z.string().uuid(),
+      source_as_of: z.string(),
+      exported_on: z.string(),
+    })
+    .optional(),
   note_state: z.enum(['NOT_COLLECTED', 'PROCESSED', 'FAILED']),
 })
 export type FinancialResult = z.infer<typeof resultSchema>
@@ -193,6 +201,7 @@ export async function getFinancialRun(id: string, signal: AbortSignal) {
         run.result.context.corp_code !== run.context.corp_code ||
         run.result.context.receipt_no !== run.context.receipt_no ||
         run.result.context.scope !== run.context.scope ||
+        run.result.context.source_import_id !== run.context.source_import_id ||
         run.result.context.enrich_notes !== run.context.enrich_notes ||
         run.result.context.lease !== run.context.lease))
   )
@@ -203,7 +212,11 @@ export async function startFinancialRun(
   input: Pick<
     FinancialContext,
     'corp_code' | 'receipt_no' | 'scope' | 'lease'
-  > & { refresh_key?: string; enrich_notes?: boolean },
+  > & {
+    refresh_key?: string
+    enrich_notes?: boolean
+    source_import_id?: string
+  },
 ) {
   return taskSchema.extend({ analysis_run_id: z.string().uuid() }).parse(
     await request('/me/financial-analyses', {
@@ -213,6 +226,12 @@ export async function startFinancialRun(
   )
 }
 export const reasonLabels: Record<string, string> = {
+  collected_account_missing: '같은 회계 범위의 수집 계정 미확보',
+  collected_note_zero_unverified: '주석의 0이 공시상 없음을 뜻하는지 미확인',
+  collected_financial_not_found:
+    '선택한 수집 버전에 해당 기업·보고서·회계 범위의 재무값이 없습니다.',
+  collected_note_enrichment_unsupported:
+    '주석 보완은 OpenDART 수집 분석에서 선택해 주세요.',
   profit_transition: '흑자·적자 전환 · 증감 금액으로 비교',
   missing_lease_input: '리스부채 미확보 · 리스 포함 소계 보류',
   construction_receivables_missing: '공사미수금 범위·기간 기준 미확보',

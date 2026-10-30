@@ -9,6 +9,7 @@ import { LiveReviewWorkspace } from '../features/review/live-review-workspace'
 import { StatePanel } from '../shared/components/state-panel'
 import { NoteResultsPage } from './note-results-page'
 import { FinancialStart } from '../features/financial/financial-start'
+import { useCollectedData } from '../features/company/collected-api'
 
 const titles: Record<string, string> = {
   summary: '핵심 재무 요약',
@@ -20,6 +21,12 @@ export function LiveAnalysisPage() {
   const { structureId = '', section = 'evidence' } = useParams()
   const id = structureId.toLowerCase()
   const note = useNoteWorkspace(id)
+  const observations = useCollectedData({
+    corpCode: note.data?.corp_code ?? null,
+    receiptNo: note.data?.receipt_no,
+    scope: note.data?.scope ?? 'OFS',
+    enabled: section === 'prediction',
+  })
   if (section === 'evidence') return <NoteResultsPage />
   if (!note.valid || !titles[section])
     return (
@@ -75,8 +82,8 @@ export function LiveAnalysisPage() {
       </div>
       {section !== 'review' && (
         <p className="notice">
-          주석 원문과 근거 탐색은 연결되어 있습니다. 재무 계산·위험규칙·외부
-          모델 결과는 아직 확보되지 않아 자료 없음으로 표시합니다.
+          주석 작업과 재무 분석은 별도 결과입니다. 핵심 재무 분석을 실행하면
+          요약·현금흐름 화면에서 같은 기준의 결과를 확인할 수 있습니다.
         </p>
       )}
       {section === 'summary' && (
@@ -196,7 +203,9 @@ export function LiveAnalysisPage() {
           </div>
         </>
       )}
-      {section === 'prediction' && <PredictionWorkspace />}
+      {section === 'prediction' && (
+        <PredictionWorkspace observations={observations.data} />
+      )}
       {section === 'review' && (
         <LiveReviewWorkspace
           key={`${note.workspaceId}:${id}:${metadata.source_sha256}`}

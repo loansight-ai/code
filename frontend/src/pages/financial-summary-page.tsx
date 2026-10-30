@@ -23,6 +23,8 @@ import {
   FinancialFactEvidence,
   FinancialNoteProgress,
 } from '../features/financial/note-progress'
+import { useCollectedData } from '../features/company/collected-api'
+import { PredictionWorkspace } from '../features/analysis/workspace-panels'
 
 export function FinancialSummaryPage() {
   const { financialId = '', section = 'summary' } = useParams()
@@ -66,6 +68,14 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
         ))
         ? 1000
         : false,
+  })
+  const observations = useCollectedData({
+    corpCode: run.data?.context.corp_code ?? null,
+    receiptNo: run.data?.context.receipt_no,
+    scope: run.data?.context.scope ?? 'OFS',
+    importId: run.data?.context.source_import_id,
+    fiscalYear: run.data?.context.fiscal_year,
+    enabled: section === 'prediction',
   })
   useEffect(() => {
     if (run.error instanceof ApiError && run.error.status === 401)
@@ -135,6 +145,9 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
         receipt_no: context.receipt_no,
         scope: context.scope,
         lease,
+        ...(!refresh && context.source_import_id
+          ? { source_import_id: context.source_import_id }
+          : {}),
         ...(context.enrich_notes ? { enrich_notes: true } : {}),
         ...(refresh
           ? { refresh_key: crypto.randomUUID() }
@@ -223,6 +236,8 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
             />
           ) : section === 'cashflow' ? (
             <FinancialCashflow result={result} />
+          ) : section === 'prediction' ? (
+            <PredictionWorkspace observations={observations.data} />
           ) : (
             <StatePanel
               state="empty"

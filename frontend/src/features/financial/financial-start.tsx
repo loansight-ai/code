@@ -52,6 +52,27 @@ export function FinancialStart({
     ['OFS', 'CFS'].includes(scope) &&
     session?.phase === 'ready' &&
     !!session.session
+  async function start() {
+    const owner = activeWorkspace.current
+    setPending(true)
+    setError('')
+    try {
+      const run = await startFinancialRun({
+        corp_code: corpCode!,
+        receipt_no: receipt!,
+        scope: scope as 'OFS' | 'CFS',
+        lease: 'include',
+        enrich_notes: enrichNotes,
+      })
+      if (owner !== activeWorkspace.current) return
+      tasks?.refresh()
+      navigate(`/financials/${run.analysis_run_id}/summary?corp=${corpCode}`)
+    } catch (failure) {
+      if (owner === activeWorkspace.current) setError(financialError(failure))
+    } finally {
+      if (owner === activeWorkspace.current) setPending(false)
+    }
+  }
   return (
     <div className="financial-start">
       <label className="financial-note-option">
@@ -69,28 +90,8 @@ export function FinancialStart({
       </p>
       <Button
         disabled={!ready || pending}
-        onClick={async () => {
-          const owner = activeWorkspace.current
-          setPending(true)
-          setError('')
-          try {
-            const run = await startFinancialRun({
-              corp_code: corpCode!,
-              receipt_no: receipt!,
-              scope: scope as 'OFS' | 'CFS',
-              lease: 'include',
-              enrich_notes: enrichNotes,
-            })
-            if (owner !== activeWorkspace.current) return
-            tasks?.refresh()
-            navigate(
-              `/financials/${run.analysis_run_id}/summary?corp=${corpCode}`,
-            )
-          } catch (failure) {
-            setError(financialError(failure))
-          } finally {
-            setPending(false)
-          }
+        onClick={() => {
+          void start()
         }}
       >
         {pending ? '재무 분석 요청 중…' : '핵심 재무 분석'}
@@ -101,7 +102,7 @@ export function FinancialStart({
         </p>
       )}
       <p className="selection-note">
-        정형 재무와 주석을 수집해 분석합니다. 주석 보완에 실패해도 확보된 재무
+        선택한 보고서의 재무로 분석합니다. 주석 보완에 실패해도 확보된 재무
         결과는 제공합니다.
       </p>
       {error && (
