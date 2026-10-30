@@ -3,7 +3,7 @@ import type { FinancialResult, FinancialMetric } from './api'
 // Fictional presentation fixture. It is never used by the authenticated analysis route.
 const periods = ['current', 'previous', 'before_previous']
 const accounts: [string, string, number, number, number][] = [
-  ['revenue', '매출액', 31420, 30594, 29667],
+  ['revenue', '매출액', 31420, 30600, 29667],
   ['operating_profit', '영업이익', 1284, 1596, 1780],
   ['operating_cashflow', '영업활동현금흐름', -310, 640, 1150],
   ['depreciation', '감가상각비', 180, 170, 160],
@@ -25,8 +25,9 @@ const accounts: [string, string, number, number, number][] = [
   ['inventory', '재고자산', 1450, 1220, 1100],
   ['receivables', '매출채권', 4200, 3790, 3450],
   ['payables', '매입채무', 2530, 2370, 2280],
-  ['cost_of_sales', '매출원가', 29253.02, 27871.13, 26700.3],
-  ['gross_profit', '매출총이익', 2166.98, 2722.87, 2966.7],
+  ['cost_of_sales', '매출원가', 29253.02, 28243.02, 26700.3],
+  ['gross_profit', '매출총이익', 2166.98, 2356.98, 2966.7],
+  ['sga', '판매비와관리비', 882.98, 787.98, 1186.7],
 ]
 type ExampleMetric = [
   string,
@@ -73,9 +74,9 @@ const definitions: ExampleMetric[] = [
     '영업이익 ÷ 매출액 × 100',
     ['operating_profit', 'revenue'],
     4.0866,
-    5.2167,
+    5.2157,
     6,
-    '-1.1301',
+    '-1.1291',
     '수익성',
   ],
   [
@@ -109,9 +110,9 @@ const definitions: ExampleMetric[] = [
     '매출총이익 ÷ 매출액 × 100',
     ['gross_profit', 'revenue'],
     6.8968,
-    8.9,
+    7.7025,
     10,
-    '-2.0032',
+    '-0.8057',
     '수익성',
   ],
   [
@@ -121,9 +122,9 @@ const definitions: ExampleMetric[] = [
     '매출원가 ÷ 매출액 × 100',
     ['cost_of_sales', 'revenue'],
     93.1032,
-    91.1,
+    92.2975,
     90,
-    '2.0032',
+    '0.8057',
     '수익성',
   ],
   [
@@ -201,10 +202,10 @@ const definitions: ExampleMetric[] = [
     '%',
     '(당기 매출 − 전기 매출) ÷ 전기 매출 × 100',
     ['revenue'],
-    2.6999,
-    3.1247,
+    2.6797,
+    3.1449,
     null,
-    '-0.4248',
+    '-0.4652',
     '성장성',
   ],
   [
@@ -213,10 +214,10 @@ const definitions: ExampleMetric[] = [
     '%p',
     '계약자산 증가율 − 매출액 증가율',
     ['contract_assets', 'revenue'],
-    18.1966,
-    10.9907,
+    18.2168,
+    10.9705,
     null,
-    '7.2059',
+    '7.2463',
     '성장성',
   ],
 ]
@@ -347,7 +348,12 @@ export const visualSummaryExample: FinancialResult = {
       transition: null,
     },
   },
-  profit_bridge: null,
+  profit_bridge: [
+    { label: '매출 증감', value: '82000000000' },
+    { label: '매출원가 증감', value: '-101000000000' },
+    { label: '판관비 증감', value: '-9500000000' },
+    { label: '기타·조정 잔차', value: '-2700000000' },
+  ],
   borrowing_totals: {
     current: '1895000000000',
     previous: '1870000000000',

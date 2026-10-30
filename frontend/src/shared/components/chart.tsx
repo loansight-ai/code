@@ -4,13 +4,14 @@ import {
   use as registerCharts,
   type EChartsCoreOption,
 } from 'echarts/core'
-import { BarChart, LineChart, RadarChart } from 'echarts/charts'
+import { BarChart, LineChart, RadarChart, CustomChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
   TooltipComponent,
   TitleComponent,
   RadarComponent,
+  MarkLineComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { scaleChartFonts } from '../typography'
@@ -19,11 +20,13 @@ registerCharts([
   BarChart,
   LineChart,
   RadarChart,
+  CustomChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,
   TitleComponent,
   RadarComponent,
+  MarkLineComponent,
   CanvasRenderer,
 ])
 

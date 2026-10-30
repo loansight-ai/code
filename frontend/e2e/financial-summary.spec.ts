@@ -128,6 +128,12 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   await expect(
     page.getByRole('heading', { name: '영업이익 변동 분해' }),
   ).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /^영업이익 변동 워터폴/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /^비교기간별 영업이익과/ }),
+  ).toBeVisible()
   await page
     .getByRole('navigation', { name: '기업 분석' })
     .getByRole('link', { name: '핵심 재무 요약', exact: true })

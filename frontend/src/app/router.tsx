@@ -25,6 +25,10 @@ export const router = createBrowserRouter([
         element: <VisualSummaryPreviewPage />,
       },
       {
+        path: '/examples/financial-cashflow',
+        element: <VisualSummaryPreviewPage section="cashflow" />,
+      },
+      {
         path: '/financials/:financialId/summary-preview',
         loader: ({ params, request }) =>
           redirect(

@@ -1,0 +1,194 @@
+.fc-workspace {
+  margin-top: 20px;
+}
+.fc-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+.fc-panel {
+  min-width: 0;
+  border: 1px solid #e0e0d9;
+  border-radius: 12px;
+  padding: 22px 20px 16px;
+  background: white;
+}
+.fc-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+  min-height: 57px;
+}
+.design-shell .fc-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.fc-heading p {
+  margin: 6px 0 0;
+  color: #7c817b;
+  font-size: 12px;
+}
+.fc-metadata {
+  padding: 3px 8px;
+  border: 1px solid #e7e6df;
+  border-radius: 5px;
+  color: #727971;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.fc-workspace .fc-panel .financial-chart {
+  height: 315px;
+}
+.fc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: #7b817a;
+  min-height: 22px;
+  align-items: center;
+}
+.fc-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.fc-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+}
+.fc-total {
+  background: #60584c;
+}
+.fc-increase {
+  background: #d2cdc4;
+}
+.fc-decrease {
+  background: #e9a59e;
+}
+.fc-residual {
+  background: transparent;
+  border: 1px dashed #bcafa0;
+}
+.fc-cash {
+  background: #a59e90;
+}
+.fc-negative {
+  background: #b42318;
+}
+.fc-comparison-legend {
+  position: relative;
+  z-index: 1;
+}
+.fc-note {
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #767d75;
+  background: #f7f7f3;
+  border-radius: 7px;
+  margin: 13px 0 0;
+}
+.fc-note-caution {
+  color: #bb352a;
+  background: #fbeae7;
+  font-weight: 500;
+}
+.fc-scope-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #8c9087;
+  flex-wrap: wrap;
+  max-width: 125px;
+}
+.fc-scope-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.fc-scope-toggle > span {
+  width: 27px;
+  height: 15px;
+  border-radius: 10px;
+  background: #d4d0c7;
+  position: relative;
+}
+.fc-scope-toggle > span::after {
+  content: '';
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+.fc-scope-toggle small {
+  font-size: 9px;
+  color: #9a9d95;
+}
+.fc-data {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #737b71;
+}
+.fc-data > summary {
+  cursor: pointer;
+  padding: 3px 0;
+}
+.fc-data > p {
+  font-size: 11px;
+  line-height: 1.8;
+}
+.fc-table-scroll {
+  overflow-x: auto;
+}
+.fc-data table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.fc-data th,
+.fc-data td {
+  border-bottom: 1px solid #eaeae3;
+  padding: 10px;
+  font-size: 12px;
+  text-align: right;
+}
+.fc-data th:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+.fc-data thead {
+  background: #f7f7f3;
+}
+@media (max-width: 1100px) {
+  .fc-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .fc-panel {
+    padding: 18px 12px 14px;
+  }
+  .design-shell .fc-heading h2 {
+    font-size: 15px;
+  }
+  .fc-heading {
+    flex-wrap: wrap;
+  }
+  .fc-workspace .fc-panel .financial-chart {
+    height: 300px;
+  }
+  .fc-metadata {
+    font-size: 10px;
+  }
+}

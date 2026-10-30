@@ -10,7 +10,6 @@ import {
   startFinancialRun,
   financialError,
   reasonLabels,
-  money,
   type FinancialResult,
 } from '../features/financial/api'
 import { StatePanel } from '../shared/components/state-panel'
@@ -18,6 +17,7 @@ import { Button } from '../shared/components/button'
 import { DataStatus, FinancialValue } from '../features/financial/data-status'
 import '../financial-summary.css'
 import { VisualFinancialSummary } from '../features/financial/visual-summary'
+import { FinancialCashflow } from '../features/financial/financial-cashflow'
 import { analysisMenus } from '../app/analysis-menu'
 import {
   FinancialFactEvidence,
@@ -222,7 +222,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
               }}
             />
           ) : section === 'cashflow' ? (
-            <Cashflow result={result} />
+            <FinancialCashflow result={result} />
           ) : (
             <StatePanel
               state="empty"
@@ -249,7 +249,7 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
               <Link to={`/?${search}`}>기업·분석 옵션 선택 →</Link>
             </StatePanel>
           )}
-          {section === 'summary' ? (
+          {['summary', 'cashflow'].includes(section) ? (
             <details className="vs-source-details">
               <summary>원천 재무 계정·추출 근거 펼치기</summary>
               <SourceFacts result={result} />
@@ -277,59 +277,6 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
 function getFact(result: FinancialResult, key: string, period = 'current') {
   return result.facts.find((f) => f.key === key && f.period === period)
 }
-function Cashflow({ result }: { result: FinancialResult }) {
-  return (
-    <>
-      <section className="panel analysis-section">
-        <div className="panel-heading">
-          <h2>영업이익 변동 분해</h2>
-          <span>억원</span>
-        </div>
-        {result.profit_bridge ? (
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>요인</th>
-                  <th>영업이익 증감 기여</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.profit_bridge.map((item) => (
-                  <tr key={item.label}>
-                    <td>{item.label}</td>
-                    <td>{money(item.value)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <StatePanel
-            state="pending"
-            title="영업이익 분해에 필요한 계정이 부족합니다"
-            description="매출·매출원가·판관비·영업이익의 당기와 전기 금액이 모두 필요합니다."
-          />
-        )}
-        <p className="panel-footnote">
-          회계상 증감 분해이며 사업상 원인을 확정하지 않습니다. 선택한 공시의
-          비교기간 기준입니다.
-        </p>
-      </section>
-      <section className="panel analysis-section">
-        <div className="panel-heading">
-          <h2>현금흐름·운전자본</h2>
-        </div>
-        <p className="panel-footnote">
-          아래 공통 원천 계정 표에서 영업·투자·재무 현금흐름, 재고·채권·채무와
-          계약자산·계약부채를 비교할 수 있습니다. 회전일수·현금전환주기는 산식
-          정책 확정 전까지 보류합니다.
-        </p>
-      </section>
-    </>
-  )
-}
-
 function SourceFacts({ result }: { result: FinancialResult }) {
   const periods = [...result.periods].reverse()
   const current = result.facts.filter((f) => f.period === 'current')

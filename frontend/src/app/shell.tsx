@@ -33,7 +33,10 @@ export function Shell() {
     session.phase === 'ready' ? financial?.context : undefined
   const location = useLocation()
   const params = new URLSearchParams(location.search)
-  const visualDemo = location.pathname === '/examples/financial-summary'
+  const visualDemo = [
+    '/examples/financial-summary',
+    '/examples/financial-cashflow',
+  ].includes(location.pathname)
   const company = findCompany(visualDemo ? 'demo-construction' : analysisId)
   const live = useNoteWorkspace(structureId?.toLowerCase())
   const metadata = live.data
@@ -67,7 +70,13 @@ export function Shell() {
       : structureId
         ? `/notes/${structureId}`
         : '/workspace'
-  const active = section ?? (structureId ? 'evidence' : 'summary')
+  const active =
+    section ??
+    (location.pathname === '/examples/financial-cashflow'
+      ? 'cashflow'
+      : structureId
+        ? 'evidence'
+        : 'summary')
   const scope = visualDemo
     ? 'OFS'
     : (financialContext?.scope ??
@@ -98,7 +107,9 @@ export function Shell() {
               to={
                 visualDemo && path === 'summary'
                   ? '/examples/financial-summary'
-                  : `${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`
+                  : visualDemo && path === 'cashflow'
+                    ? '/examples/financial-cashflow'
+                    : `${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`
               }
               className={`nav-item ${location.pathname !== '/' && active === path ? 'active' : ''}`}
             >
