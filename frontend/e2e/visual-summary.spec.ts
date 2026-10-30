@@ -56,6 +56,9 @@ test('standalone visual preview, tabs, formula and responsive layout', async ({
   await expect(button).toBeFocused()
   await page.evaluate(() => window.scrollTo(0, 0))
   await page
+    .getByRole('region', { name: '공통 핵심 5개 비율' })
+    .screenshot({ path: testInfo.outputPath('core-ratios.png') })
+  await page
     .getByRole('region', { name: '영업이익', exact: true })
     .screenshot({ path: testInfo.outputPath('profit-card.png') })
   const industry = page.getByRole('region', { name: '건설 업종 핵심 지표' })

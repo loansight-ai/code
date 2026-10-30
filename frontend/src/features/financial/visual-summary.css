@@ -285,6 +285,164 @@
 .vs-period-bar.vs-current {
   background: #385e7c;
 }
+.vs-core-card {
+  min-height: 166px;
+  padding: 13px 12px 10px;
+  gap: 6px;
+}
+.vs-core-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 5px;
+  width: 100%;
+}
+.vs-core-card .vs-core-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #263b4b;
+  white-space: normal;
+}
+.vs-core-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 4px;
+}
+.vs-core-tags > span {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 4px;
+  background: white;
+  white-space: nowrap;
+}
+.vs-core-card.vs-core-attention {
+  color: #a26008;
+  background: #fcf2de;
+  border-color: #f0d3a0;
+}
+.vs-core-card.vs-core-warning {
+  color: #be281c;
+  background: #fbeae7;
+  border-color: #f3c6be;
+}
+.vs-core-card.vs-core-watch {
+  color: #365f86;
+  background: #e9eff6;
+  border-color: #ceddeb;
+}
+.vs-core-card.vs-core-unassessed {
+  color: #3b4e5b;
+  background: #f7f8f7;
+  border-color: #dfe4df;
+}
+.vs-core-card.vs-core-positive {
+  color: #13836d;
+  background: #e9f4ee;
+  border-color: #c8e2d5;
+}
+.vs-core-card .vs-core-value {
+  color: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-top: 1px;
+}
+.vs-core-value small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #828780;
+  letter-spacing: 0;
+  margin-left: 2px;
+}
+.vs-core-comparison {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+}
+.vs-core-comparison > span,
+.vs-core-subtext {
+  color: #838881;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.vs-core-subtext {
+  min-height: 15px;
+}
+.vs-core-bullet-area {
+  margin-top: auto;
+  padding-top: 12px;
+  width: 100%;
+}
+.vs-core-bullet {
+  position: relative;
+  height: 11px;
+  border-radius: 2px;
+  background: #ffffffd9;
+}
+.vs-core-bullet i {
+  display: block;
+  position: absolute;
+}
+.vs-core-risk-range {
+  top: 0;
+  height: 100%;
+  background: currentColor;
+  opacity: 0.08;
+}
+.vs-core-previous-bar {
+  top: 2px;
+  height: 6px;
+  background: #ccc8c0;
+  opacity: 0.75;
+}
+.vs-core-current-bar {
+  top: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 1px;
+}
+.vs-core-previous-marker {
+  top: -3px;
+  height: 17px;
+  width: 2px;
+  background: #9b9f9d;
+}
+.vs-core-reference-marker {
+  top: -5px;
+  height: 21px;
+  width: 2px;
+  background: #34393a;
+}
+.vs-core-reference-caption {
+  display: block;
+  margin-top: 5px;
+  text-align: center;
+  color: #898e87;
+  font-size: 9px;
+}
+.vs-core-data-detail {
+  font-size: 10px;
+  margin-top: 6px;
+}
+.vs-core-legend {
+  font-size: 10px;
+  margin-top: 12px;
+}
+.vs-core-legend-warning {
+  color: #be281c;
+}
+.vs-core-legend-attention {
+  color: #a26008;
+}
+.vs-core-legend-watch {
+  color: #365f86;
+}
 .vs-footnote {
   font-size: 11px;
   color: #77736b;

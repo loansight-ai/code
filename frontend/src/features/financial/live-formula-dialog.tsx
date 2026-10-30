@@ -5,6 +5,7 @@ import { MetricValue, MetricStatus } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
 import {
   money,
+  metricValue,
   reasonLabels,
   type FinancialMetric,
   type FinancialResult,
@@ -55,6 +56,23 @@ export function LiveFormulaDialog({
     )
   }
   const rows: { label: string; value: ReactNode }[] = []
+  const assessment = result.core_card_assessments?.find(
+    (item) => item.key === metric.key,
+  )
+  if (assessment) {
+    rows.push({ label: '카드 표시 근거', value: assessment.reason })
+    if (assessment.reference)
+      rows.push({
+        label: '카드 비교선',
+        value: (
+          <>
+            {assessment.reference.label}{' '}
+            {metricValue(assessment.reference.value, metric.unit)}
+            <small>{assessment.reference.source}</small>
+          </>
+        ),
+      })
+  }
   const pair = operands[metric.key]
   const debt =
     result.borrowing_totals.current == null

@@ -2,13 +2,7 @@ import { useState } from 'react'
 import type { EChartsCoreOption } from 'echarts/core'
 import { Chart } from '../../shared/components/chart'
 import { LiveFormulaDialog } from './live-formula-dialog'
-import {
-  DataBadge,
-  DataStatus,
-  FinancialValue,
-  MetricValue,
-  MetricStatus,
-} from './data-status'
+import { DataBadge, DataStatus, FinancialValue } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
 import {
   money,
@@ -18,18 +12,12 @@ import {
 } from './api'
 import { IndustryHighlights, RepaymentHighlights } from './financial-highlights'
 import './visual-summary.css'
+import { CoreRatioCards } from './core-ratio-cards'
 import {
   IndustryPositionPanel,
   type IndustryBenchmark,
 } from './industry-position-panel'
 
-const core = [
-  'current_ratio',
-  'debt_ratio',
-  'operating_margin',
-  'operating_roa',
-  'interest_coverage',
-]
 type IndustrySpec = {
   description: string
   caution: string
@@ -122,51 +110,6 @@ function signed(value: string | null | undefined, unit: string) {
   return value == null
     ? '비교 보류'
     : `${Number(value) > 0 ? '+' : ''}${metricValue(value, unit)}`
-}
-
-// Each metric uses its own zero-based scale; these are period comparisons, not risk thresholds.
-function PeriodBars({
-  metric,
-  result,
-}: {
-  metric: FinancialMetric
-  result: FinancialResult
-}) {
-  const current = numberValue(displayedMetricValue(metric, result))
-  const previous = numberValue(displayedMetricValue(metric, result, 'previous'))
-  const scale = Math.max(Math.abs(current ?? 0), Math.abs(previous ?? 0), 1)
-  return (
-    <div
-      className="vs-period-bars"
-      aria-label={`${metric.label} 전기·당기 비교`}
-    >
-      {(
-        [
-          ['전기', previous],
-          ['당기', current],
-        ] as const
-      ).map(([label, value]) => (
-        <div className="vs-period-row" key={label}>
-          <span>{label}</span>
-          <div className="vs-bar-track">
-            <i className="vs-zero" />
-            {value != null && (
-              <i
-                className={`vs-period-bar ${label === '당기' ? 'vs-current' : ''}`}
-                style={{
-                  left: `${value < 0 ? 50 - (Math.abs(value) / scale) * 50 : 50}%`,
-                  width: `${(Math.abs(value) / scale) * 50}%`,
-                }}
-              />
-            )}
-          </div>
-          <span>
-            {value == null ? '—' : metricValue(String(value), metric.unit)}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 export function VisualFinancialSummary({
@@ -479,61 +422,7 @@ export function VisualFinancialSummary({
           ))}
         </div>
       </div>
-      <section className="vs-panel" aria-labelledby="vs-core-title">
-        <div className="vs-heading">
-          <div>
-            <span className="vs-eyebrow">02 / 한눈에 보는 비율</span>
-            <h2 id="vs-core-title">공통 핵심 5개 비율</h2>
-          </div>
-          <span className="vs-muted">
-            회색 전기 · 파랑 당기 · 막대 중앙은 0
-          </span>
-        </div>
-        <div className="vs-core-grid">
-          {core.map((key) => {
-            const metric = result.metrics.find((m) => m.key === key)
-            if (!metric)
-              return (
-                <div className="vs-core-card" key={key}>
-                  지표 미확보
-                </div>
-              )
-            const value = displayedMetricValue(metric, result)
-            return (
-              <article className="vs-core-card" key={key}>
-                <button
-                  className="vs-text-button"
-                  aria-label={metric.label}
-                  onClick={(e) => show(metric, e.currentTarget)}
-                >
-                  {metric.label} ↗
-                </button>
-                <strong>
-                  <MetricValue metric={metric} result={result} />
-                </strong>
-                <span className="vs-delta">
-                  {signed(
-                    numberValue(value) != null ? metric.change : null,
-                    metric.change_unit,
-                  )}
-                </span>
-                <PeriodBars metric={metric} result={result} />
-                {dataState(value) === 'MISSING' ? (
-                  <MetricStatus metric={metric} result={result} />
-                ) : (
-                  <DataBadge value={value} />
-                )}
-              </article>
-            )
-          })}
-        </div>
-        <p className="vs-footnote">
-          막대는 지표별 전기·당기의 크기를 비교합니다. 위험 등급과 업종 기준선은
-          검증된 기준 확보 후 표시합니다.
-          {result.industry === '부동산 임대' &&
-            ' 임대업은 아래 EBITDA·현금보상 지표를 우선 확인하세요.'}
-        </p>
-      </section>
+      <CoreRatioCards result={result} demo={demo} onFormula={show} />
       <IndustryPositionPanel
         result={result}
         benchmark={benchmark}

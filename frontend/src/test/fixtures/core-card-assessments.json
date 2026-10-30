@@ -1,0 +1,65 @@
+{
+  "core_card_assessments": [
+    {
+      "key": "current_ratio",
+      "status": "CAUTION",
+      "reason": "사용자 지정 팀 가설 150 기준의 확인 대상입니다. 최종 위험 판정이 아닙니다.",
+      "reference": {
+        "value": "150",
+        "label": "팀 가설",
+        "kind": "TEAM_HYPOTHESIS",
+        "source": "사용자 지정 팀 가설 · 유동비율 150% / 부채비율 200% / 이자보상비율 3배"
+      },
+      "higher_is_better": true
+    },
+    {
+      "key": "debt_ratio",
+      "status": "DETERIORATING",
+      "reason": "동일 공시의 전기 대비 악화 방향입니다.",
+      "reference": {
+        "value": "200",
+        "label": "팀 가설",
+        "kind": "TEAM_HYPOTHESIS",
+        "source": "사용자 지정 팀 가설 · 유동비율 150% / 부채비율 200% / 이자보상비율 3배"
+      },
+      "higher_is_better": false
+    },
+    {
+      "key": "operating_margin",
+      "status": "DETERIORATING",
+      "reason": "동일 공시의 전기 대비 악화 방향입니다.",
+      "reference": {
+        "value": "4.1391",
+        "label": "전기",
+        "kind": "PREVIOUS",
+        "source": "동일 공시·회계 범위의 전기 비교값"
+      },
+      "higher_is_better": true
+    },
+    {
+      "key": "operating_roa",
+      "status": "DETERIORATING",
+      "reason": "동일 공시의 전기 대비 악화 방향입니다.",
+      "reference": {
+        "value": "4.7289",
+        "label": "전기",
+        "kind": "PREVIOUS",
+        "source": "동일 공시·회계 범위의 전기 비교값"
+      },
+      "higher_is_better": true
+    },
+    {
+      "key": "interest_coverage",
+      "status": "IMPROVING",
+      "reason": "동일 공시의 전기 대비 개선 방향입니다.",
+      "reference": {
+        "value": "3",
+        "label": "팀 가설",
+        "kind": "TEAM_HYPOTHESIS",
+        "source": "사용자 지정 팀 가설 · 유동비율 150% / 부채비율 200% / 이자보상비율 3배"
+      },
+      "higher_is_better": true
+    }
+  ],
+  "core_card_assessment_version": "core-card-assessments-v1-team-hypotheses"
+}

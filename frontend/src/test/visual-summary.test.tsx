@@ -6,6 +6,7 @@ import { resultSchema } from '../features/financial/api'
 import fixture from './fixtures/financial-result.json'
 import { visualSummaryExample } from '../features/financial/visual-summary-example'
 import { exampleIndustryBenchmark } from '../features/financial/industry-position-example'
+import coreAssessments from './fixtures/core-card-assessments.json'
 
 vi.mock('../shared/components/chart', () => ({
   Chart: ({ label }: { label: string }) => (
@@ -90,6 +91,47 @@ it('rejects benchmark context mismatches instead of showing unrelated percentile
   expect(
     within(screen.getByRole('tabpanel')).queryByText('하위 25%'),
   ).not.toBeInTheDocument()
+})
+
+it('shows example reference bullets and treats a rising debt ratio as worsening', () => {
+  render(<VisualFinancialSummary result={visualSummaryExample} demo />)
+  const core = screen.getByRole('region', { name: '공통 핵심 5개 비율' })
+  const debt = within(core)
+    .getByRole('button', { name: '부채비율' })
+    .closest('article')!
+  expect(debt).toHaveClass('vs-core-warning')
+  expect(within(debt).getByText('경고')).toBeVisible()
+  expect(within(debt).getByText('▲ +24.4%p')).toHaveClass('vs-change-down')
+  expect(
+    within(core).getByRole('img', { name: /유동비율:.*권고 150.0%/ }),
+  ).toBeVisible()
+  expect(
+    within(core).getByRole('img', { name: /매출액영업이익률:.*업종 4.8%/ }),
+  ).toBeVisible()
+})
+
+it('uses server assessments and authorized reference lines on real financial results', async () => {
+  const result = resultSchema.parse({ ...fixture, ...coreAssessments })
+  render(<VisualFinancialSummary result={result} />)
+  const core = screen.getByRole('region', { name: '공통 핵심 5개 비율' })
+  const liquidity = within(core)
+    .getByRole('button', { name: '유동비율' })
+    .closest('article')!
+  expect(liquidity).toHaveClass('vs-core-attention')
+  expect(within(liquidity).getByText('주의')).toBeVisible()
+  expect(
+    within(liquidity).getByRole('img', { name: /팀 가설 150.0%/ }),
+  ).toBeVisible()
+  expect(
+    within(core).getByRole('img', { name: /이자보상비율:.*팀 가설 3.0배/ }),
+  ).toBeVisible()
+  expect(
+    within(core).getByRole('img', { name: /매출액영업이익률:.*전기 4.1%/ }),
+  ).toBeVisible()
+  await userEvent
+    .setup()
+    .click(within(core).getByRole('button', { name: '유동비율' }))
+  expect(screen.getByRole('dialog')).toHaveTextContent('사용자 지정 팀 가설')
 })
 
 it('does not guess an industry and delegates lease changes to the existing workflow', async () => {

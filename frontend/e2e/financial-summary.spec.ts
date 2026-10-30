@@ -8,6 +8,18 @@ const result = JSON.parse(
   ),
 )
 const id = result.analysis_run_id
+Object.assign(
+  result,
+  JSON.parse(
+    readFileSync(
+      new URL(
+        '../src/test/fixtures/core-card-assessments.json',
+        import.meta.url,
+      ),
+      'utf-8',
+    ),
+  ),
+)
 const other = '22222222-2222-4222-8222-222222222222'
 const task = {
   task_id: id,
@@ -69,6 +81,19 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   ).toBeVisible()
   await expect(
     page.getByRole('heading', { name: '공통 핵심 5개 비율' }),
+  ).toBeVisible()
+  const core = page.getByRole('region', { name: '공통 핵심 5개 비율' })
+  await expect(
+    core.getByRole('img', { name: /유동비율:.*팀 가설 150.0%/ }),
+  ).toBeVisible()
+  await expect(
+    core.getByRole('img', { name: /매출액영업이익률:.*전기 4.1%/ }),
+  ).toBeVisible()
+  await expect(
+    core
+      .getByRole('button', { name: '유동비율', exact: true })
+      .locator('..')
+      .getByText('주의', { exact: true }),
   ).toBeVisible()
   await expect(page.locator('#main .source-strip')).toHaveCount(0)
   await expect(
