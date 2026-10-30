@@ -215,6 +215,14 @@
   padding: 16px;
   align-items: end;
 }
+.company-collected-filter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px 12px;
+  color: #60584c;
+  font-size: calc(12px * var(--font-scale));
+}
 .company-search-toolbar .search-field {
   flex: 1;
   margin: 0;

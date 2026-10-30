@@ -35,6 +35,7 @@ export async function searchCompanies(
   signal: AbortSignal,
   industry?: Industry,
   market?: 'Y' | 'K' | 'N' | 'E',
+  collectedOnly = false,
 ) {
   const params = new URLSearchParams({
     q: query,
@@ -43,6 +44,7 @@ export async function searchCompanies(
   })
   if (industry) params.set('industry', industry)
   if (market) params.set('market', market)
+  if (collectedOnly) params.set('collected_only', 'true')
   return resultsSchema.parse(await request(`/companies?${params}`, { signal }))
 }
 

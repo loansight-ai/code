@@ -58,6 +58,64 @@ function mount(initialEntry = '/') {
   return router
 }
 
+it('filters CSV companies on the server, preserves conditions and resets pagination', async () => {
+  const fetcher = vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({ items: [company], total: 21, offset: 0, limit: 10 }),
+          { status: 200 },
+        ),
+    )
+  const router = mount('/?q=삼성&industry=제조&market=Y&offset=10')
+  const toggle = screen.getByRole('checkbox', {
+    name: 'CSV 재무 데이터 보유 기업만',
+  })
+  expect(toggle).not.toBeChecked()
+  await userEvent.setup().click(toggle)
+  await vi.waitFor(() => {
+    const url = new URL(String(fetcher.mock.lastCall?.[0]), 'http://localhost')
+    expect(url.searchParams.get('collected_only')).toBe('true')
+    expect(url.searchParams.get('q')).toBe('삼성')
+    expect(url.searchParams.get('industry')).toBe('제조')
+    expect(url.searchParams.get('market')).toBe('Y')
+    expect(url.searchParams.get('offset')).toBe('0')
+  })
+  await userEvent.setup().click(screen.getByRole('button', { name: '다음' }))
+  await vi.waitFor(() =>
+    expect(
+      new URLSearchParams(router.state.location.search).get('offset'),
+    ).toBe('10'),
+  )
+  expect(
+    new URLSearchParams(router.state.location.search).get('collected_only'),
+  ).toBe('true')
+  await userEvent.setup().click(toggle)
+  await vi.waitFor(() => {
+    const url = new URL(String(fetcher.mock.lastCall?.[0]), 'http://localhost')
+    expect(url.searchParams.has('collected_only')).toBe(false)
+    expect(url.searchParams.get('offset')).toBe('0')
+  })
+})
+
+it('restores the CSV-only option from the URL', async () => {
+  const fetcher = vi
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(
+      new Response(
+        JSON.stringify({ items: [], total: 0, offset: 0, limit: 10 }),
+        { status: 200 },
+      ),
+    )
+  mount('/?collected_only=true')
+  expect(
+    screen.getByRole('checkbox', { name: 'CSV 재무 데이터 보유 기업만' }),
+  ).toBeChecked()
+  await screen.findByText('검색 결과가 없습니다')
+  expect(String(fetcher.mock.lastCall?.[0])).toContain('collected_only=true')
+})
+
 it('searches the server, preserves IME composition and selects a real company without demo analysis', async () => {
   const fetcher = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
     new Response(

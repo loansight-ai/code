@@ -16,7 +16,7 @@ from app.modules.company.catalog import (
     CompanyCatalog,
     Industry,
 )
-from app.modules.company.models import CompanyImport, CompanyRecord
+from app.modules.company.models import CollectedFinancial, CompanyImport, CompanyRecord
 from app.modules.company.profiles import ProfileError
 
 IMPORT_LOCK = 7364201101
@@ -159,6 +159,7 @@ class CompanyRepository:
         limit: int,
         industry: Industry | None = None,
         market: str | None = None,
+        collected_only: bool = False,
     ) -> dict:
         if not self.ready:
             await self.import_sources()
@@ -190,6 +191,12 @@ class CompanyRepository:
             conditions.append(CompanyRecord.industry == industry)
         if market:
             conditions.append(CompanyRecord.corp_cls == market)
+        if collected_only:
+            conditions.append(
+                select(CollectedFinancial.corp_code)
+                .where(CollectedFinancial.corp_code == CompanyRecord.corp_code)
+                .exists()
+            )
         async with self.database.transaction() as session:
             # Keep count/page on one MVCC snapshot during a concurrent import.
             await session.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))

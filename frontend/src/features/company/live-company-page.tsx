@@ -20,6 +20,7 @@ export function LiveCompanyPage() {
   const [composing, setComposing] = useState(false)
   const [selection, setSelected] = useState<DartCompany | null>(null)
   const marketValue = params.get('market')
+  const collectedOnly = params.get('collected_only') === 'true'
   const market = ['Y', 'K', 'N', 'E'].includes(marketValue ?? '')
     ? (marketValue as 'Y' | 'K' | 'N' | 'E')
     : undefined
@@ -41,9 +42,17 @@ export function LiveCompanyPage() {
     return () => window.clearTimeout(timeout)
   }, [composing, input.value, query, setParams])
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ['dart', 'companies', query, offset, industry, market],
+    queryKey: [
+      'dart',
+      'companies',
+      query,
+      offset,
+      industry,
+      market,
+      collectedOnly,
+    ],
     queryFn: ({ signal }) =>
-      searchCompanies(query, offset, signal, industry, market),
+      searchCompanies(query, offset, signal, industry, market, collectedOnly),
     retry: false,
   })
   const restored = useQuery({
@@ -129,6 +138,31 @@ export function LiveCompanyPage() {
               </select>
             </label>
           </div>
+          <label className="company-collected-filter">
+            <input
+              type="checkbox"
+              checked={collectedOnly}
+              onChange={(event) => {
+                const checked = event.target.checked
+                setSelected(null)
+                setParams((previous) => {
+                  const next = new URLSearchParams(previous)
+                  if (checked) next.set('collected_only', 'true')
+                  else next.delete('collected_only')
+                  next.delete('offset')
+                  next.delete('corp')
+                  return next
+                })
+              }}
+            />
+            CSV 재무 데이터 보유 기업만
+          </label>
+          {collectedOnly && (
+            <p className="search-scope-note">
+              CSV에서 적재한 재무 데이터가 한 건 이상 있는 기업입니다.
+              보고서·연도·연결/별도별 보유 여부는 기업 선택 후 확인하세요.
+            </p>
+          )}
           <div className="industry-filters" aria-label="업종 필터">
             {['전체', ...industries].map((item) => (
               <button

@@ -45,9 +45,12 @@ async def search_companies(
     limit: Annotated[int, Query(ge=1, le=100)] = 10,
     industry: Industry | None = None,
     market: Literal["Y", "K", "N", "E"] | None = None,
+    collected_only: bool = False,
 ) -> dict:
     try:
-        return await request.app.state.company_repository.search(q, offset, limit, industry, market)
+        return await request.app.state.company_repository.search(
+            q, offset, limit, industry, market, collected_only
+        )
     except CatalogUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from None
 

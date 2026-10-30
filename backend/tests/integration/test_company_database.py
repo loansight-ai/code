@@ -14,6 +14,59 @@ from app.modules.company.profiles import FIELDS, ProfileError, read_seed
 from app.modules.company.repository import CompanyRepository
 
 
+async def test_csv_filter_uses_exists_before_count_and_page(catalog, environment, client):
+    from datetime import date
+
+    from app.modules.company.models import CollectedFinancial, CompanyDatasetImport
+
+    repository, _, _ = catalog
+    _, _, database = environment
+    await repository.import_sources()
+    async with database.transaction() as db:
+        source = CompanyDatasetImport(
+            signature="a" * 64,
+            parser_version="test",
+            exported_on=date(2026, 10, 30),
+            source_as_of=date(2026, 10, 30),
+            manifest={},
+        )
+        db.add(source)
+        await db.flush()
+        for code in ("00123456", "00000003"):
+            company = await db.get(CompanyRecord, code)
+            company.corp_cls = "Y"
+            for year, scope in ((2024, "OFS"), (2025, "OFS"), (2025, "CFS")):
+                db.add(
+                    CollectedFinancial(
+                        import_id=source.id,
+                        corp_code=code,
+                        fiscal_year=year,
+                        scope=scope,
+                        receipt_no="20260320000001",
+                        data={},
+                    )
+                )
+    url = "/api/v1/companies"
+    first = await client.get(url, params={"collected_only": "true", "limit": 1})
+    assert first.status_code == 200
+    assert first.json()["total"] == 2
+    assert len(first.json()["items"]) == 1
+    second = (
+        await client.get(url, params={"collected_only": "true", "limit": 1, "offset": 1})
+    ).json()
+    assert second["total"] == 2
+    assert second["items"][0]["corp_code"] != first.json()["items"][0]["corp_code"]
+    selected = (
+        await client.get(url, params={"collected_only": "true", "industry": "제조", "market": "Y"})
+    ).json()
+    assert selected["total"] == 1 and selected["items"][0]["corp_code"] == "00123456"
+    assert (await client.get(url, params={"collected_only": "true", "q": "없는기업"})).json()[
+        "total"
+    ] == 0
+    assert (await client.get(url, params={"collected_only": "false"})).json()["total"] == 11
+    assert (await client.get(url, params={"collected_only": "invalid"})).status_code == 422
+
+
 def master(source, rows):
     archive = io.BytesIO()
     with ZipFile(archive, "w") as output:
