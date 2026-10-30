@@ -13,6 +13,7 @@ from app.modules.evidence.dart_models import DartNote
 from app.modules.evidence.dart_service import ensure_source
 from app.modules.evidence.service import fingerprint
 from app.modules.financial.collector import download, parse_response
+from app.modules.financial.core_assessments import with_core_assessments
 from app.modules.financial.domain import (
     FORMULA_VERSION,
     MAPPING_VERSION,
@@ -256,6 +257,8 @@ async def read(database, identity, run_id: UUID):
             **tasks.task_payload(task, job),
             "analysis_run_id": str(run.id),
             "context": run.context,
-            "result": workflow.result if workflow and workflow.result else run.result,
+            "result": with_core_assessments(
+                workflow.result if workflow and workflow.result else run.result
+            ),
             "note_workflow": enrichment,
         }

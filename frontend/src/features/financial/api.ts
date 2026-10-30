@@ -57,6 +57,34 @@ export const resultSchema = z.object({
   collected_at: z.string(),
   mapping_version: z.string(),
   formula_version: z.string(),
+  core_card_assessment_version: z.string().optional(),
+  core_card_assessments: z
+    .array(
+      z.object({
+        key: z.string(),
+        status: z.enum([
+          'WARNING',
+          'CAUTION',
+          'DETERIORATING',
+          'IMPROVING',
+          'UNCHANGED',
+          'UNAVAILABLE',
+          'NOT_EVALUATED',
+          'CONTEXT_REQUIRED',
+        ]),
+        reason: z.string(),
+        higher_is_better: z.boolean(),
+        reference: z
+          .object({
+            value: z.string().regex(/^-?\d+(\.\d+)?$/),
+            label: z.string(),
+            kind: z.enum(['ABSOLUTE', 'PREVIOUS', 'TEAM_HYPOTHESIS']),
+            source: z.string(),
+          })
+          .nullable(),
+      }),
+    )
+    .optional(),
   periods: z.array(z.object({ key: z.string(), label: z.string() })),
   facts: z.array(factSchema),
   metrics: z.array(metricSchema),
