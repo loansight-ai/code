@@ -4,11 +4,13 @@ import {
   use as registerCharts,
   type EChartsCoreOption,
 } from 'echarts/core'
-import { BarChart, LineChart } from 'echarts/charts'
+import { BarChart, LineChart, RadarChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
   TooltipComponent,
+  TitleComponent,
+  RadarComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { scaleChartFonts } from '../typography'
@@ -16,30 +18,36 @@ import { scaleChartFonts } from '../typography'
 registerCharts([
   BarChart,
   LineChart,
+  RadarChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,
+  TitleComponent,
+  RadarComponent,
   CanvasRenderer,
 ])
 
 export function Chart({
   option,
   label,
+  onClick,
 }: {
   option: EChartsCoreOption
   label: string
+  onClick?: (event: { name?: string }) => void
 }) {
   const container = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const chart = init(container.current!)
     chart.setOption(scaleChartFonts(option))
+    if (onClick) chart.on('click', (event) => onClick(event))
     const observer = new ResizeObserver(() => chart.resize())
     observer.observe(container.current!)
     return () => {
       observer.disconnect()
       chart.dispose()
     }
-  }, [option])
+  }, [option, onClick])
   return (
     <div
       ref={container}
