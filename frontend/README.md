@@ -42,6 +42,8 @@ React + Vite + TypeScript 기반 화면입니다. 코드 접속·서버 세션·
 
 ### 실적 변동·현금흐름
 
+완료된 재무 결과를 연 뒤 기업 검색으로 이동해도 상단 분석 기준과 재무 메뉴는 해당 결과를 유지합니다. 같은 탭의 새로고침에도 복원하며 새 결과를 열면 갱신합니다. 저장 범위·권한 처리와 검증은 [활성 분석 유지 검증](../docs/reviews/22_active-financial-navigation-validation.md)을 따릅니다.
+
 `/financials/:financialId/cashflow`는 실제 분석 결과의 영업이익 변동 분해와 기간별 영업이익·영업활동현금흐름을 나란히 표시합니다. `/examples/financial-cashflow`에서는 같은 컴포넌트를 가상 데이터로 확인합니다. 데이터 검산·자료 상태·비교 범위와 검증 결과는 [현금흐름 시각화 검증](../docs/reviews/21_financial-cashflow-validation.md)을 따릅니다.
 
 <a id="screen-design"></a>
