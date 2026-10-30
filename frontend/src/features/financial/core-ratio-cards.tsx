@@ -1,6 +1,7 @@
 import { DataBadge, MetricStatus, MetricValue } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
 import type { FinancialMetric, FinancialResult } from './api'
+import { bokGap, bokValue } from './bok-data'
 
 const specs = [
   {
@@ -104,7 +105,9 @@ export function CoreRatioCards({
         <span className="vs-muted">
           {demo
             ? '상태·기준선은 예시'
-            : '팀 가설 150% · 200% · 3배 / 수익성은 전기 비교'}
+            : result.bok_benchmark
+              ? '비교선: 한국은행 업종 평균 · 상태: 기존 규칙'
+              : '팀 가설 150% · 200% · 3배 / 수익성은 전기 비교'}
         </span>
       </div>
       <div className="vs-core-grid">
@@ -156,9 +159,13 @@ export function CoreRatioCards({
                     : 'DETERIORATING'
           const status = assessment?.status ?? fallbackStatus
           const liveReference = assessment?.reference
-          const candidate = liveReference
-            ? Number(liveReference.value)
-            : previous
+          const bok = !demo ? bokValue(result, spec.key) : undefined
+          const candidate =
+            bok?.value != null
+              ? Number(bok.value)
+              : liveReference
+                ? Number(liveReference.value)
+                : previous
           const reference = demo
             ? spec.reference
             : candidate != null && Number.isFinite(candidate)
@@ -166,12 +173,16 @@ export function CoreRatioCards({
               : null
           const referenceLabel = demo
             ? spec.referenceLabel
-            : (liveReference?.label ?? '전기')
+            : bok?.value != null
+              ? `업종 평균 · ${bok.year}`
+              : (liveReference?.label ?? '전기')
           const tone = demo ? spec.tone : statusTones[status]
           const referenceSource = demo
             ? '가상 예시'
-            : (liveReference?.source ??
-              '동일 공시의 전기 비교값 · 업종 평균 아님')
+            : bok?.value != null
+              ? `${result.bok_benchmark?.industry_name} · 한국은행 · 전체 기업 규모`
+              : (liveReference?.source ??
+                '동일 공시의 전기 비교값 · 업종 평균 아님')
           const max =
             Math.max(
               demo ? spec.max : 1,
@@ -179,7 +190,8 @@ export function CoreRatioCards({
               previous ?? 0,
               reference ?? 0,
             ) * (demo ? 1 : 1.25)
-          const min = Math.min(0, current ?? 0, previous ?? 0) * 1.1
+          const min =
+            Math.min(0, current ?? 0, previous ?? 0, reference ?? 0) * 1.1
           const position = (n: number) =>
             Math.max(0, Math.min(100, ((n - min) / (max - min)) * 100))
           const adjustedDebt = result.metrics.find(
@@ -253,7 +265,7 @@ export function CoreRatioCards({
                   role="img"
                   aria-label={`${metric.label}: 당기 ${current == null ? '자료 없음' : formatted(current, metric.unit)}, 전기 ${previous == null ? '자료 없음' : formatted(previous, metric.unit)}${reference == null ? ', 기준선 미확보' : `, ${referenceLabel} ${formatted(reference, metric.unit)} · ${referenceSource}`}`}
                 >
-                  {reference != null && (
+                  {reference != null && (demo || bok?.value == null) && (
                     <i
                       className="vs-core-risk-range"
                       style={{
@@ -298,6 +310,13 @@ export function CoreRatioCards({
                     ? '기준선 비교 보류'
                     : `${referenceLabel} ${formatted(reference, metric.unit)}`}
                 </span>
+                {!demo && bok && (
+                  <span className="vs-muted">
+                    {bok.gap != null
+                      ? `평균 대비 ${bokGap(bok.gap, metric.unit)}`
+                      : (bok.comparison_reason ?? '비교 보류')}
+                  </span>
+                )}
               </div>
               {dataState(value) !== 'CONFIRMED' && (
                 <div className="vs-core-data-detail">
@@ -318,6 +337,19 @@ export function CoreRatioCards({
         {demo
           ? ' · 상태·기준선은 가상 예시'
           : ' · 팀 가설은 참고선이며 정상·최종 여신 판단을 뜻하지 않습니다. 업종상 왜곡 지표는 판정을 보류합니다.'}
+        {!demo && result.bok_benchmark?.source_url && (
+          <>
+            {' · '}
+            <a
+              href={result.bok_benchmark.source_url}
+              target="_blank"
+              rel="noreferrer"
+              title={`${result.bok_benchmark.industry_name ?? '업종 미확정'} · 전체 기업 규모 · ${result.bok_benchmark.scope_note ?? ''}`}
+            >
+              한국은행 기업경영분석
+            </a>
+          </>
+        )}
       </p>
     </section>
   )

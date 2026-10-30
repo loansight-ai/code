@@ -93,6 +93,16 @@ export function FinancialInformation({
                 <dt>비교 기준</dt>
                 <dd>{result.comparison_basis}</dd>
               </div>
+              {result.bok_benchmark && (
+                <div>
+                  <dt>업종 평균</dt>
+                  <dd>
+                    {result.bok_benchmark.source_title} ·{' '}
+                    {result.bok_benchmark.industry_name ?? '업종 미확정'} · 기업
+                    규모 전체 · {result.bok_benchmark.scope_note}
+                  </dd>
+                </div>
+              )}
             </>
           )}
         </dl>
@@ -107,6 +117,15 @@ export function FinancialInformation({
           {result && (
             <a href={`/api/v1/me/financial-analyses/${id}/source`}>
               수집 원본 JSON
+            </a>
+          )}
+          {result?.bok_benchmark?.source_url && (
+            <a
+              href={result.bok_benchmark.source_url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              한국은행 통계 원문
             </a>
           )}
         </div>

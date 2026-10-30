@@ -58,6 +58,40 @@ export const resultSchema = z.object({
   collected_at: z.string(),
   mapping_version: z.string(),
   formula_version: z.string(),
+  bok_benchmark: z
+    .object({
+      status: z.enum(['AVAILABLE', 'UNAVAILABLE']),
+      reason: z.string().nullable(),
+      release_id: z.string().optional(),
+      version: z.string().optional(),
+      source_title: z.string().optional(),
+      source_url: z.string().url().optional(),
+      company_size: z.string().optional(),
+      population: z.string().optional(),
+      industry_code: z.string().nullable().optional(),
+      industry_name: z.string().nullable().optional(),
+      mapping_note: z.string().nullable().optional(),
+      scope_note: z.string().optional(),
+      metrics: z.array(
+        z.object({
+          key: z.string(),
+          label: z.string(),
+          unit: z.string(),
+          source_metric_code: z.string(),
+          values: z.array(
+            z.object({
+              period: z.string(),
+              year: z.number().int(),
+              value: z.string().nullable(),
+              reason: z.string().nullable(),
+              gap: z.string().nullable(),
+              comparison_reason: z.string().nullable(),
+            }),
+          ),
+        }),
+      ),
+    })
+    .optional(),
   core_card_assessment_version: z.string().optional(),
   core_card_assessments: z
     .array(

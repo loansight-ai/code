@@ -1,0 +1,464 @@
+{
+  "status": "AVAILABLE",
+  "reason": null,
+  "release_id": "BOK_FSA_2025_FINAL",
+  "version": "8bb38e003ecea1f71221d37543d8fec7762ee745737a31489f6ac873a8eb247a",
+  "source_title": "2025년 기업경영분석(통계편)",
+  "source_url": "https://www.bok.or.kr/portal/bbs/P0000599/view.do?nttId=11065774&menuNo=200455",
+  "company_size": "전체",
+  "population": "비금융 영리법인 전체 · 별도재무제표 집계",
+  "industry_code": "C10",
+  "industry_name": "식료품",
+  "mapping_note": "정확한 대응 · 원천 중분류와 같은 코드",
+  "scope_note": "별도재무제표 기준 업종 집계 비율입니다.",
+  "metrics": [
+    {
+      "key": "current_ratio",
+      "source_metric_code": "702",
+      "label": "유동비율",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "131.50",
+          "reason": null,
+          "gap": "0.0457",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "132.12",
+          "reason": null,
+          "gap": "3.2087",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "132.98",
+          "reason": null,
+          "gap": "23.5464",
+          "comparison_reason": null
+        }
+      ]
+    },
+    {
+      "key": "debt_ratio",
+      "source_metric_code": "707",
+      "label": "부채비율",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "103.48",
+          "reason": null,
+          "gap": "-51.2786",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "101.73",
+          "reason": null,
+          "gap": "-50.0635",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "105.46",
+          "reason": null,
+          "gap": "-52.4963",
+          "comparison_reason": null
+        }
+      ]
+    },
+    {
+      "key": "operating_margin",
+      "source_metric_code": "611",
+      "label": "매출액영업이익률",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "3.95",
+          "reason": null,
+          "gap": "-0.9593",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "3.82",
+          "reason": null,
+          "gap": "0.3191",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "3.76",
+          "reason": null,
+          "gap": "1.8001",
+          "comparison_reason": null
+        }
+      ]
+    },
+    {
+      "key": "interest_coverage",
+      "source_metric_code": "629",
+      "label": "이자보상비율",
+      "unit": "배",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "3.4678",
+          "reason": null,
+          "gap": "3.5415",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "2.9967",
+          "reason": null,
+          "gap": "3.5055",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "2.8668",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "확정 자사 값 미확보"
+        }
+      ]
+    },
+    {
+      "key": "equity_ratio",
+      "source_metric_code": "701",
+      "label": "자기자본비율",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "49.15",
+          "reason": null,
+          "gap": "16.5524",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "49.57",
+          "reason": null,
+          "gap": "16.3641",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "48.67",
+          "reason": null,
+          "gap": "16.7050",
+          "comparison_reason": null
+        }
+      ]
+    },
+    {
+      "key": "borrowing_ratio",
+      "source_metric_code": "710",
+      "label": "차입금의존도",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "32.82",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "확정 자사 값 미확보"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "33.59",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "확정 자사 값 미확보"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "34.04",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "확정 자사 값 미확보"
+        }
+      ]
+    },
+    {
+      "key": "cost_ratio",
+      "source_metric_code": "612",
+      "label": "매출원가 대 매출액",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "79.73",
+          "reason": null,
+          "gap": "1.7633",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "79.46",
+          "reason": null,
+          "gap": "1.4576",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "80.02",
+          "reason": null,
+          "gap": "0.4142",
+          "comparison_reason": null
+        }
+      ]
+    },
+    {
+      "key": "revenue_growth",
+      "source_metric_code": "506",
+      "label": "매출액증가율",
+      "unit": "%",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "3.97",
+          "reason": null,
+          "gap": "-1.8555",
+          "comparison_reason": null
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "2.31",
+          "reason": null,
+          "gap": "-0.4155",
+          "comparison_reason": null
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "1.61",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "확정 자사 값 미확보"
+        }
+      ]
+    },
+    {
+      "key": "inventory_turnover",
+      "source_metric_code": "807",
+      "label": "재고자산회전율",
+      "unit": "회",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "8.63",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "8.69",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "8.24",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        }
+      ]
+    },
+    {
+      "key": "receivables_turnover",
+      "source_metric_code": "809",
+      "label": "매출채권회전율",
+      "unit": "회",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "9.94",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "9.77",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "9.75",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        }
+      ]
+    },
+    {
+      "key": "payables_turnover",
+      "source_metric_code": "810",
+      "label": "매입채무회전율",
+      "unit": "회",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": "17.63",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": "16.70",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": "15.85",
+          "reason": null,
+          "gap": null,
+          "comparison_reason": "동일 단위의 자사 지표 미확보"
+        }
+      ]
+    },
+    {
+      "key": "operating_roa",
+      "source_metric_code": "NA_총자산영업이익률",
+      "label": "총자산영업이익률",
+      "unit": "",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        }
+      ]
+    },
+    {
+      "key": "gross_margin",
+      "source_metric_code": "NA_매출총이익률",
+      "label": "매출총이익률",
+      "unit": "",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        }
+      ]
+    },
+    {
+      "key": "cash_flow_ratios",
+      "source_metric_code": "NA_현금흐름비율",
+      "label": "현금흐름비율",
+      "unit": "",
+      "values": [
+        {
+          "period": "current",
+          "year": 2025,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "previous",
+          "year": 2024,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        },
+        {
+          "period": "before_previous",
+          "year": 2023,
+          "value": null,
+          "reason": "원천 미제공 지표",
+          "gap": null,
+          "comparison_reason": "원천 미제공 지표"
+        }
+      ]
+    }
+  ]
+}
