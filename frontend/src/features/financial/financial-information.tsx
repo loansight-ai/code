@@ -128,6 +128,13 @@ export function FinancialInformation({
               한국은행 통계 원문
             </a>
           )}
+          {result?.bok_benchmark?.metrics.some((m) =>
+            m.values.some((v) => v.source_kind === 'ECOS'),
+          ) && (
+            <a href="https://ecos.bok.or.kr/" target="_blank" rel="noreferrer">
+              ECOS 보완 통계
+            </a>
+          )}
         </div>
         {result ? (
           <p className="financial-information-note">

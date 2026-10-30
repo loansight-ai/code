@@ -78,3 +78,32 @@ it('keeps five domains available when BOK industry mapping is unavailable', () =
     screen.queryByRole('heading', { name: '업종 평균 비교' }),
   ).not.toBeInTheDocument()
 })
+
+it('retains ECOS provenance and links to ECOS only for supplemented card values', () => {
+  const data = result()
+  const coverage = data.bok_benchmark!.metrics.find(
+    (m) => m.key === 'interest_coverage',
+  )!
+  coverage.values[0] = {
+    ...coverage.values[0],
+    source_kind: 'ECOS',
+    source_url: 'https://ecos.bok.or.kr/api/',
+    stat_code: '501Y006',
+    ecos_metric_code: '627',
+    ecos_industry_code: 'C10',
+    ecos_size_code: 'A',
+    fetched_at: '2026-10-30T00:00:00+00:00',
+  }
+  const validated = resultSchema.parse(data)
+  render(<VisualFinancialSummary result={validated} />)
+  const core = screen.getByRole('region', { name: '공통 핵심 5개 비율' })
+  expect(
+    within(core).getByRole('link', {
+      name: '한국은행 기업경영분석 · ECOS 보완',
+    }),
+  ).toHaveAttribute('href', 'https://ecos.bok.or.kr/')
+  expect(
+    within(core).getByRole('img', { name: /이자보상비율:.*한국은행 ECOS/ }),
+  ).toBeVisible()
+  expect(screen.getByRole('region', { name: '5개 영역 지표' })).toBeVisible()
+})

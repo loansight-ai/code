@@ -95,6 +95,9 @@ export function CoreRatioCards({
   demo: boolean
   onFormula: (metric: FinancialMetric, button: HTMLButtonElement) => void
 }) {
+  const usesEcos =
+    !demo &&
+    specs.some((spec) => bokValue(result, spec.key)?.source_kind === 'ECOS')
   return (
     <section className="vs-panel vs-core-panel" aria-labelledby="vs-core-title">
       <div className="vs-heading">
@@ -180,7 +183,7 @@ export function CoreRatioCards({
           const referenceSource = demo
             ? '가상 예시'
             : bok?.value != null
-              ? `${result.bok_benchmark?.industry_name} · 한국은행 · 전체 기업 규모`
+              ? `${result.bok_benchmark?.industry_name} · ${bok.source_kind === 'ECOS' ? '한국은행 ECOS' : '한국은행'} · 전체 기업 규모`
               : (liveReference?.source ??
                 '동일 공시의 전기 비교값 · 업종 평균 아님')
           const max =
@@ -341,12 +344,18 @@ export function CoreRatioCards({
           <>
             {' · '}
             <a
-              href={result.bok_benchmark.source_url}
+              href={
+                usesEcos
+                  ? 'https://ecos.bok.or.kr/'
+                  : result.bok_benchmark.source_url
+              }
               target="_blank"
               rel="noreferrer"
               title={`${result.bok_benchmark.industry_name ?? '업종 미확정'} · 전체 기업 규모 · ${result.bok_benchmark.scope_note ?? ''}`}
             >
-              한국은행 기업경영분석
+              {usesEcos
+                ? '한국은행 기업경영분석 · ECOS 보완'
+                : '한국은행 기업경영분석'}
             </a>
           </>
         )}
