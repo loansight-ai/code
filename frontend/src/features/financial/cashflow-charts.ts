@@ -103,7 +103,66 @@ export function profitBridgeData(result: FinancialResult): {
 function chartNumber(number: number) {
   return number.toLocaleString('ko-KR', { maximumFractionDigits: 1 })
 }
-export function profitBridgeOption(points: BridgePoint[]): EChartsCoreOption {
+export function cashCompositionData(result: FinancialResult) {
+  const keys = [
+    'cash_beginning',
+    'operating_cashflow',
+    'investing_cashflow',
+    'financing_cashflow',
+    'cash_ending',
+  ]
+  const labels = ['기초현금', '영업활동', '투자활동', '재무활동', '기말현금']
+  const rows = keys.map((key, i) => ({
+    key,
+    label: labels[i],
+    fact: financialFact(result, key),
+  }))
+  const amounts = rows.map((row) =>
+    financialNumber(row.fact) == null ? null : scaledAmount(row.fact?.value),
+  )
+  if (amounts.some((value) => value == null))
+    return {
+      points: [],
+      rows,
+      adjustment: null,
+      reason:
+        '기초·기말 현금과 세 활동별 금액이 모두 필요합니다. 미확보 금액은 0으로 대체하지 않습니다.',
+    }
+  const [start, operating, investing, financing, end] = amounts as bigint[]
+  const adjustment = end - start - operating - investing - financing
+  const fixed = (value: bigint) =>
+    `${value < 0n ? '-' : ''}${(value < 0n ? -value : value) / SCALE}.${String((value < 0n ? -value : value) % SCALE).padStart(6, '0')}`
+  const points: BridgePoint[] = []
+  let cursor = 0n
+  const add = (
+    label: string,
+    value: bigint,
+    total = false,
+    residual = false,
+  ) => {
+    const next = total ? value : cursor + value
+    points.push({
+      label,
+      value: fixed(value),
+      from: total ? 0 : Number(cursor) / WON_PER_EOK_SCALED,
+      to: Number(next) / WON_PER_EOK_SCALED,
+      total,
+      residual,
+    })
+    cursor = next
+  }
+  add('기초현금', start, true)
+  add('영업활동', operating)
+  add('투자활동', investing)
+  add('재무활동', financing)
+  if (adjustment !== 0n) add('잔액 차이\n조정', adjustment, false, true)
+  add('기말현금', end, true)
+  return { points, rows, adjustment: fixed(adjustment), reason: null }
+}
+export function profitBridgeOption(
+  points: BridgePoint[],
+  negativeFinal = false,
+): EChartsCoreOption {
   const renderItem: NonNullable<CustomSeriesOption['renderItem']> = (
     params,
     api,
@@ -115,7 +174,18 @@ export function profitBridgeOption(points: BridgePoint[]): EChartsCoreOption {
     const width = Math.min(54, (size?.[0] ?? 60) * 0.64)
     const next = api.coord([params.dataIndex + 1, point.to]) as number[]
     const increasing = Number(point.value) >= 0
-    const color = point.total ? '#60584c' : increasing ? '#d2cdc4' : '#e9a59e'
+    const negativeEnd =
+      negativeFinal &&
+      point.total &&
+      params.dataIndex === points.length - 1 &&
+      Number(point.value) < 0
+    const color = negativeEnd
+      ? '#b42318'
+      : point.total
+        ? '#60584c'
+        : increasing
+          ? '#d2cdc4'
+          : '#e9a59e'
     const amount = Number(point.value) / 1e8
     return {
       type: 'group',
@@ -155,7 +225,7 @@ export function profitBridgeOption(points: BridgePoint[]): EChartsCoreOption {
           style: {
             x: from[0],
             y:
-              point.total || increasing
+              !negativeEnd && (point.total || increasing)
                 ? Math.min(from[1], to[1]) - 10
                 : Math.max(from[1], to[1]) + 14,
             text: `${!point.total && amount > 0 ? '+' : ''}${chartNumber(amount)}`,
@@ -163,7 +233,10 @@ export function profitBridgeOption(points: BridgePoint[]): EChartsCoreOption {
             verticalAlign: 'middle',
             fontSize: scaledFontSize(11),
             fontWeight: 600,
-            fill: !point.total && !increasing ? '#bf3026' : '#262b2c',
+            fill:
+              negativeEnd || (!point.total && !increasing)
+                ? '#bf3026'
+                : '#262b2c',
           },
         },
       ],
@@ -218,6 +291,98 @@ export function profitBridgeOption(points: BridgePoint[]): EChartsCoreOption {
         data: points.map((point, index) => [index, point.from, point.to]),
       },
     ],
+  }
+}
+
+export function cashBridgeData(result: FinancialResult) {
+  const read = (key: string, period = 'current') => {
+    const fact = financialFact(result, key, period)
+    return financialNumber(fact) == null ? null : scaledAmount(fact?.value)
+  }
+  const start = read('operating_profit')
+  const end = read('operating_cashflow')
+  const fromScaled = (amount: bigint) => {
+    const absolute = amount < 0n ? -amount : amount
+    return `${amount < 0n ? '-' : ''}${absolute / SCALE}.${String(absolute % SCALE).padStart(6, '0')}`
+  }
+  const points: BridgePoint[] = []
+  const rows: { label: string; value: string | null; basis: string }[] = []
+  let cursor = start ?? 0n
+  const add = (
+    label: string,
+    amount: bigint,
+    total = false,
+    residual = false,
+  ) => {
+    const next = total ? amount : cursor + amount
+    points.push({
+      label,
+      value: fromScaled(amount),
+      from: total ? 0 : Number(cursor) / WON_PER_EOK_SCALED,
+      to: Number(next) / WON_PER_EOK_SCALED,
+      total,
+      residual,
+    })
+    cursor = next
+  }
+  if (start != null) add('영업이익', start, true)
+  const depreciation = read('depreciation')
+  rows.push({
+    label: '감가상각비',
+    value: depreciation == null ? null : fromScaled(depreciation),
+    basis: '당기 감가상각비 가산',
+  })
+  if (depreciation != null) add('감가상각비', depreciation)
+  const accounts = [
+    ['receivables', '매출채권 증감', -1n],
+    ['contract_assets', '계약자산 증감', -1n],
+    ['inventory', '재고자산 증감', -1n],
+    ['payables', '매입채무 증감', 1n],
+    ['contract_liabilities', '계약부채(선수금) 증감', 1n],
+  ] as const
+  let workingCapital = 0n
+  let completeWorkingCapital = true
+  for (const [key, label, sign] of accounts) {
+    // A missing balance is never zero; its effect remains in the unexplained residual.
+    const current = read(key)
+    const previous = read(key, 'previous')
+    const effect =
+      current == null || previous == null ? null : (current - previous) * sign
+    rows.push({
+      label,
+      value: effect == null ? null : fromScaled(effect),
+      basis:
+        effect == null
+          ? '비교 잔액 미확보 · 잔여 조정에 포함'
+          : `근사 · ${sign < 0 ? '전기 − 당기' : '당기 − 전기'} 재무상태표 잔액`,
+    })
+    if (effect == null) completeWorkingCapital = false
+    else {
+      workingCapital += effect
+      add(label, effect)
+    }
+  }
+  if (start == null || end == null)
+    return {
+      points: [],
+      rows,
+      reason: '당기 영업이익과 영업활동현금흐름이 필요합니다.',
+      workingCapital: null,
+    }
+  const residual = end - cursor
+  add('기타·미분해\n조정', residual, false, true)
+  rows.push({
+    label: '기타·미분해 조정',
+    value: fromScaled(residual),
+    basis:
+      '영업CF − 영업이익 − 표시 조정 합계 · 미확보 항목 포함. 이자·법인세로 확정하지 않음',
+  })
+  add('영업활동\n현금흐름', end, true)
+  return {
+    points,
+    rows,
+    reason: null,
+    workingCapital: completeWorkingCapital ? fromScaled(workingCapital) : null,
   }
 }
 

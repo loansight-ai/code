@@ -134,6 +134,21 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   await expect(
     page.getByRole('img', { name: /^비교기간별 영업이익과/ }),
   ).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /^이익에서 현금 브리지/ }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('table', { name: '현금흐름 확인 항목' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /^영업이익률 업종 비교/ }),
+  ).toHaveAttribute(
+    'aria-label',
+    expect.stringContaining('업종 분포·중앙값 비교 보류'),
+  )
+  await expect(
+    page.getByRole('heading', { name: '현금흐름 구성', exact: true }),
+  ).toBeVisible()
   await page
     .getByRole('navigation', { name: '기업 분석' })
     .getByRole('link', { name: '핵심 재무 요약', exact: true })

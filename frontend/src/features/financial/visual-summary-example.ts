@@ -6,6 +6,10 @@ const accounts: [string, string, number, number, number][] = [
   ['revenue', '매출액', 31420, 30600, 29667],
   ['operating_profit', '영업이익', 1284, 1596, 1780],
   ['operating_cashflow', '영업활동현금흐름', -310, 640, 1150],
+  ['investing_cashflow', '투자활동현금흐름', -480, -500, -700],
+  ['financing_cashflow', '재무활동현금흐름', 860, 110, -200],
+  ['cash_beginning', '기초 현금및현금성자산', 4050, 3800, 3550],
+  ['cash_ending', '기말 현금및현금성자산', 4120, 4050, 3800],
   ['depreciation', '감가상각비', 180, 170, 160],
   ['current_assets', '유동자산', 11840, 12400, 13000],
   ['current_liabilities', '유동부채', 10000, 10000, 10000],
@@ -300,6 +304,22 @@ metrics.push(
     change_unit: unit,
   })),
 )
+// Fictional day comparisons for the cashflow layout only; no real calculation policy is set.
+for (const [key, current, previous] of [
+  ['construction_receivable_days', 142, 118],
+  ['inventory_days', 38, 33],
+  ['payable_days', 61, 66],
+  ['ccc', 119, 85],
+] as const) {
+  const metric = metrics.find((item) => item.key === key)!
+  metric.basis = '가상 비교일수 · 화면 배치 예시 · 실제 산식과 무관'
+  metric.values = periods.map((period, index) => ({
+    period,
+    value: index < 2 ? String(index === 0 ? current : previous) : null,
+    state: index < 2 ? 'CONFIRMED' : 'MISSING',
+    reason: index < 2 ? null : 'missing_input',
+  }))
+}
 export const visualSummaryExample: FinancialResult = {
   analysis_run_id: '00000000-0000-4000-8000-000000000021',
   context: {

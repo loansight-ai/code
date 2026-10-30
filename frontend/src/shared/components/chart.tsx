@@ -4,7 +4,13 @@ import {
   use as registerCharts,
   type EChartsCoreOption,
 } from 'echarts/core'
-import { BarChart, LineChart, RadarChart, CustomChart } from 'echarts/charts'
+import {
+  BarChart,
+  LineChart,
+  RadarChart,
+  CustomChart,
+  ScatterChart,
+} from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
@@ -21,6 +27,7 @@ registerCharts([
   LineChart,
   RadarChart,
   CustomChart,
+  ScatterChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,

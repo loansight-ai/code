@@ -10,8 +10,20 @@ import {
   profitCashflowOption,
 } from './cashflow-charts'
 import './financial-cashflow.css'
+import { CashflowBridge } from './cashflow-bridge'
+import { CashflowChecks } from './cashflow-checks'
+import { CashflowOverview } from './cashflow-overview'
+import type { CashflowPeerData } from './cashflow-peer-data'
 
-export function FinancialCashflow({ result }: { result: FinancialResult }) {
+export function FinancialCashflow({
+  result,
+  peers,
+  demo = false,
+}: {
+  result: FinancialResult
+  peers?: CashflowPeerData
+  demo?: boolean
+}) {
   const bridge = profitBridgeData(result)
   const currentProfit = financialNumber(
     financialFact(result, 'operating_profit'),
@@ -237,6 +249,9 @@ export function FinancialCashflow({ result }: { result: FinancialResult }) {
           </details>
         </section>
       </div>
+      <CashflowBridge result={result} />
+      <CashflowChecks result={result} />
+      <CashflowOverview result={result} peers={peers} demo={demo} />
     </div>
   )
 }

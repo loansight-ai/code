@@ -14,6 +14,170 @@
   padding: 22px 20px 16px;
   background: white;
 }
+.fc-cash-bridge {
+  margin-top: 18px;
+}
+.fc-check-grid {
+  margin-top: 18px;
+}
+.fc-peer-tabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px;
+  background: #f5f5f1;
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+.fc-peer-tabs button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 8px;
+  font-size: 12px;
+  color: #858a81;
+  cursor: pointer;
+}
+.fc-peer-tabs button[aria-selected='true'] {
+  background: white;
+  color: #26332c;
+  font-weight: 600;
+  box-shadow: 0 1px 3px #d9d9d2;
+}
+.fc-workspace .fc-panel .fc-peer-chart .financial-chart {
+  height: 140px;
+}
+.fc-peer-source {
+  color: #738574;
+  font-size: 11px;
+  text-align: right;
+  line-height: 1.7;
+}
+.fc-workspace .fc-panel .fc-composition-chart .financial-chart {
+  height: 240px;
+  min-width: 400px;
+}
+.fc-composition-chart {
+  overflow-x: auto;
+}
+.fc-balance-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.fc-balance-card {
+  border: 1px solid #e5e5df;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 0;
+  font-size: 12px;
+  color: #737c74;
+}
+.fc-balance-card strong {
+  display: block;
+  font-size: 19px;
+  color: #25332e;
+  margin: 5px 0;
+}
+.fc-balance-card small {
+  font-size: 11px;
+  font-weight: 400;
+}
+.fc-text-negative,
+.fc-balance-card strong.fc-text-negative {
+  color: #b42318;
+}
+.fc-workspace .fc-panel .fc-days-scroll .financial-chart {
+  height: 185px;
+  min-width: 420px;
+}
+.fc-days-scroll {
+  overflow-x: auto;
+}
+.fc-day-legend {
+  font-size: 11px;
+  color: #737c74;
+  margin: 8px 0 0;
+}
+.fc-days-context {
+  font-size: 10px;
+  color: #92978f;
+  line-height: 1.6;
+  margin: 5px 0 0;
+}
+.fc-days-pending {
+  padding: 12px 4px;
+  font-size: 12px;
+  color: #888e85;
+}
+.fc-days-pending > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px dashed #e5e5df;
+}
+.fc-days-pending p {
+  font-size: 11px;
+}
+.fc-check-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #e5e5df;
+  border-radius: 7px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.fc-check-table th,
+.fc-check-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eaeae4;
+  text-align: right;
+  font-weight: 400;
+}
+.fc-check-table th:first-child {
+  text-align: left;
+}
+.fc-check-table thead {
+  background: #f7f7f3;
+  color: #7c817b;
+}
+.fc-check-table tr:last-child > * {
+  border-bottom: 0;
+}
+.fc-status {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.fc-status-pending {
+  background: #eeeeea;
+  color: #7f857c;
+}
+.fc-status-check {
+  background: #fcf0dc;
+  color: #b07920;
+}
+.fc-status-watch {
+  background: #e7eef5;
+  color: #527394;
+}
+.fc-bridge-scroll {
+  overflow-x: auto;
+}
+.fc-bridge-scroll .financial-chart {
+  min-width: 830px;
+}
+.fc-cash-bridge button.fc-metadata {
+  background: white;
+  cursor: pointer;
+}
+.fc-cash-bridge .fc-data td:last-child {
+  text-align: left;
+  min-width: 240px;
+}
 .fc-heading {
   display: flex;
   justify-content: space-between;
@@ -176,6 +340,12 @@
   }
 }
 @media (max-width: 600px) {
+  .fc-balance-cards {
+    grid-template-columns: 1fr;
+  }
+  .fc-check-table {
+    min-width: 420px;
+  }
   .fc-panel {
     padding: 18px 12px 14px;
   }

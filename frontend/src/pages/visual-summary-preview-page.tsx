@@ -3,6 +3,7 @@ import { VisualFinancialSummary } from '../features/financial/visual-summary'
 import { visualSummaryExample } from '../features/financial/visual-summary-example'
 import { exampleIndustryBenchmark } from '../features/financial/industry-position-example'
 import { FinancialCashflow } from '../features/financial/financial-cashflow'
+import { exampleCashflowPeers } from '../features/financial/cashflow-peer-data'
 
 export function VisualSummaryPreviewPage({
   section = 'summary',
@@ -36,7 +37,11 @@ export function VisualSummaryPreviewPage({
         <span>리스 포함</span>
       </div>
       {section === 'cashflow' ? (
-        <FinancialCashflow result={visualSummaryExample} />
+        <FinancialCashflow
+          result={visualSummaryExample}
+          peers={exampleCashflowPeers}
+          demo
+        />
       ) : (
         <VisualFinancialSummary
           result={visualSummaryExample}
