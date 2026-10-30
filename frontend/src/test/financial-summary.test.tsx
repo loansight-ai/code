@@ -87,7 +87,7 @@ it('renders official filing values, policy holds and exact note provenance in th
   ).toBeVisible()
   const roa = screen
     .getByRole('button', { name: '총자산영업이익률' })
-    .closest('.financial-core-item')!
+    .closest('.vs-core-card')!
   expect(roa).toHaveTextContent('확정')
   expect(roa).not.toHaveTextContent('기말/평균잔액 기준 미정')
   await userEvent
@@ -124,7 +124,7 @@ it('shows closing total assets and its actual value in the operating ROA formula
   )
   mount()
   const opener = await screen.findByRole('button', { name: '총자산영업이익률' })
-  expect(opener.closest('.financial-core-item')).toHaveTextContent('3.4%')
+  expect(opener.closest('.vs-core-card')).toHaveTextContent('3.4%')
   await userEvent.setup().click(opener)
   const dialog = screen.getByRole('dialog', { name: '총자산영업이익률 산식' })
   expect(dialog).toHaveTextContent('영업이익 ÷ 기말 자산총계 × 100')
@@ -191,6 +191,9 @@ it('shows reconciled note borrowing amounts and provenance while full borrowing 
     response(detail()),
   )
   mount()
+  await userEvent
+    .setup()
+    .click(await screen.findByText('차입 구성 원천 계정·자료 상태'))
   const table = await screen.findByRole('table', { name: '차입 구성' })
   const subtotal = within(table)
     .getByRole('rowheader', { name: '주석 차입금 소계 · 리스 제외' })
@@ -258,7 +261,7 @@ it.each([
     const opener = await screen.findByRole('button', {
       name: '유동비율',
     })
-    const card = opener.closest('.financial-core-item')!
+    const card = opener.closest('.vs-core-card')!
     expect(card).toHaveTextContent(badge)
     expect(card).toHaveTextContent(display)
     if (reason === 'missing_input') expect(card).toHaveTextContent('참고')
@@ -286,6 +289,9 @@ it('preserves actual zero and shows missing source amounts as data unavailable w
     response(detail('SUCCEEDED', result)),
   )
   mount()
+  await userEvent
+    .setup()
+    .click(await screen.findByText('원천 재무 계정·추출 근거 펼치기'))
   const sources = await screen.findByRole('table', {
     name: '공통 원천 재무 계정',
   })
@@ -293,6 +299,9 @@ it('preserves actual zero and shows missing source amounts as data unavailable w
     .getByText('매출액', { exact: true })
     .closest('tr')!
   expect(within(revenue).getAllByRole('cell')[3]).toHaveTextContent(/^0$/)
+  await userEvent
+    .setup()
+    .click(screen.getByText('차입 구성 원천 계정·자료 상태'))
   const borrowings = screen.getByRole('table', { name: '차입 구성' })
   const bonds = within(borrowings).getByText('비유동 사채').closest('tr')!
   expect(bonds).toHaveTextContent('자료 없음')
@@ -336,10 +345,10 @@ it('shows monetary changes and transition status instead of growth percentages w
   )
   mount()
   await screen.findByRole('heading', { name: '핵심 재무 요약' })
-  await userEvent.setup().click(screen.getByRole('button', { name: '성장성' }))
+  await userEvent.setup().click(screen.getByRole('tab', { name: /성장성/ }))
   const row = screen
     .getByRole('button', { name: '매출액 증가율 산식 보기' })
-    .closest('tr')!
+    .closest('.vs-position-row')!
   expect(row).toHaveTextContent('적자 전환')
   expect(row).toHaveTextContent('증감 -2억원')
   expect(row).toHaveTextContent('계산 불가')

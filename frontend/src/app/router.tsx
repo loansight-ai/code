@@ -1,10 +1,11 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, redirect } from 'react-router'
 import { Shell } from './shell'
 import { CompanyPage } from '../pages/company-page'
 import { AnalysisPage } from '../pages/analysis-page'
 import { LiveAnalysisPage } from '../pages/live-analysis-page'
 import { FinancialSummaryPage } from '../pages/financial-summary-page'
 import { AnalysisEntryPage } from '../pages/analysis-entry-page'
+import { VisualSummaryPreviewPage } from '../pages/visual-summary-preview-page'
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +15,22 @@ export const router = createBrowserRouter([
       { path: '/workspace/:section', element: <AnalysisEntryPage /> },
       { path: '/analyses/:analysisId/:section?', element: <AnalysisPage /> },
       { path: '/notes/:structureId/:section?', element: <LiveAnalysisPage /> },
+      {
+        path: '/preview/financial-summary',
+        loader: ({ request }) =>
+          redirect(`/examples/financial-summary${new URL(request.url).search}`),
+      },
+      {
+        path: '/examples/financial-summary',
+        element: <VisualSummaryPreviewPage />,
+      },
+      {
+        path: '/financials/:financialId/summary-preview',
+        loader: ({ params, request }) =>
+          redirect(
+            `/financials/${params.financialId}/summary${new URL(request.url).search}`,
+          ),
+      },
       {
         path: '/financials/:financialId/:section?',
         element: <FinancialSummaryPage />,

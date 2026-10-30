@@ -32,7 +32,8 @@ export function Shell() {
     session.phase === 'ready' ? financial?.context : undefined
   const location = useLocation()
   const params = new URLSearchParams(location.search)
-  const company = findCompany(analysisId)
+  const visualDemo = location.pathname === '/examples/financial-summary'
+  const company = findCompany(visualDemo ? 'demo-construction' : analysisId)
   const live = useNoteWorkspace(structureId?.toLowerCase())
   const metadata = live.data
   const corp =
@@ -61,16 +62,17 @@ export function Shell() {
   const base = financialId
     ? `/financials/${financialId}`
     : company
-      ? `/analyses/${analysisId}`
+      ? `/analyses/${company.id}`
       : structureId
         ? `/notes/${structureId}`
         : '/workspace'
   const active = section ?? (structureId ? 'evidence' : 'summary')
-  const scope =
-    financialContext?.scope ??
-    metadata?.scope ??
-    params.get('scope') ??
-    (company ? 'CFS' : 'OFS')
+  const scope = visualDemo
+    ? 'OFS'
+    : (financialContext?.scope ??
+      metadata?.scope ??
+      params.get('scope') ??
+      (company && !visualDemo ? 'CFS' : 'OFS'))
   return (
     <div className="app-shell design-shell">
       <a className="skip-link" href="#main">
@@ -92,7 +94,11 @@ export function Shell() {
           {analysisMenus.map(([path, label]) => (
             <NavLink
               key={path}
-              to={`${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`}
+              to={
+                visualDemo && path === 'summary'
+                  ? '/examples/financial-summary'
+                  : `${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`
+              }
               className={`nav-item ${location.pathname !== '/' && active === path ? 'active' : ''}`}
             >
               {label}
@@ -136,11 +142,13 @@ export function Shell() {
             {metadata || company || corp ? (
               <>
                 <span>
-                  {financialContext
-                    ? `${financialContext.period} 결산 보고서`
-                    : metadata
-                      ? `${metadata.period} 결산 보고서`
-                      : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
+                  {visualDemo
+                    ? '2025 사업보고서 · 예시'
+                    : financialContext
+                      ? `${financialContext.period} 결산 보고서`
+                      : metadata
+                        ? `${metadata.period} 결산 보고서`
+                        : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
                 </span>
                 <span>{scope === 'OFS' ? '별도(OFS)' : '연결(CFS)'}</span>
                 {financialContext && (
