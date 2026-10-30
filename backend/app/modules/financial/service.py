@@ -40,7 +40,8 @@ async def submit(database, settings, identity, context):
         {
             "workspace": str(identity.workspace_id),
             **context,
-            "mapping": MAPPING_VERSION,
+            "mapping": MAPPING_VERSION
+            + ("+collected-v1" if context.get("source_import_id") else ""),
             "formula": FORMULA_VERSION,
             "notes": NOTE_VERSION,
             "enrichment": agent_config(settings) if context.get("enrich_notes") else None,
@@ -97,6 +98,10 @@ async def prepare(database, settings, job_id):
                 DartNote.receipt_no == context["receipt_no"], DartNote.scope == context["scope"]
             )
         )
+    if context.get("source_import_id"):
+        from app.modules.financial.collected import prepare_collected
+
+        return await prepare_collected(database, settings, run.id, context, name, industry)
     if not settings.open_dart_api_key:
         raise CollectionError("dart_api_key_missing")
     raw = await asyncio.to_thread(download, settings.open_dart_api_key.get_secret_value(), context)

@@ -22,6 +22,7 @@ class FinancialInput(BaseModel):
     lease: Literal["include", "exclude"] = "include"
     enrich_notes: bool = False
     refresh_key: UUID | None = None
+    source_import_id: UUID | None = None
 
 
 @router.post("", status_code=202)
@@ -30,6 +31,8 @@ async def submit(
 ):
     require_origin(request)
     response.headers["Cache-Control"] = "no-store"
+    if body.source_import_id and body.enrich_notes:
+        raise HTTPException(422, "collected_note_enrichment_unsupported")
     try:
         catalog = await request.app.state.company_reports.get(body.corp_code)
     except LookupError:
@@ -60,6 +63,26 @@ async def submit(
         "refresh_key": str(body.refresh_key) if body.refresh_key else None,
         "enrich_notes": body.enrich_notes,
     }
+    # Source selection belongs to the existing analysis flow, not a separate UI.
+    # An explicit refresh or note-enrichment request still collects from DART.
+    if body.source_import_id or (body.refresh_key is None and not body.enrich_notes):
+        from app.modules.company.exported import ExportError, read_company_collection
+
+        try:
+            collection = await read_company_collection(
+                request.app.state.database,
+                body.source_import_id,
+                body.corp_code,
+                body.receipt_no,
+                body.scope,
+                report.fiscal_year,
+            )
+        except ExportError as exc:
+            raise HTTPException(422, "collected_financial_not_found") from exc
+        if body.source_import_id and len(collection["financial"]) != 1:
+            raise HTTPException(422, "collected_financial_not_found")
+        if len(collection["financial"]) == 1:
+            context["source_import_id"] = collection["import_id"]
     return await service.submit(
         request.app.state.database, request.app.state.settings, identity, context
     )
