@@ -41,11 +41,16 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   let posted: Record<string, unknown> | null = null
+  let sessionWorkspace = id
   await page.route('**/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname
     let data: unknown
     if (path.endsWith('/session'))
-      data = { user_id: id, workspace_id: id, user_code: '12345' }
+      data = {
+        user_id: sessionWorkspace,
+        workspace_id: sessionWorkspace,
+        user_code: '12345',
+      }
     else if (path.endsWith('/me/tasks'))
       data = { tasks: [], event_cursor: `${id}:0` }
     else if (path.includes('/task-events'))
@@ -149,6 +154,24 @@ test('financial summary, formula, shared cashflow and server lease request', asy
   await expect(
     page.getByRole('heading', { name: '현금흐름 구성', exact: true }),
   ).toBeVisible()
+  const navigation = page.getByRole('navigation', { name: '기업 분석' })
+  await navigation.getByRole('link', { name: '기업 검색', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: '기업 검색', exact: true, level: 1 }),
+  ).toBeVisible()
+  await expect(
+    navigation.getByRole('link', { name: '핵심 재무 요약', exact: true }),
+  ).toHaveAttribute('href', new RegExp(`/financials/${id}/summary`))
+  await expect(page.getByLabel('기업 분석 기준')).toContainText(
+    result.context.receipt_no,
+  )
+  await page.reload()
+  await expect(
+    navigation.getByRole('link', { name: '실적 변동·현금흐름', exact: true }),
+  ).toHaveAttribute('href', new RegExp(`/financials/${id}/cashflow`))
+  await expect(page.getByLabel('기업 분석 기준')).toContainText(
+    result.context.receipt_no,
+  )
   await page
     .getByRole('navigation', { name: '기업 분석' })
     .getByRole('link', { name: '핵심 재무 요약', exact: true })
@@ -164,5 +187,13 @@ test('financial summary, formula, shared cashflow and server lease request', asy
     scope: 'OFS',
     lease: 'exclude',
   })
+  sessionWorkspace = other
+  await page.goto('/')
+  await expect(
+    navigation.getByRole('link', { name: '핵심 재무 요약', exact: true }),
+  ).toHaveAttribute('href', '/workspace/summary')
+  await expect(page.getByLabel('기업 분석 기준')).not.toContainText(
+    result.context.receipt_no,
+  )
   expect(errors).toEqual([])
 })

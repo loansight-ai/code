@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { CircleHelp } from 'lucide-react'
@@ -12,10 +12,30 @@ import { useSession } from '../features/session/session-context'
 import { getFinancialRun } from '../features/financial/api'
 import { FinancialInformation } from '../features/financial/financial-information'
 import { analysisMenus } from './analysis-menu'
+import { ApiError } from '../features/session/api'
+import {
+  rememberFinancialRun,
+  useActiveFinancialRun,
+} from '../features/financial/active-financial-run'
 
 export function Shell() {
-  const { analysisId, structureId, financialId, section } = useParams()
+  const {
+    analysisId,
+    structureId,
+    financialId: routeFinancialId,
+    section,
+  } = useParams()
   const session = useSession()
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const workspace =
+    session.phase === 'ready' ? session.session?.workspace_id : undefined
+  const rememberedFinancialId = useActiveFinancialRun(workspace)
+  const financialId =
+    routeFinancialId ??
+    (location.pathname === '/' && params.get('data') !== 'demo'
+      ? (rememberedFinancialId ?? undefined)
+      : undefined)
   const financialQuery = useQuery({
     queryKey: [
       'server',
@@ -27,12 +47,32 @@ export function Shell() {
       getFinancialRun(financialId!.toLowerCase(), signal),
     enabled: !!financialId && session.phase === 'ready' && !!session.session,
     retry: false,
-  }).data
-  const financial = session.phase === 'ready' ? financialQuery : undefined
+  })
+  const financial =
+    session.phase === 'ready' && !financialQuery.error
+      ? financialQuery.data
+      : undefined
+  useEffect(() => {
+    if (workspace && routeFinancialId && financial?.result)
+      rememberFinancialRun(workspace, financial.analysis_run_id)
+    else if (
+      workspace &&
+      financialId &&
+      financialQuery.error instanceof ApiError &&
+      [403, 404].includes(financialQuery.error.status) &&
+      rememberedFinancialId === financialId
+    )
+      rememberFinancialRun(workspace, null)
+  }, [
+    workspace,
+    routeFinancialId,
+    financial,
+    financialId,
+    financialQuery.error,
+    rememberedFinancialId,
+  ])
   const financialContext =
     session.phase === 'ready' ? financial?.context : undefined
-  const location = useLocation()
-  const params = new URLSearchParams(location.search)
   const visualDemo = [
     '/examples/financial-summary',
     '/examples/financial-cashflow',
