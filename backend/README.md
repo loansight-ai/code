@@ -74,6 +74,94 @@ Codex에는 계정/금액이 미확보된 대상만 전달하며 기존 `NoteSea
 
 <a id="note-hierarchy"></a>
 
+<a id="collected-company-data"></a>
+
+## 수집 CSV 적재와 기업·보고서 연결
+
+`data/company/exported/`의 재무·사건 후보·조회 범위 CSV를 공개 수집 데이터로
+적재한다. HTML/XML 없이도 적재할 수 있다. 기존 핵심 재무 분석이 기업·보고서·회계
+범위에 일치하는 저장 데이터를 자동으로 사용한다. 재무 카드·비율·실적 변동·현금흐름과
+기존 사건 화면에 반영하며, 데이터 전용 패널이나 별도 분석 버튼은 제공하지 않는다.
+
+```sh
+# backend 디렉터리에서 실행. validate는 DB 연결 없이 전체 파일을 검사한다.
+python -m app.modules.company.exported validate --exported-on 2026-10-30 --source-as-of 2026-10-26
+alembic upgrade head
+python -m app.modules.company.exported load --exported-on 2026-10-30 --source-as-of 2026-10-26
+# load 결과의 import_id를 사용한다.
+python -m app.modules.company.exported show --import-id <UUID> --corp-code 00164478 --receipt-no 20260318001395 --scope CFS
+```
+
+다른 폴더는 `validate`/`load`의 `--directory`로 지정한다. 파일명 날짜는
+`--exported-on`과 일치해야 하며 원천 기준일은 `--source-as-of`로 명시한다.
+Compose에서는 최신 소스를 포함한 이미지를 빌드한 뒤
+`docker compose -f deploy/compose.yaml run --rm --no-deps api /app/.venv/bin/python -m app.modules.company.exported ...`
+로 실행한다. 마이그레이션은 기존 [마이그레이션 안내](#마이그레이션)를 따른다.
+
+| 테이블 | 역할과 키 |
+| --- | --- |
+| `company_dataset_import` | 적재 UUID, 파일별 SHA-256·행 수·날짜·파서 버전·품질 경고. 같은 내용/날짜/파서 버전은 재사용 |
+| `collected_financial` | 적재 UUID + `corp_code` + 사업연도 + CFS/OFS. 접수번호 인덱스로 보고서 조회 |
+| `collected_risk_event` | 적재 UUID + 원본 사건 `id`. 기업·접수번호·사건일·검증 상태와 원본 열 보존 |
+| `collected_event_coverage` | 적재 UUID + `corp_code`. 조회 범위·감사의견 확인 누락·후보 수 보존 |
+
+세 수집 테이블은 기존 `company.corp_code`에 외래키로 연결한다. 기업 원장에 없는
+코드가 있으면 적재 전체를 거부하고 해당 코드를 알린다. 원장 값이나 보고서 목록을
+CSV로 덮어쓰거나 임의 생성하지 않는다. 현재 보고서 목록은 JSON 캐시이므로 접수번호는
+원천 식별자로 보존하며 보고서 테이블 FK나 원문 보유를 의미하지 않는다.
+
+적재는 하나의 트랜잭션으로 수행하고 동일 파일의 동시/반복 적재를 직렬화한다.
+내용이 바뀌면 새 적재 버전으로 남겨 기존 버전을 보존한다. `show`는 명시한 적재 버전의
+기업·접수번호·회계 범위를 정확히 조회한다. OFS가 없다고 CFS로 대체하지 않는다.
+같은 접수번호가 여러 사업연도에 걸친 경우 모두 반환해 모호함을 보존한다.
+사건과 조회 범위는 회사 단위이며 조회한 재무제표의 CFS/OFS에 귀속시키지 않는다.
+
+모든 CSV 열은 `data` JSONB에 보존한다. 금액은 부동소수점 손실을 막기 위해 정확한
+십진 문자열로, 빈칸은 JSON null로, 사건의 `t`/`f`는 boolean으로 저장한다.
+금액 계산 시 기존 재무 도메인의 Decimal 변환을 사용해야 한다. 원본의 0을 바꾸거나
+미확보를 0으로 채우지 않는다. 사건 검증 미완료·주석 0의 불확실성은 적재로 해소되지
+않으며 원문 아티팩트/검수 완료를 생성하지 않는다. `nt_dev` 의미·리스 포함 여부·
+`nt_pf`/`nt_rental` 사용은 [데이터 설명서](data/company/exported/README_export_20261030.md)의
+미확정 사항으로 유지한다. 사건 후보와 조회 범위의 파일 간 참조·후보 수는 검사하지만,
+공시 내용의 사실 검증을 수행하는 것은 아니다.
+
+검증은 `python -m unittest discover -s tests -p 'test_company_exported*.py' -v`로 실행한다.
+PostgreSQL 통합 검사는 이름이 `_test`로 끝나는 별도 DB의
+`LOANSIGHT_TEST_DATABASE_URL`을 명시해야 하며 각 테스트는 격리된 스키마를 사용한다.
+실제 적재 건수와 실행 결과는 [수집 CSV 검증 기록](../docs/reviews/23_company-exported-data-validation.md)을 따른다.
+
+### 화면 조회와 수집 데이터 기반 분석
+
+`GET /api/v1/companies/{corp_code}/collected-data?receipt_no={접수번호}&scope=CFS`
+는 수집 데이터 보유 여부, 해당 보고서·회계 범위의 재무, 최근 5개 사업연도의 원보고서
+값, 회사 전체 사건 후보와 조회 범위를 반환한다. `fiscal_year`로 사업연도를 제한하고,
+`import_id`를 지정하면 해당 버전에 고정한다. 생략 시 해당 기업의 조회 범위를 가진
+적재 중 원천 기준일·적재 시각 순으로 최신 버전을 선택한다. 미보유는 빈 배열/null이며
+다른 회계 범위·옛 버전으로 조용히 대체하지 않는다. 공개 공시 데이터 조회 API다.
+
+`POST /api/v1/me/financial-analyses`의 선택 필드 `source_import_id`는 CSV 기반 분석을
+요청한다. 서버는 기존 보고서 목록 검증 후 기업·접수번호·사업연도·회계 범위가 일치하는
+재무 1행을 확인하고 적재 UUID를 작업 조건에 고정한다. Worker는 API 호출 없이 해당
+버전의 계정값을 기존 계산기에 전달한다. 당기·전기·전전기는 각각의 원보고서 값이며
+같은 회계 범위만 사용한다. 비교기간 재작성 금액과 같다고 간주하지 않는다.
+
+일반 분석 요청은 `source_import_id`를 브라우저에서 지정하지 않아도 일치하는 최신
+수집값이 있으면 서버가 적재 UUID를 선택·고정한다. 해당 조건의 재무가 없으면 기존
+OpenDART 경로를 사용한다. `refresh_key`가 있는 재수집과 `enrich_notes=true`는 자동
+선택을 건너뛰고 OpenDART로 수집한다. 이 선택은 기존 분석 UI 안에서 처리한다.
+
+계정 포함 범위가 불명확한 차입 집계·`bs_cpltd`와 미정 주석 항목을 계산 입력으로
+자동 채택하지 않는다. `is_int_exp=0`은 주석 미검출과 명시적 0을 구별할 수 없어
+`MISSING`으로 보류한다. 원천 데이터의 0 자체는 보존한다. 분석용 JSON 원천 스냅샷과
+계정별 CSV 열·기업/보고서·범위·사업연도·적재 UUID를 보존하며 HTML/XML로 표시하지 않는다.
+
+결과의 `collection_source`는 적재 UUID·원천 기준일·내보낸 날짜다. 리스 옵션 변경은
+같은 적재 버전으로 새 분석을 만들고, **다시 수집·분석**은 기존 OpenDART 경로를 사용한다.
+CSV 분석과 `enrich_notes=true` 조합은 거부한다. 원문·Codex 보완은 OpenDART 분석에서
+요청한다. 사건/조회 범위는 수집 기준일까지의 회사 전체 이력이며 결산 당시의 사실이나
+모델 입력으로 취급하지 않는다. 화면 연결 검증은
+[수집 데이터 화면 검증](../docs/reviews/24_collected-data-pages-validation.md)을 따른다.
+
 ## 재무제표 주석 구조화 모듈
 
 패키지의 기능·출력 스키마·설정·한계는 [v0.8.4 사용방법](app/modules/사용방법_dart_note_hierarchy-0.8.4-py3-none-any.md)에서 관리합니다. 배포 패키지명은 `dart-note-hierarchy`, Python import명은 `note_hierarchy`, CLI는 `note-hierarchy`입니다. 이 저장소에서는 로컬 wheel 경로와 해시를 `pyproject.toml`·`uv.lock`에 등록했으므로 `backend/`에서 다음처럼 준비합니다.
