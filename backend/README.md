@@ -48,6 +48,16 @@ Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pypro
 
 대표 4기업·양 회계 범위의 공식 응답, 주석 보완, DB·화면 검증은 [재무 분석 검증](../docs/reviews/16_financial-summary-validation.md), 주석 차입금 추가 검증은 [별도 기록](../docs/reviews/17_note-borrowing-validation.md)을 참고합니다.
 
+### 핵심 5개 비율 카드 평가
+
+`GET /api/v1/me/financial-analyses/{id}`의 결과에는 `core_card_assessments`와 `core_card_assessment_version`을 추가한다. 원래 재무 스냅샷·주석 보완값을 바꾸지 않고 실제 조회 결과에 표시용 평가를 붙이므로 기존 결과도 재수집 없이 반영된다. 카드 평가와 전체 위험징후 패널·최종 여신 판정은 구분한다.
+
+사용자가 지정한 팀 가설은 유동비율 150% 미만→주의, 부채비율 200% 초과→경고, 이자보상비율 3배 미만→주의다. 기준선의 `kind=TEAM_HYPOTHESIS`, `source`와 판정 사유를 함께 반환한다. 이자보상비율 1배 미만과 확정 자본총계 0 이하도 지표 문서의 명시 기준으로 설명한다. 비교기간을 연간으로 검증하지 않았으므로 3개 비교값만으로 ‘3년 연속 경고’를 만들지 않는다.
+
+수익성 두 지표는 실제 전기값을 비교선으로 쓰며 업종 평균으로 표시하지 않는다. 기준을 넘지 않더라도 전기 대비 악화는 별도로 표시하며 기준 충족을 정상으로 바꾸지 않는다. 근사·미확보·전기 누락은 보류 사유를 유지한다. 도소매 유동비율, 건설 부채비율, 부동산 임대업의 왜곡 가능 공통 지표는 업종 대체 지표 확인 대상으로 두며 팀 가설만으로 단정하지 않는다.
+
+규칙과 경계값·스냅샷 보존 검사는 `tests/test_financial_core_assessments.py`에서 관리한다. 화면·API 배포 검증은 [재무 요약 검증](../docs/reviews/20_visual-financial-summary-validation.md)을 따른다.
+
 <a id="financial-note-enrichment"></a>
 
 ### 선택적 주석 구조화·Codex 재무 보완
