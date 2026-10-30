@@ -47,6 +47,52 @@ def dataset_version():
         return "unavailable"
 
 
+def ecos_mappings():
+    tables, _ = dataset()
+    definitions = {r["source_metric_code"]: r for r in tables["metric_definitions"]}
+    metrics, industries, sizes = {}, {}, {}
+    for row in tables.get("ecos_mapping", []):
+        kind, code, target = row["mapping_type"], row["source_code"], row["ecos_item_code"]
+        if kind == "지표":
+            if (
+                code in metrics
+                or code not in definitions
+                or not target
+                or not row["ecos_stat_code"]
+            ):
+                raise ValueError("bok_ecos_metric_mapping_invalid")
+            metrics[code] = (row["ecos_stat_code"], target, definitions[code]["unit"])
+        elif kind == "업종" and target != "같은 코드":
+            if code in industries or not target:
+                raise ValueError("bok_ecos_industry_mapping_invalid")
+            industries[code] = target
+        elif kind == "규모":
+            if code in sizes or not target:
+                raise ValueError("bok_ecos_size_mapping_invalid")
+            sizes[code] = target
+    expected = {code for code in definitions if not code.startswith("NA_")}
+    if set(metrics) != expected or not industries or not sizes:
+        raise ValueError("bok_ecos_mapping_incomplete")
+    return metrics, industries, sizes
+
+
+def metric_definition(definition):
+    return {
+        key: definition[key]
+        for key in (
+            "formula",
+            "numerator",
+            "denominator",
+            "balance_basis",
+            "accounting_basis",
+            "aggregation_method",
+            "comparability",
+            "reason",
+            "definition_version",
+        )
+    }
+
+
 def number(value):
     try:
         parsed = Decimal(str(value))
@@ -113,6 +159,7 @@ def build_benchmark(result, ksic_code):
             "source_metric_code": code,
             "label": definition["source_metric_name"] or code.removeprefix("NA_"),
             "unit": "배" if code == "629" else definition["unit"],
+            "definition": metric_definition(definition),
             "values": [],
         }
         for offset, period in enumerate(PERIODS):
@@ -151,6 +198,11 @@ def with_benchmark(result, ksic_code=None):
     # Retain the statistics version saved with a run; recompute only own-value gaps
     # so note-enriched facts do not leave stale comparison differences.
     benchmark = result.get("bok_benchmark") or build_benchmark(result, ksic_code)
+    try:
+        tables, _ = dataset()
+        definitions = {r["source_metric_code"]: r for r in tables["metric_definitions"]}
+    except (OSError, ValueError):
+        definitions = {}
     own_metrics = {m["key"]: m for m in result["metrics"]}
     metrics = []
     for metric in benchmark["metrics"]:
@@ -180,5 +232,12 @@ def with_benchmark(result, ksic_code=None):
             values.append(
                 {**value, "gap": str(gap) if gap is not None else None, "comparison_reason": reason}
             )
-        metrics.append({**metric, "values": values})
+        definition = definitions.get(metric["source_metric_code"])
+        metrics.append(
+            {
+                **metric,
+                "values": values,
+                **({"definition": metric_definition(definition)} if definition else {}),
+            }
+        )
     return {**result, "bok_benchmark": {**benchmark, "metrics": metrics}}

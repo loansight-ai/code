@@ -12,29 +12,13 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.modules.financial.bok import dataset, number, with_benchmark
+from app.modules.financial.bok import dataset, ecos_mappings, number, with_benchmark
 from app.modules.financial.models import EcosObservation
 
 VERSION = "ecos-fsa-v1"
 ENDPOINT = "https://ecos.bok.or.kr/api/StatisticSearch"
 PUBLIC_URL = "https://ecos.bok.or.kr/api/"
 MAX_BYTES = 1024 * 1024
-# Book code -> official table, ECOS account code, source unit.
-METRICS = {
-    "506": ("501Y005", "506", "%"),
-    "611": ("501Y006", "611", "%"),
-    "612": ("501Y006", "612", "%"),
-    "629": ("501Y006", "627", "%"),
-    "701": ("501Y007", "701", "%"),
-    "702": ("501Y007", "702", "%"),
-    "707": ("501Y007", "707", "%"),
-    "710": ("501Y007", "710", "%"),
-    "807": ("501Y008", "806", "회"),
-    "809": ("501Y008", "808", "회"),
-    "810": ("501Y008", "809", "회"),
-}
-INDUSTRIES = {"C10-34": "C", "F41-42": "F", "G45-47": "G", "L68": "L"}
-SIZES = {"전체": "A", "대기업": "L", "중견기업": "J", "중소기업": "M", "중기업": "D", "소기업": "S"}
 
 
 class EcosError(Exception):
@@ -162,8 +146,13 @@ async def supplement(database, settings, result, ksic_code=None):
         return None
     result = copy.deepcopy(with_benchmark(result, ksic_code))
     benchmark = result["bok_benchmark"]
-    industry = INDUSTRIES.get(benchmark.get("industry_code"), benchmark.get("industry_code"))
-    size = SIZES.get(benchmark.get("company_size"))
+    try:
+        metrics, industries, sizes = ecos_mappings()
+    except (OSError, ValueError):
+        benchmark["ecos_mapping_reason"] = "ECOS 매핑 파일 미확보 또는 형식 오류 · 보완 보류"
+        return result
+    industry = industries.get(benchmark.get("industry_code"), benchmark.get("industry_code"))
+    size = sizes.get(benchmark.get("company_size"))
     # Old snapshots can have blank points even when their exact CSV version
     # contains an observation. Prefer that source before consulting ECOS.
     try:
@@ -191,7 +180,7 @@ async def supplement(database, settings, result, ksic_code=None):
             if point["value"] is None and value is not None:
                 point.update(value=str(value / 100 if code == "629" else value), reason=None)
         points = [p for p in metric["values"] if p["value"] is None and p["year"] >= 2009]
-        if code in METRICS and points:
+        if code in metrics and points:
             missing[code] = points
     if not missing or not industry or not size:
         return with_benchmark(result)
@@ -209,7 +198,7 @@ async def supplement(database, settings, result, ksic_code=None):
         ).all()
     by_key = {(r.stat_code, r.metric_code, r.year): r for r in cached}
     for code, points in missing.items():
-        table, item, _ = METRICS[code]
+        table, item, _ = metrics[code]
         for point in points:
             observation = by_key.get((table, item, point["year"]))
             if observation:
@@ -225,7 +214,7 @@ async def supplement(database, settings, result, ksic_code=None):
             for point in points:
                 point["reason"] = "ECOS API 키 미설정 · 통계 보완 보류"
             return
-        table, item, unit = METRICS[code]
+        table, item, unit = metrics[code]
         try:
             async with semaphore:
                 rows = await asyncio.to_thread(

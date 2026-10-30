@@ -65,6 +65,7 @@ export const resultSchema = z.object({
       release_id: z.string().optional(),
       version: z.string().optional(),
       ecos_adapter_version: z.string().optional(),
+      ecos_mapping_reason: z.string().optional(),
       source_title: z.string().optional(),
       source_url: z.string().url().optional(),
       company_size: z.string().optional(),
@@ -79,6 +80,19 @@ export const resultSchema = z.object({
           label: z.string(),
           unit: z.string(),
           source_metric_code: z.string(),
+          definition: z
+            .object({
+              formula: z.string(),
+              numerator: z.string(),
+              denominator: z.string(),
+              balance_basis: z.string(),
+              accounting_basis: z.string(),
+              aggregation_method: z.string(),
+              comparability: z.string(),
+              reason: z.string(),
+              definition_version: z.string(),
+            })
+            .optional(),
           values: z.array(
             z.object({
               period: z.string(),

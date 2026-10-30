@@ -56,12 +56,17 @@ export function LiveFormulaDialog({
     )
   }
   const rows: { label: string; value: ReactNode }[] = []
+  const benchmark = result.bok_benchmark?.metrics.find(
+    (m) => m.key === metric.key,
+  )
+  const reference = benchmark?.values.find((v) => v.period === 'current')
+  const definition = benchmark?.definition
   const assessment = result.core_card_assessments?.find(
     (item) => item.key === metric.key,
   )
   if (assessment) {
     rows.push({ label: '카드 표시 근거', value: assessment.reason })
-    if (assessment.reference)
+    if (assessment.reference && reference?.value == null)
       rows.push({
         label: '카드 비교선',
         value: (
@@ -72,6 +77,47 @@ export function LiveFormulaDialog({
           </>
         ),
       })
+  }
+  if (benchmark && reference?.value != null) {
+    rows.push({
+      label: '카드 비교선',
+      value: (
+        <>
+          한국은행 업종 평균 {metricValue(reference.value, benchmark.unit)} ·{' '}
+          {reference.year}년
+          <small>{result.bok_benchmark?.industry_name} · 기업 규모 전체</small>
+        </>
+      ),
+    })
+  }
+  if (definition) {
+    rows.push(
+      {
+        label: '한국은행 지표 산식',
+        value: definition.formula || '원천 미제공',
+      },
+      {
+        label: '한국은행 분자·분모',
+        value: `${definition.numerator || '미제공'} / ${definition.denominator || '미제공'}`,
+      },
+      {
+        label: '한국은행 잔액 기준',
+        value: definition.balance_basis || '원천 미제공',
+      },
+      {
+        label: '업종 평균 비교 조건',
+        value: (
+          <>
+            {definition.accounting_basis}
+            <small>{definition.reason}</small>
+          </>
+        ),
+      },
+      {
+        label: '한국은행 지표 정의 버전',
+        value: definition.definition_version,
+      },
+    )
   }
   const pair = operands[metric.key]
   const debt =

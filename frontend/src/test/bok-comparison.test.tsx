@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import { VisualFinancialSummary } from '../features/financial/visual-summary'
 import { CashflowOverview } from '../features/financial/cashflow-overview'
+import { LiveFormulaDialog } from '../features/financial/live-formula-dialog'
 import { resultSchema } from '../features/financial/api'
 import fixture from './fixtures/financial-result.json'
 import benchmark from './fixtures/bok-benchmark.json'
@@ -21,6 +22,38 @@ function result() {
     bok_benchmark: benchmark,
   })
 }
+
+it('shows supplied BOK definitions in the existing formula dialog with the actual card reference', () => {
+  const data = result()
+  const reference = data.bok_benchmark!.metrics.find(
+    (m) => m.key === 'current_ratio',
+  )!
+  reference.definition = {
+    formula: '유동자산 ÷ 유동부채 × 100',
+    numerator: '유동자산',
+    denominator: '유동부채',
+    balance_basis: '기말 잔액(정태비율)',
+    accounting_basis: '별도 기준',
+    aggregation_method: '업종 집계',
+    comparability: '조건부',
+    reason: '2024년 기업경영분석 해설편 702',
+    definition_version: 'v2',
+  }
+  const metric = data.metrics.find((m) => m.key === 'current_ratio')!
+  render(
+    <LiveFormulaDialog
+      result={resultSchema.parse(data)}
+      metric={metric}
+      onClose={() => {}}
+      onCloseAutoFocus={() => {}}
+    />,
+  )
+  const dialog = screen.getByRole('dialog')
+  expect(dialog).toHaveTextContent('한국은행 지표 산식')
+  expect(dialog).toHaveTextContent('기말 잔액(정태비율)')
+  expect(dialog).toHaveTextContent('2024년 기업경영분석 해설편 702')
+  expect(dialog).toHaveTextContent('한국은행 업종 평균 131.5% · 2025년')
+})
 
 it('keeps BOK averages in core cards and restores all five metric domains', async () => {
   render(<VisualFinancialSummary result={result()} />)

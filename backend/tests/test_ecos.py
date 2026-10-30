@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from app.modules.financial.ecos import METRICS, EcosError, download, parse_response
+from app.modules.financial.bok import ecos_mappings
+from app.modules.financial.ecos import EcosError, download, parse_response
 
 
 def response(**changes):
@@ -27,10 +28,32 @@ def parse(raw):
 
 
 def test_ecos_codes_are_distinct_from_book_codes():
+    METRICS, industries, sizes = ecos_mappings()
+    assert industries["C10-34"] == "C"
+    assert sizes["전체"] == "A"
     assert METRICS["629"][:2] == ("501Y006", "627")
     assert METRICS["807"][:2] == ("501Y008", "806")
     assert METRICS["809"][:2] == ("501Y008", "808")
     assert METRICS["810"][:2] == ("501Y008", "809")
+
+
+def test_mapping_file_is_authoritative_and_excludes_description_rows(monkeypatch):
+    import copy
+
+    from app.modules.financial import bok
+
+    tables, version = bok.dataset()
+    changed = copy.deepcopy(tables)
+    row = next(r for r in changed["ecos_mapping"] if r["source_code"] == "629")
+    row["ecos_item_code"] = "test-account"
+    monkeypatch.setattr(bok, "dataset", lambda: (changed, version))
+    metrics, industries, sizes = bok.ecos_mappings()
+    assert metrics["629"][1] == "test-account"
+    assert "C10~C34·F41·F42·G45·G46·G47" not in industries
+    assert set(sizes.values()) == {"A", "L", "J", "M", "D", "S"}
+    changed["ecos_mapping"].append(row.copy())
+    with pytest.raises(ValueError, match="mapping_invalid"):
+        bok.ecos_mappings()
 
 
 def test_exact_dimensions_year_unit_and_decimal_preserved():

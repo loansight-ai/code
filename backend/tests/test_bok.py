@@ -17,6 +17,20 @@ def metric(benchmark, key):
 
 
 class BokComparisonTests(unittest.TestCase):
+    def test_v2_definitions_are_added_without_changing_saved_numbers(self):
+        data = with_benchmark(result(), "10740")
+        saved = copy.deepcopy(data)
+        for item in data["bok_benchmark"]["metrics"]:
+            item.pop("definition", None)
+        updated = with_benchmark(data)
+        self.assertEqual(updated, saved)
+        definitions = {m["key"]: m["definition"] for m in updated["bok_benchmark"]["metrics"]}
+        self.assertEqual(definitions["current_ratio"]["definition_version"], "v2")
+        self.assertIn("기말", definitions["current_ratio"]["balance_basis"])
+        self.assertEqual(definitions["inventory_turnover"]["numerator"], "매출액")
+        self.assertEqual(definitions["payables_turnover"]["numerator"], "매출액")
+        self.assertIn("해당 없음", definitions["operating_margin"]["balance_basis"])
+
     def test_real_source_year_mapping_and_percentage_to_multiple(self):
         data = result()
         snapshot = copy.deepcopy(data)
