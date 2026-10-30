@@ -126,7 +126,6 @@
 }
 .design-shell .page {
   padding: 20px 24px 26px;
-  max-width: 1440px;
 }
 .design-shell h1 {
   font-size: calc(22px * var(--font-scale));

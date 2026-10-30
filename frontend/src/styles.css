@@ -374,7 +374,6 @@ hr {
   border-bottom: 1px solid var(--border);
 }
 .page {
-  max-width: 1500px;
   margin: 0 auto;
   padding: 36px 40px 20px;
 }
