@@ -115,6 +115,11 @@
   color: #73776e;
   font-size: calc(9px * var(--font-scale));
 }
+.formula-dialog > .formula-definition > tbody > tr > th,
+.formula-dialog > .formula-definition > tbody > tr > td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .formula-explanation {
   margin-top: 16px;
   padding: 12px 14px;

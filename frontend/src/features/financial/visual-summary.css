@@ -395,12 +395,6 @@
   background: currentColor;
   opacity: 0.08;
 }
-.vs-core-previous-bar {
-  top: 2px;
-  height: 6px;
-  background: #ccc8c0;
-  opacity: 0.75;
-}
 .vs-core-current-bar {
   top: 4px;
   height: 4px;
@@ -418,6 +412,61 @@
   height: 21px;
   width: 2px;
   background: #34393a;
+}
+.vs-core-fixed-marker {
+  top: -5px;
+  height: 21px;
+  border-left: 1px dashed #34393a;
+}
+.vs-core-quartile-risk {
+  background: #b42318;
+  opacity: 0.14;
+}
+.vs-core-reference-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+}
+.vs-core-fixed-caption {
+  color: #898e87;
+  font-size: 9px;
+}
+.vs-core-position-note {
+  color: #66716b;
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.vs-core-card .vs-core-detail-button {
+  align-self: flex-end;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.core-quartile-history {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.core-quartile-history table {
+  min-width: 430px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.core-quartile-history th,
+.core-quartile-history td {
+  white-space: nowrap;
+}
+.core-quartile-history .formula-definition thead th:first-child {
+  width: 64px;
+}
+.core-quartile-history p {
+  white-space: normal;
+  font-size: 11px;
+  line-height: 1.7;
 }
 .vs-core-reference-caption {
   display: block;

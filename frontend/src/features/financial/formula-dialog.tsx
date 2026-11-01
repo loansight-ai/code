@@ -10,6 +10,7 @@ export function FormulaDialog({
   formula,
   state,
   rows,
+  details,
   reason,
   sourceUrl,
   onClose,
@@ -26,6 +27,7 @@ export function FormulaDialog({
     | 'missing'
     | 'not_computable'
   rows: { label: string; value: ReactNode }[]
+  details?: ReactNode
   reason: string
   sourceUrl?: string
   onClose: () => void
@@ -64,6 +66,7 @@ export function FormulaDialog({
         <span>계산식</span>
         <strong>{formula}</strong>
       </div>
+      {details}
       <table className="formula-definition" aria-label="산식 정의">
         <thead>
           <tr>

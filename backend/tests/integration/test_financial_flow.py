@@ -281,6 +281,38 @@ async def test_bok_snapshot_persistence_and_legacy_read(client, environment, fin
         assert "bok_benchmark" not in run.result
 
 
+async def test_core_quartiles_are_pinned_and_legacy_decoration_does_not_write(
+    client, environment, financial
+):
+    _, _, database = environment
+    await client.post("/api/v1/users")
+    submitted = (await client.post("/api/v1/me/financial-analyses", json=INPUT)).json()
+    await execute(environment, submitted)
+    url = "/api/v1/me/financial-analyses/" + submitted["analysis_run_id"]
+    result = (await client.get(url)).json()["result"]
+    benchmark = result["core_ratio_benchmark"]
+    assert benchmark["industry_code"] == "C10-34"
+    liquidity = next(m for m in benchmark["metrics"] if m["key"] == "current_ratio")
+    assert liquidity["median"] == "166.550495"
+    assert (
+        next(a for a in result["core_card_assessments"] if a["key"] == "current_ratio")[
+            "reference"
+        ]["kind"]
+        == "INDUSTRY_MEDIAN"
+    )
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        assert run.result["core_ratio_benchmark"] == benchmark
+        saved_facts = run.result["facts"]
+        run.result = {k: v for k, v in run.result.items() if k != "core_ratio_benchmark"}
+    legacy = (await client.get(url)).json()["result"]
+    assert legacy["core_ratio_benchmark"] == benchmark
+    assert legacy["facts"] == saved_facts
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        assert "core_ratio_benchmark" not in run.result
+
+
 async def test_full_flow_atomic_facts_provenance_and_workspace_isolation(
     client, environment, financial
 ):

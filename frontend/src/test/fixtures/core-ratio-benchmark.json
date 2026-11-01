@@ -1,0 +1,321 @@
+{
+  "core_ratio_benchmark": {
+    "version": "d7ce440dffed3693502384a89ec39a5753d8c494ff3028c8f38d4321530d3592",
+    "source_file": "2016-2025_4개업종_전체기업_5개재무지표.csv",
+    "source_note": "팀 제공 비교자료 · 수집 설명상 ECOS 통계와 자체 OFS 표본 보충값이 포함됩니다. CSV에 셀별 출처·표본 수·보충 여부가 없어 확인되지 않았습니다. 업종합산비율은 기업별 비율의 중앙값과 다릅니다.",
+    "industry_code": "C10-34",
+    "industry_name": "제조업",
+    "company_size": "전체",
+    "scope": "OFS",
+    "metrics": [
+      {
+        "key": "current_ratio",
+        "unit": "%",
+        "year": 2025,
+        "aggregate": "135.08",
+        "q1": "94.448537",
+        "median": "166.550495",
+        "q3": "349.47898",
+        "history": [
+          {
+            "year": 2021,
+            "aggregate": "144.18",
+            "q1": "109.616363",
+            "median": "176.592399",
+            "q3": "335.73779"
+          },
+          {
+            "year": 2022,
+            "aggregate": "141.51",
+            "q1": "105.088647",
+            "median": "168.663331",
+            "q3": "316.500735"
+          },
+          {
+            "year": 2023,
+            "aggregate": "138.55",
+            "q1": "103.09993",
+            "median": "166.206159",
+            "q3": "333.531831"
+          },
+          {
+            "year": 2024,
+            "aggregate": "133.77",
+            "q1": "98.059898",
+            "median": "168.338651",
+            "q3": "351.733661"
+          },
+          {
+            "year": 2025,
+            "aggregate": "135.08",
+            "q1": "94.448537",
+            "median": "166.550495",
+            "q3": "349.47898"
+          }
+        ],
+        "comparison_reason": null
+      },
+      {
+        "key": "debt_ratio",
+        "unit": "%",
+        "year": 2025,
+        "aggregate": "74.40",
+        "q1": "23.0989",
+        "median": "53.131086",
+        "q3": "101.992157",
+        "history": [
+          {
+            "year": 2021,
+            "aggregate": "78.55",
+            "q1": "58.8",
+            "median": "156.1",
+            "q3": "401.1"
+          },
+          {
+            "year": 2022,
+            "aggregate": "76.95",
+            "q1": "55.2",
+            "median": "149.9",
+            "q3": "391.2"
+          },
+          {
+            "year": 2023,
+            "aggregate": "75.87",
+            "q1": "23.284441",
+            "median": "52.471678",
+            "q3": "100.030112"
+          },
+          {
+            "year": 2024,
+            "aggregate": "75.78",
+            "q1": "22.884288",
+            "median": "53.721974",
+            "q3": "100.736794"
+          },
+          {
+            "year": 2025,
+            "aggregate": "74.40",
+            "q1": "23.0989",
+            "median": "53.131086",
+            "q3": "101.992157"
+          }
+        ],
+        "comparison_reason": null
+      },
+      {
+        "key": "operating_margin",
+        "unit": "%",
+        "year": 2025,
+        "aggregate": "6.26",
+        "q1": "-3.4",
+        "median": "3.5",
+        "q3": "8.4",
+        "history": [
+          {
+            "year": 2021,
+            "aggregate": "6.79",
+            "q1": "-2.4",
+            "median": "3.4",
+            "q3": "7.9"
+          },
+          {
+            "year": 2022,
+            "aggregate": "5.72",
+            "q1": "-2.1",
+            "median": "3.5",
+            "q3": "8.1"
+          },
+          {
+            "year": 2023,
+            "aggregate": "3.28",
+            "q1": "-2.1",
+            "median": "4",
+            "q3": "8.9"
+          },
+          {
+            "year": 2024,
+            "aggregate": "5.13",
+            "q1": "-2.5",
+            "median": "3.8",
+            "q3": "8.7"
+          },
+          {
+            "year": 2025,
+            "aggregate": "6.26",
+            "q1": "-3.4",
+            "median": "3.5",
+            "q3": "8.4"
+          }
+        ],
+        "comparison_reason": null
+      },
+      {
+        "key": "operating_roa",
+        "unit": "%",
+        "year": 2025,
+        "aggregate": "5.008",
+        "q1": "-2.285783",
+        "median": "1.684529",
+        "q3": "5.279536",
+        "history": [
+          {
+            "year": 2021,
+            "aggregate": "6.0431",
+            "q1": "-0.713664",
+            "median": "2.928333",
+            "q3": "6.913741"
+          },
+          {
+            "year": 2022,
+            "aggregate": "5.3768",
+            "q1": "-0.296969",
+            "median": "3.075432",
+            "q3": "6.879127"
+          },
+          {
+            "year": 2023,
+            "aggregate": "2.7880",
+            "q1": "-2.152645",
+            "median": "1.984729",
+            "q3": "5.622579"
+          },
+          {
+            "year": 2024,
+            "aggregate": "4.2579",
+            "q1": "-2.109153",
+            "median": "1.861974",
+            "q3": "5.385893"
+          },
+          {
+            "year": 2025,
+            "aggregate": "5.008",
+            "q1": "-2.285783",
+            "median": "1.684529",
+            "q3": "5.279536"
+          }
+        ],
+        "comparison_reason": "자사는 기말 총자산, 비교자료는 연평균 총자산 기준이므로 상대 판정을 보류합니다."
+      },
+      {
+        "key": "interest_coverage",
+        "unit": "배",
+        "year": 2025,
+        "aggregate": "5.3733",
+        "q1": "-2.504",
+        "median": "2.01",
+        "q3": "18.195",
+        "history": [
+          {
+            "year": 2021,
+            "aggregate": "9.5832",
+            "q1": "-2.435",
+            "median": "3.098",
+            "q3": "25.446"
+          },
+          {
+            "year": 2022,
+            "aggregate": "6.9343",
+            "q1": "-1.808",
+            "median": "2.521",
+            "q3": "19.598"
+          },
+          {
+            "year": 2023,
+            "aggregate": "2.6593",
+            "q1": "-1.291",
+            "median": "2.1",
+            "q3": "16.917"
+          },
+          {
+            "year": 2024,
+            "aggregate": "4.0107",
+            "q1": "-1.683",
+            "median": "2.034",
+            "q3": "17.362"
+          },
+          {
+            "year": 2025,
+            "aggregate": "5.3733",
+            "q1": "-2.504",
+            "median": "2.01",
+            "q3": "18.195"
+          }
+        ],
+        "comparison_reason": null
+      }
+    ]
+  },
+  "core_card_assessment_version": "core-card-assessments-v2-quartiles",
+  "core_card_assessments": [
+    {
+      "key": "current_ratio",
+      "status": "WATCH",
+      "reason": "제공 비교자료의 중앙값보다 취약한 쪽에 위치합니다.",
+      "higher_is_better": true,
+      "reference": {
+        "value": "166.550495",
+        "label": "업종 중앙값",
+        "kind": "INDUSTRY_MEDIAN",
+        "source": "제조업 · 2025년 · 별도 기준 · 전체 규모 · 팀 제공 비교자료"
+      },
+      "comparison_allowed": true,
+      "flags": []
+    },
+    {
+      "key": "debt_ratio",
+      "status": "REFERENCE_RANGE",
+      "reason": "제공 비교자료의 중앙값 이하 부채비율입니다. 정상 판정을 뜻하지 않습니다.",
+      "higher_is_better": false,
+      "reference": {
+        "value": "53.131086",
+        "label": "업종 중앙값",
+        "kind": "INDUSTRY_MEDIAN",
+        "source": "제조업 · 2025년 · 별도 기준 · 전체 규모 · 팀 제공 비교자료"
+      },
+      "comparison_allowed": true,
+      "flags": []
+    },
+    {
+      "key": "operating_margin",
+      "status": "WATCH",
+      "reason": "제공 비교자료의 중앙값보다 취약한 쪽에 위치합니다.",
+      "higher_is_better": true,
+      "reference": {
+        "value": "3.5",
+        "label": "업종 중앙값",
+        "kind": "INDUSTRY_MEDIAN",
+        "source": "제조업 · 2025년 · 별도 기준 · 전체 규모 · 팀 제공 비교자료"
+      },
+      "comparison_allowed": true,
+      "flags": []
+    },
+    {
+      "key": "operating_roa",
+      "status": "NOT_EVALUATED",
+      "reason": "자사는 기말 총자산, 비교자료는 연평균 총자산 기준이므로 상대 판정을 보류합니다.",
+      "higher_is_better": true,
+      "reference": {
+        "value": "1.684529",
+        "label": "업종 중앙값",
+        "kind": "INDUSTRY_MEDIAN",
+        "source": "제조업 · 2025년 · 별도 기준 · 전체 규모 · 팀 제공 비교자료"
+      },
+      "comparison_allowed": false,
+      "flags": []
+    },
+    {
+      "key": "interest_coverage",
+      "status": "REFERENCE_RANGE",
+      "reason": "제공 비교자료의 중앙값 이상입니다. 정상 판정을 뜻하지 않습니다.",
+      "higher_is_better": true,
+      "reference": {
+        "value": "2.01",
+        "label": "업종 중앙값",
+        "kind": "INDUSTRY_MEDIAN",
+        "source": "제조업 · 2025년 · 별도 기준 · 전체 규모 · 팀 제공 비교자료"
+      },
+      "comparison_allowed": true,
+      "flags": []
+    }
+  ]
+}

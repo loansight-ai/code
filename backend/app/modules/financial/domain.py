@@ -3,7 +3,7 @@
 import re
 from decimal import Decimal, InvalidOperation, localcontext
 
-MAPPING_VERSION = "financial-accounts-v4"
+MAPPING_VERSION = "financial-accounts-v5"
 FORMULA_VERSION = "financial-formulas-v4"
 PERIODS = ("current", "previous", "before_previous")
 AMOUNT_KEYS = ("thstrm_amount", "frmtrm_amount", "bfefrmtrm_amount")
@@ -41,6 +41,7 @@ ACCOUNTS = [
     ("assets", "자산총계", "BS", ["Assets"], ["자산총계"]),
     ("liabilities", "부채총계", "BS", ["Liabilities"], ["부채총계"]),
     ("equity", "자본총계", "BS", ["Equity"], ["자본총계"]),
+    ("capital", "자본금", "BS", ["IssuedCapital"], ["자본금"]),
     ("current_assets", "유동자산", "BS", ["CurrentAssets"], ["유동자산"]),
     ("current_liabilities", "유동부채", "BS", ["CurrentLiabilities"], ["유동부채"]),
     ("noncurrent_assets", "비유동자산", "BS", ["NoncurrentAssets"], ["비유동자산"]),

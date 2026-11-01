@@ -15,6 +15,8 @@ from app.modules.evidence.service import fingerprint
 from app.modules.financial.bok import dataset_version, with_benchmark
 from app.modules.financial.collector import download, parse_response
 from app.modules.financial.core_assessments import with_core_assessments
+from app.modules.financial.core_benchmarks import dataset_version as core_benchmark_version
+from app.modules.financial.core_benchmarks import with_core_benchmark
 from app.modules.financial.domain import (
     FORMULA_VERSION,
     MAPPING_VERSION,
@@ -49,6 +51,7 @@ async def submit(database, settings, identity, context):
             "notes": NOTE_VERSION,
             "bok": dataset_version(),
             "ecos": ECOS_VERSION,
+            "core_benchmark": core_benchmark_version(),
             "enrichment": agent_config(settings) if context.get("enrich_notes") else None,
         }
     )
@@ -219,7 +222,9 @@ async def complete(database, job_id, owner, prepared):
             return False
         run = await db.scalar(select(FinancialRun).where(FinancialRun.job_id == job_id))
         company = await db.get(CompanyRecord, run.context["corp_code"])
-        run.result = with_benchmark(prepared.result, company.ksic11_code if company else None)
+        run.result = with_core_benchmark(
+            with_benchmark(prepared.result, company.ksic11_code if company else None)
+        )
         run.source_sha256 = prepared.source_sha256
         run.completed_at = now
         workflow = await db.get(FinancialNoteWorkflow, run.id)

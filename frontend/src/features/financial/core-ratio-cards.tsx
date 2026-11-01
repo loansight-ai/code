@@ -74,6 +74,8 @@ const statusLabels = {
   UNAVAILABLE: '미확보',
   NOT_EVALUATED: '평가 보류',
   CONTEXT_REQUIRED: '업종 확인',
+  WATCH: '관찰',
+  REFERENCE_RANGE: '중앙값 이상',
 }
 const statusTones = {
   WARNING: 'warning',
@@ -84,6 +86,8 @@ const statusTones = {
   UNAVAILABLE: 'unassessed',
   NOT_EVALUATED: 'unassessed',
   CONTEXT_REQUIRED: 'unassessed',
+  WATCH: 'watch',
+  REFERENCE_RANGE: 'unassessed',
 }
 
 export function CoreRatioCards({
@@ -108,9 +112,11 @@ export function CoreRatioCards({
         <span className="vs-muted">
           {demo
             ? '상태·기준선은 예시'
-            : result.bok_benchmark
-              ? '비교선: 한국은행 업종 평균 · 상태: 기존 규칙'
-              : '팀 가설 150% · 200% · 3배 / 수익성은 전기 비교'}
+            : result.core_ratio_benchmark
+              ? '중앙값·사분위 비교 · 고정값은 참고선'
+              : result.bok_benchmark
+                ? '비교선: 한국은행 업종 평균 · 상태: 기존 규칙'
+                : '팀 가설 150% · 200% · 3배 / 수익성은 전기 비교'}
         </span>
       </div>
       <div className="vs-core-grid">
@@ -162,9 +168,34 @@ export function CoreRatioCards({
                     : 'DETERIORATING'
           const status = assessment?.status ?? fallbackStatus
           const liveReference = assessment?.reference
+          const quartiles = !demo
+            ? result.core_ratio_benchmark?.metrics.find(
+                (m) => m.key === spec.key,
+              )
+            : undefined
+          const hasQuartiles = !demo && !!result.core_ratio_benchmark
+          const comparisonAllowed =
+            hasQuartiles && assessment?.comparison_allowed === true
+          const boundaryValue = spec.higherBetter
+            ? quartiles?.q1
+            : quartiles?.q3
+          const boundary =
+            comparisonAllowed && boundaryValue != null
+              ? Number(boundaryValue)
+              : null
+          const fixedReference =
+            hasQuartiles &&
+            ['current_ratio', 'debt_ratio', 'interest_coverage'].includes(
+              spec.key,
+            )
+              ? spec.reference
+              : null
           const bok = !demo ? bokValue(result, spec.key) : undefined
-          const candidate =
-            bok?.value != null
+          const candidate = hasQuartiles
+            ? quartiles?.median != null
+              ? Number(quartiles.median)
+              : null
+            : bok?.value != null
               ? Number(bok.value)
               : liveReference
                 ? Number(liveReference.value)
@@ -176,25 +207,37 @@ export function CoreRatioCards({
               : null
           const referenceLabel = demo
             ? spec.referenceLabel
-            : bok?.value != null
-              ? `업종 평균 · ${bok.year}`
-              : (liveReference?.label ?? '전기')
+            : hasQuartiles
+              ? `${comparisonAllowed ? '업종 중앙값' : '참고 중앙값'} · ${quartiles?.year ?? '연도 미확보'}`
+              : bok?.value != null
+                ? `업종 평균 · ${bok.year}`
+                : (liveReference?.label ?? '전기')
           const tone = demo ? spec.tone : statusTones[status]
           const referenceSource = demo
             ? '가상 예시'
-            : bok?.value != null
-              ? `${result.bok_benchmark?.industry_name} · ${bok.source_kind === 'ECOS' ? '한국은행 ECOS' : '한국은행'} · 전체 기업 규모`
-              : (liveReference?.source ??
-                '동일 공시의 전기 비교값 · 업종 평균 아님')
+            : hasQuartiles
+              ? `${result.core_ratio_benchmark?.industry_name ?? '업종 미확보'} · 제공 비교자료`
+              : bok?.value != null
+                ? `${result.bok_benchmark?.industry_name} · ${bok.source_kind === 'ECOS' ? '한국은행 ECOS' : '한국은행'} · 전체 기업 규모`
+                : (liveReference?.source ??
+                  '동일 공시의 전기 비교값 · 업종 평균 아님')
           const max =
             Math.max(
               demo ? spec.max : 1,
               current ?? 0,
               previous ?? 0,
               reference ?? 0,
+              boundary ?? 0,
+              fixedReference ?? 0,
             ) * (demo ? 1 : 1.25)
           const min =
-            Math.min(0, current ?? 0, previous ?? 0, reference ?? 0) * 1.1
+            Math.min(
+              0,
+              current ?? 0,
+              previous ?? 0,
+              reference ?? 0,
+              boundary ?? 0,
+            ) * 1.1
           const position = (n: number) =>
             Math.max(0, Math.min(100, ((n - min) / (max - min)) * 100))
           const adjustedDebt = result.metrics.find(
@@ -228,8 +271,13 @@ export function CoreRatioCards({
                           '전기 대비 방향 비교이며 업종 위험 등급이 아닙니다.'
                         }
                       >
-                        {statusLabels[status]}
+                        {status === 'REFERENCE_RANGE' && !spec.higherBetter
+                          ? '중앙값 이하'
+                          : statusLabels[status]}
                       </span>
+                      {assessment?.flags?.map((flag) => (
+                        <span key={flag}>{flag}</span>
+                      ))}
                     </>
                   )}
                 </div>
@@ -266,38 +314,31 @@ export function CoreRatioCards({
                 <div
                   className="vs-core-bullet"
                   role="img"
-                  aria-label={`${metric.label}: 당기 ${current == null ? '자료 없음' : formatted(current, metric.unit)}, 전기 ${previous == null ? '자료 없음' : formatted(previous, metric.unit)}${reference == null ? ', 기준선 미확보' : `, ${referenceLabel} ${formatted(reference, metric.unit)} · ${referenceSource}`}`}
+                  aria-label={`${metric.label}: 당기 ${current == null ? '자료 없음' : formatted(current, metric.unit)}, 전기 ${previous == null ? '자료 없음' : formatted(previous, metric.unit)}${reference == null ? ', 기준선 미확보' : `, ${referenceLabel} ${formatted(reference, metric.unit)} · ${referenceSource}`}${boundary == null ? '' : `, 취약 구간 ${spec.higherBetter ? 'Q1 미만' : 'Q3 초과'} ${formatted(boundary, metric.unit)}`}${fixedReference == null ? '' : `, 고정 참고 ${formatted(fixedReference, metric.unit)} (판정에 사용하지 않음)`}`}
                 >
-                  {reference != null && (demo || bok?.value == null) && (
+                  {(hasQuartiles
+                    ? boundary != null
+                    : reference != null && (demo || bok?.value == null)) && (
                     <i
-                      className="vs-core-risk-range"
+                      className={`vs-core-risk-range${hasQuartiles ? ' vs-core-quartile-risk' : ''}`}
                       style={{
-                        left: `${spec.higherBetter ? 0 : position(reference)}%`,
-                        width: `${spec.higherBetter ? position(reference) : 100 - position(reference)}%`,
+                        left: `${spec.higherBetter ? 0 : position((hasQuartiles ? boundary : reference)!)}%`,
+                        width: `${spec.higherBetter ? position((hasQuartiles ? boundary : reference)!) : 100 - position((hasQuartiles ? boundary : reference)!)}%`,
                       }}
                     />
                   )}
                   {previous != null && (
-                    <>
-                      <i
-                        className="vs-core-previous-bar"
-                        style={{
-                          left: `${Math.min(position(0), position(previous))}%`,
-                          width: `${Math.abs(position(previous) - position(0))}%`,
-                        }}
-                      />
-                      <i
-                        className="vs-core-previous-marker"
-                        style={{ left: `${position(previous)}%` }}
-                      />
-                    </>
+                    <i
+                      className="vs-core-previous-marker"
+                      style={{ left: `${position(previous)}%` }}
+                    />
                   )}
                   {current != null && (
                     <i
                       className="vs-core-current-bar"
                       style={{
-                        left: `${Math.min(position(0), position(current))}%`,
-                        width: `${Math.abs(position(current) - position(0))}%`,
+                        left: 0,
+                        width: `${position(current)}%`,
                       }}
                     />
                   )}
@@ -307,13 +348,44 @@ export function CoreRatioCards({
                       style={{ left: `${position(reference)}%` }}
                     />
                   )}
+                  {fixedReference != null && (
+                    <i
+                      className="vs-core-fixed-marker"
+                      style={{ left: `${position(fixedReference)}%` }}
+                    />
+                  )}
                 </div>
-                <span className="vs-core-reference-caption">
-                  {reference == null
-                    ? '기준선 비교 보류'
-                    : `${referenceLabel} ${formatted(reference, metric.unit)}`}
-                </span>
-                {!demo && bok && (
+                <div className="vs-core-reference-row">
+                  <span className="vs-core-reference-caption">
+                    {reference == null
+                      ? '기준선 비교 보류'
+                      : `${referenceLabel} ${formatted(reference, metric.unit)}`}
+                  </span>
+                  {fixedReference != null && (
+                    <span className="vs-core-fixed-caption">
+                      참고 {formatted(fixedReference, metric.unit)}
+                    </span>
+                  )}
+                </div>
+                {hasQuartiles && (
+                  <p
+                    className="vs-core-position-note"
+                    title={assessment?.reason}
+                  >
+                    {comparisonAllowed
+                      ? status === 'CAUTION'
+                        ? spec.higherBetter
+                          ? '업종 하위 구간 · Q1 미만'
+                          : '업종 대비 부채 수준 높음 · Q3 초과'
+                        : status === 'WATCH'
+                          ? '업종 중앙값보다 취약한 쪽'
+                          : '업종 상대 위치 · 정상 판정 아님'
+                      : (assessment?.reason ??
+                        quartiles?.comparison_reason ??
+                        '해당 연도 비교자료 미확보')}
+                  </p>
+                )}
+                {!demo && !hasQuartiles && bok && (
                   <span className="vs-muted">
                     {bok.gap != null
                       ? `평균 대비 ${bokGap(bok.gap, metric.unit)}`
@@ -326,40 +398,59 @@ export function CoreRatioCards({
                   <MetricStatus metric={metric} result={result} />
                 </div>
               )}
+              {hasQuartiles && (
+                <button
+                  className="vs-text-button vs-core-detail-button"
+                  onClick={(event) => onFormula(metric, event.currentTarget)}
+                  aria-label={`${metric.label} 상세 보기`}
+                >
+                  상세 보기 ›
+                </button>
+              )}
             </article>
           )
         })}
       </div>
-      <p className="vs-footnote vs-core-legend">
-        바탕·값 색 = 상태 <span className="vs-core-legend-warning">경고</span> ·{' '}
-        <span className="vs-core-legend-attention">주의</span> ·{' '}
-        <span className="vs-core-legend-watch">관찰</span> │ 증감:{' '}
-        <b className="vs-change-down">빨강 = 나빠짐</b> ·{' '}
-        <b className="vs-change-up">초록 = 좋아짐</b> (화살표는 방향) │ 막대
-        당기 · 회색 전기 · 검은 선 기준
-        {demo
-          ? ' · 상태·기준선은 가상 예시'
-          : ' · 팀 가설은 참고선이며 정상·최종 여신 판단을 뜻하지 않습니다. 업종상 왜곡 지표는 판정을 보류합니다.'}
-        {!demo && result.bok_benchmark?.source_url && (
-          <>
-            {' · '}
-            <a
-              href={
-                usesEcos
-                  ? 'https://ecos.bok.or.kr/'
-                  : result.bok_benchmark.source_url
-              }
-              target="_blank"
-              rel="noreferrer"
-              title={`${result.bok_benchmark.industry_name ?? '업종 미확정'} · 전체 기업 규모 · ${result.bok_benchmark.scope_note ?? ''}`}
-            >
-              {usesEcos
-                ? '한국은행 기업경영분석 · ECOS 보완'
-                : '한국은행 기업경영분석'}
-            </a>
-          </>
-        )}
-      </p>
+      {result.core_ratio_benchmark && !demo ? (
+        <p className="vs-footnote vs-core-legend">
+          주의 = 취약 사분위 구간 · 관찰 = 중앙값보다 취약한 쪽 │ 막대 끝 당기 ·
+          회색 세로선 전기 · 검은 실선 중앙값 · 붉은 띠 취약 구간 · 점선 고정
+          참고값(판정 제외). 업종 상대 위치는 최종 위험 판정이 아닙니다. 팀 제공
+          자료는 ECOS·자체 표본 보충값을 포함하며 셀별 출처·표본 수는
+          미확인입니다. 기준과 5년 이력은 상세 보기에서 확인합니다.
+        </p>
+      ) : (
+        <p className="vs-footnote vs-core-legend">
+          바탕·값 색 = 상태 <span className="vs-core-legend-warning">경고</span>{' '}
+          · <span className="vs-core-legend-attention">주의</span> ·{' '}
+          <span className="vs-core-legend-watch">관찰</span> │ 증감:{' '}
+          <b className="vs-change-down">빨강 = 나빠짐</b> ·{' '}
+          <b className="vs-change-up">초록 = 좋아짐</b> (화살표는 방향) │ 막대
+          끝 당기 · 회색 세로선 전기 · 검은 선 기준
+          {demo
+            ? ' · 상태·기준선은 가상 예시'
+            : ' · 팀 가설은 참고선이며 정상·최종 여신 판단을 뜻하지 않습니다. 업종상 왜곡 지표는 판정을 보류합니다.'}
+          {!demo && result.bok_benchmark?.source_url && (
+            <>
+              {' · '}
+              <a
+                href={
+                  usesEcos
+                    ? 'https://ecos.bok.or.kr/'
+                    : result.bok_benchmark.source_url
+                }
+                target="_blank"
+                rel="noreferrer"
+                title={`${result.bok_benchmark.industry_name ?? '업종 미확정'} · 전체 기업 규모 · ${result.bok_benchmark.scope_note ?? ''}`}
+              >
+                {usesEcos
+                  ? '한국은행 기업경영분석 · ECOS 보완'
+                  : '한국은행 기업경영분석'}
+              </a>
+            </>
+          )}
+        </p>
+      )}
     </section>
   )
 }

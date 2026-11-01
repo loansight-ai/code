@@ -48,6 +48,13 @@ const metricSchema = z.object({
   change_unit: z.string(),
 })
 export type FinancialMetric = z.infer<typeof metricSchema>
+const coreQuartileSchema = z.object({
+  year: z.number().int().nullable(),
+  aggregate: z.string().nullable(),
+  q1: z.string().nullable(),
+  median: z.string().nullable(),
+  q3: z.string().nullable(),
+})
 export const resultSchema = z.object({
   analysis_run_id: z.string().uuid(),
   context: contextSchema,
@@ -115,6 +122,25 @@ export const resultSchema = z.object({
       ),
     })
     .optional(),
+  core_ratio_benchmark: z
+    .object({
+      version: z.string(),
+      source_file: z.string(),
+      source_note: z.string(),
+      industry_code: z.string().nullable(),
+      industry_name: z.string().nullable(),
+      company_size: z.string(),
+      scope: z.literal('OFS'),
+      metrics: z.array(
+        coreQuartileSchema.extend({
+          key: z.string(),
+          unit: z.string(),
+          comparison_reason: z.string().nullable(),
+          history: z.array(coreQuartileSchema),
+        }),
+      ),
+    })
+    .optional(),
   core_card_assessment_version: z.string().optional(),
   core_card_assessments: z
     .array(
@@ -129,14 +155,23 @@ export const resultSchema = z.object({
           'UNAVAILABLE',
           'NOT_EVALUATED',
           'CONTEXT_REQUIRED',
+          'WATCH',
+          'REFERENCE_RANGE',
         ]),
         reason: z.string(),
         higher_is_better: z.boolean(),
+        comparison_allowed: z.boolean().optional(),
+        flags: z.array(z.string()).optional(),
         reference: z
           .object({
             value: z.string().regex(/^-?\d+(\.\d+)?$/),
             label: z.string(),
-            kind: z.enum(['ABSOLUTE', 'PREVIOUS', 'TEAM_HYPOTHESIS']),
+            kind: z.enum([
+              'ABSOLUTE',
+              'PREVIOUS',
+              'TEAM_HYPOTHESIS',
+              'INDUSTRY_MEDIAN',
+            ]),
             source: z.string(),
           })
           .nullable(),

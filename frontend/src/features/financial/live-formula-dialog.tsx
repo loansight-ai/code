@@ -3,6 +3,7 @@ import { FormulaDialog } from './formula-dialog'
 import { FinancialFactEvidence } from './note-progress'
 import { MetricValue, MetricStatus } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
+import { CoreQuartileDetail } from './core-quartile-detail'
 import {
   money,
   metricValue,
@@ -60,6 +61,10 @@ export function LiveFormulaDialog({
     )
   }
   const rows: { label: string; value: ReactNode }[] = []
+  const coreBenchmark = result.core_ratio_benchmark
+  const coreComparison = coreBenchmark?.metrics.find(
+    (m) => m.key === metric.key,
+  )
   const benchmark = result.bok_benchmark?.metrics.find(
     (m) => m.key === metric.key,
   )
@@ -70,7 +75,7 @@ export function LiveFormulaDialog({
   )
   if (assessment) {
     rows.push({ label: '카드 표시 근거', value: assessment.reason })
-    if (assessment.reference && reference?.value == null)
+    if (assessment.reference && (coreComparison || reference?.value == null))
       rows.push({
         label: '카드 비교선',
         value: (
@@ -82,7 +87,44 @@ export function LiveFormulaDialog({
         ),
       })
   }
-  if (benchmark && reference?.value != null) {
+  if (coreComparison && coreBenchmark) {
+    rows.push(
+      { label: '업종 비교자료 출처', value: coreBenchmark.source_note },
+      {
+        label: '업종 비교자료 버전',
+        value: (
+          <>
+            {coreBenchmark.source_file}
+            <small>SHA-256 {coreBenchmark.version}</small>
+          </>
+        ),
+      },
+    )
+    if (coreComparison.comparison_reason)
+      rows.push({
+        label: '업종 비교 제한',
+        value: coreComparison.comparison_reason,
+      })
+    if (metric.key === 'interest_coverage')
+      rows.push({
+        label: '업종 단위 환산',
+        value: 'CSV의 % 값을 100으로 나누어 배 단위로 표시했습니다.',
+      })
+    if (
+      metric.key === 'debt_ratio' &&
+      !result.facts.some(
+        (f) =>
+          f.key === 'capital' &&
+          f.period === 'current' &&
+          f.state === 'CONFIRMED',
+      )
+    )
+      rows.push({
+        label: '부분자본잠식 확인',
+        value: '확정 자본금 미확보 · 자본총계와 자본금의 비교는 보류합니다.',
+      })
+  }
+  if (!coreComparison && benchmark && reference?.value != null) {
     rows.push({
       label: '카드 비교선',
       value: (
@@ -291,6 +333,11 @@ export function LiveFormulaDialog({
           'confirmed' | 'approximate' | 'missing' | 'not_computable'
       }
       rows={rows}
+      details={
+        coreComparison ? (
+          <CoreQuartileDetail result={result} metric={metric} />
+        ) : undefined
+      }
       reason={explanation}
       sourceUrl={result.source_url}
       onClose={onClose}
