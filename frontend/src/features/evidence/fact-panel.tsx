@@ -459,6 +459,13 @@ function FactSummary({ fact }: { fact: Fact }) {
     FUNDING_SUPPORT: '자금보충',
     BUYER_GUARANTEE: '수분양자 중도금 보증',
     OTHER: '기타 보증·조건부 의무',
+    M3: '3개월 이내',
+    M6: '3개월 초과~6개월',
+    M12: '6개월 초과~12개월',
+    Y2: '1년 초과~2년',
+    Y3: '2년 초과~3년',
+    OVER3: '3년 초과',
+    UNDISCLOSED: '공시상 만기 미기재',
   }
   return (
     <>
@@ -484,6 +491,8 @@ function FactSummary({ fact }: { fact: Fact }) {
                 'case_count',
                 'filing_date',
                 'case_note',
+                'maturity_bucket',
+                'loan_period',
               ] as const
             ).filter((k) => fact.data[k] != null && fact.data[k] !== 'UNKNOWN'),
           ] as const

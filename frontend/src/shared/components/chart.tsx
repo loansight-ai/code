@@ -18,6 +18,7 @@ import {
   TitleComponent,
   RadarComponent,
   MarkLineComponent,
+  MarkAreaComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { scaleChartFonts } from '../typography'
@@ -34,6 +35,7 @@ registerCharts([
   TitleComponent,
   RadarComponent,
   MarkLineComponent,
+  MarkAreaComponent,
   CanvasRenderer,
 ])
 

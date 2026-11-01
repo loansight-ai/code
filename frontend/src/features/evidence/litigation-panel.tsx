@@ -22,7 +22,11 @@ export function LitigationPanel({
     value == null ? '미확보' : `${money(value)}억`
   const cases = data?.top_cases ?? []
   return (
-    <section className="panel exposure-litigation" aria-label="소송 현황 피고">
+    <section
+      id="evidence-litigation"
+      className="panel exposure-litigation"
+      aria-label="소송 현황 피고"
+    >
       <div className="litigation-layout">
         <div className="litigation-overview">
           <div className="litigation-heading">

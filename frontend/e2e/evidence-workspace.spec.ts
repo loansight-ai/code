@@ -305,8 +305,57 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
     .click()
   await maturity.getByRole('link', { name: '만기 사다리 보기 →' }).click()
   await expect(
-    main.getByRole('region', { name: '상세 만기 사다리' }),
+    main.getByRole('table', { name: '상세 만기 사다리' }),
   ).toBeVisible()
+  const riskLadder = main.getByRole('region', {
+    name: 'PF 보증·조건부 의무 만기 사다리',
+  })
+  await expect(riskLadder.locator('.pf-ladder-subtitle')).toContainText(
+    '5,010억원 (46%)',
+  )
+  await expect(riskLadder.getByRole('img')).toHaveAttribute(
+    'aria-label',
+    /만기 미공시 810억원/,
+  )
+  await expect(riskLadder.locator('canvas')).toBeVisible()
+  await expect(riskLadder.getByRole('img')).toHaveCSS('height', '400px')
+  expect(await overflow()).toBe(false)
+  await riskLadder.locator('.pf-ladder-details > summary').click()
+  await page.evaluate(async () => {
+    ;(document.activeElement as HTMLElement)?.blur()
+    scrollTo(0, 0)
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    )
+  })
+  await page.screenshot({
+    path: info.outputPath('risk-maturity-ladder.png'),
+    fullPage: true,
+  })
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await overflow()).toBe(false)
+  await page.screenshot({
+    path: info.outputPath('risk-maturity-mobile.png'),
+    fullPage: true,
+  })
+  await page.setViewportSize(info.project.use.viewport!)
+  await riskLadder.locator('.pf-ladder-details > summary').click()
+  await riskLadder
+    .getByRole('table')
+    .getByRole('button', { name: /XI.2/ })
+    .first()
+    .click()
+  await expect(
+    exposureDialog.getByRole('table', { name: '저장된 근거 표' }),
+  ).toBeVisible()
+  await exposureDialog
+    .getByRole('button', { name: '닫기', exact: true })
+    .click()
+  await riskLadder.getByRole('link', { name: '소송 현황 보기 →' }).click()
+  await expect(page).toHaveURL(/tab=notes#evidence-litigation$/)
+  await expect(
+    main.getByRole('region', { name: '소송 현황 피고' }),
+  ).toBeInViewport()
   await page
     .getByRole('navigation', { name: '주석 확인 메뉴' })
     .getByRole('button', { name: '주석 추출 근거' })

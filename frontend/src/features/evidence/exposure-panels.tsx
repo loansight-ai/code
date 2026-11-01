@@ -35,7 +35,7 @@ const buckets = [
 ] as const
 type OpenSource = (source: ExposureSource) => void
 
-function SourceDrawer({
+export function ExposureSourceDrawer({
   bundle,
   source,
   onClose,
@@ -124,7 +124,11 @@ function MaturityBar({
         }
       >
         {data?.total == null ? (
-          <span>만기 정보 미확보</span>
+          <span>
+            {data?.availability_state === 'EXPLICIT_NONE'
+              ? '공시상 제공 보증 없음'
+              : '만기 정보 미확보'}
+          </span>
         ) : (
           visibleBuckets.map(([k]) => (
             <span
@@ -185,6 +189,7 @@ export function ExposurePanels({ bundle }: { bundle: EvidenceBundle }) {
         </div>
       )}
       <section
+        id="evidence-guarantees"
         className="panel exposure-composition"
         aria-label="제공 보증·조건부 의무 구성"
       >
@@ -298,6 +303,7 @@ export function ExposurePanels({ bundle }: { bundle: EvidenceBundle }) {
       </section>
       <div className="exposure-summary-column">
         <section
+          id="evidence-maturity-summary"
           className="panel exposure-maturity"
           aria-label="1년 내 만기 요약"
         >
@@ -353,7 +359,7 @@ export function ExposurePanels({ bundle }: { bundle: EvidenceBundle }) {
         </p>
       )}
       {source && (
-        <SourceDrawer
+        <ExposureSourceDrawer
           key={source.segment_id}
           bundle={bundle}
           source={source}
@@ -418,7 +424,7 @@ export function MaturityLadder({ bundle }: { bundle: EvidenceBundle }) {
           </p>
         )}
       {source && (
-        <SourceDrawer
+        <ExposureSourceDrawer
           key={source.segment_id}
           bundle={bundle}
           source={source}

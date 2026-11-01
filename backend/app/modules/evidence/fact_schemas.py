@@ -39,6 +39,8 @@ FieldKey = Literal[
     "case_count",
     "filing_date",
     "case_note",
+    "maturity_bucket",
+    "loan_period",
 ]
 
 
@@ -99,6 +101,8 @@ class FactInput(BaseModel):
     case_count: int | None = Field(default=None, ge=0)
     filing_date: date | None = None
     case_note: str | None = Field(default=None, min_length=1, max_length=2000)
+    maturity_bucket: Literal["M3", "M6", "M12", "Y2", "Y3", "OVER3", "UNDISCLOSED"] | None = None
+    loan_period: str | None = Field(default=None, min_length=1, max_length=200)
 
     @model_validator(mode="after")
     def kind_matches_category(self):
@@ -114,6 +118,10 @@ class FactInput(BaseModel):
         }
         if self.kind not in allowed[self.category]:
             raise ValueError("fact_kind_category_mismatch")
+        if self.kind not in {"guarantee", "borrowing_maturity"} and (
+            self.maturity_bucket or self.loan_period
+        ):
+            raise ValueError("maturity_metadata_kind_mismatch")
         if self.kind != "guarantee" and (self.obligation_type or self.project_count is not None):
             raise ValueError("guarantee_metadata_kind_mismatch")
         if self.kind != "litigation" and (

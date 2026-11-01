@@ -34,6 +34,7 @@ const composition = z.object({
   complete: z.boolean(),
 })
 const maturity = z.object({
+  availability_state: z.string().optional(),
   values: z.object({
     within: amount,
     beyond: amount,
@@ -66,6 +67,53 @@ const schema = z.object({
   equity: amount,
   ratio_percent: amount,
   maturity: z.object({ debt: maturity, obligation: maturity }),
+  maturity_ladder: z
+    .object({
+      state: z.enum([
+        'DISCLOSED',
+        'RECALCULATED',
+        'UNDISCLOSED',
+        'MATURITY_UNCONFIRMED',
+        'EXPLICIT_NONE',
+        'CONFLICT',
+        'PARTIAL',
+        'REVIEW_REQUIRED',
+        'NOT_DETECTED',
+        'AMOUNT_UNCONFIRMED',
+      ]),
+      bins: z.array(
+        z.object({
+          key: z.string(),
+          label: z.string(),
+          amount,
+          within_year: z.boolean(),
+        }),
+      ),
+      total: amount,
+      known_total: amount,
+      within_amount: amount,
+      within_percent: amount,
+      denominator_includes_undisclosed: z.literal(true),
+      reconciled: z.boolean(),
+      basis: z.array(z.string()),
+      sources: z.array(source),
+      items: z.array(
+        z.object({
+          label: z.string(),
+          amount: z.string(),
+          band: z.string(),
+          basis: z.string(),
+          maturity: z.string().nullable(),
+          loan_period: z.string().nullable(),
+          source,
+        }),
+      ),
+      unready_facts: z.number(),
+      absence_quotes: z.array(
+        z.object({ quote: z.string(), sources: z.array(source) }),
+      ),
+    })
+    .optional(),
   litigation: z.object({
     case_count: z.number().nullable(),
     claim: amount,

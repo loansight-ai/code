@@ -6,6 +6,7 @@ from decimal import localcontext
 from fastapi import HTTPException
 
 from app.modules.evidence.fact_sources import resolve
+from app.modules.evidence.maturity_ladder import BAND_PATTERNS
 from app.modules.evidence.service import fingerprint
 from app.modules.financial.domain import amount
 
@@ -93,6 +94,22 @@ async def validate(tools, fact):
         require("counterparty", fact.counterparty)
     if fact.maturity:
         require("maturity", fact.maturity)
+    if fact.maturity_bucket:
+        q = require("maturity_bucket")
+        if not any(re.search(BAND_PATTERNS[fact.maturity_bucket], normalize(s)) for s in q):
+            block(
+                "maturity_bucket",
+                "maturity_band_not_supported",
+                "중복되지 않는 공시 만기 구간의 인용이 필요합니다.",
+            )
+    if fact.loan_period:
+        q = require("loan_period", fact.loan_period)
+        if not any(re.search(r"대출(?:약정)?기간|차입기간", normalize(s)) for s in q):
+            block(
+                "loan_period",
+                "loan_period_context_required",
+                "사업장별 대출기간의 직접 인용이 필요합니다.",
+            )
     if fact.status:
         require("status", fact.status)
     if fact.case_note:

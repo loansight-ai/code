@@ -14,6 +14,7 @@ from app.modules.evidence.fact_models import EvidenceFact
 from app.modules.evidence.fact_schemas import FactInput
 from app.modules.evidence.fact_sources import resolve
 from app.modules.evidence.fact_validation import validate
+from app.modules.evidence.maturity_ladder import build_ladder
 
 TYPES = {
     "PF_GUARANTEE": "PF 대출보증",
@@ -269,7 +270,7 @@ def litigation(records, nonmonetary):
     }
 
 
-def build_summary(bundle, records, nonmonetary=(), equity=None):
+def build_summary(bundle, records, nonmonetary=(), equity=None, absences=(), unready=0):
     with localcontext() as ctx:
         ctx.prec = 60
         start, end = boundaries(bundle.period)
@@ -288,6 +289,35 @@ def build_summary(bundle, records, nonmonetary=(), equity=None):
         # Mixed tables can duplicate the same debt; do not silently combine them.
         if len({r["source"]["segment_id"] for r in debts}) > 1:
             debts = []
+        loans = unique_items([r for r in chosen if r["data"]["amount_role"] == "LOAN_BALANCE"])
+        ladder = build_ladder(
+            loans,
+            start,
+            provided["totals"]["loan_balance"],
+            complete=provided["complete"],
+            absences=absences,
+            unready=unready,
+            detected=bool(provided["rows"]),
+        )
+        obligation = maturity(loans, start, end)
+        allocated = any(item["band"] != "UNDISCLOSED" for item in ladder["items"])
+        by_band = {row["key"]: row["amount"] for row in ladder["bins"]}
+        obligation.update(
+            total=ladder["total"],
+            within_percent=ladder["within_percent"],
+            sources=ladder["sources"],
+            availability_state=ladder["state"],
+        )
+        obligation["values"] = {
+            "within": ladder["within_amount"],
+            "beyond": text(
+                sum((Decimal(by_band[k] or 0) for k in ("Y2", "Y3", "OVER3")), Decimal(0))
+            )
+            if allocated
+            else None,
+            "undisclosed": by_band["UNDISCLOSED"],
+            "overdue": by_band.get("OVERDUE", "0") if loans else None,
+        }
         return {
             "bundle_id": str(bundle.id),
             "bundle_revision": bundle.fingerprint,
@@ -303,12 +333,9 @@ def build_summary(bundle, records, nonmonetary=(), equity=None):
             "ratio_percent": text(ratio),
             "maturity": {
                 "debt": maturity(unique_items(debts), start, end),
-                "obligation": maturity(
-                    unique_items([r for r in chosen if r["data"]["amount_role"] == "LOAN_BALANCE"]),
-                    start,
-                    end,
-                ),
+                "obligation": obligation,
             },
+            "maturity_ladder": ladder,
             "litigation": litigation(records, nonmonetary),
         }
 
@@ -335,34 +362,36 @@ async def read_summary(db, tools, database):
     for row in rows:
         if row.state == "APPROVED":
             conflicts[row.comparison_key].add(row.value_key)
-    records, nonmonetary, excluded = [], [], 0
+    records, nonmonetary, absences, excluded, unready = [], [], [], 0, 0
     for row in rows:
         if row.data["kind"] not in {"guarantee", "borrowing_maturity", "litigation"}:
             continue
+        provided_fact = row.data["kind"] == "guarantee" and row.data["direction"] == "PROVIDED"
         if (
             row.state != "APPROVED"
             or row.data.get("period") != tools.bundle.period
             or len(conflicts[row.comparison_key]) > 1
         ):
             excluded += 1
+            unready += int(provided_fact)
             continue
         fact = FactInput.model_validate(row.data)
         checked = await validate(tools, fact)
-        if (
-            checked["status"] != "CITATIONS_VALID"
-            or checked["source_digest"] != row.validation.get("source_digest")
-            or fact.detection != "DETECTED"
+        if checked["status"] != "CITATIONS_VALID" or checked["source_digest"] != row.validation.get(
+            "source_digest"
         ):
             excluded += 1
+            unready += int(provided_fact)
             continue
         sid = fact.amount.cell.segment_id if fact.amount else fact.citations[0].segment_id
         source = await resolve(tools, sid)
         ref = {"segment_id": str(sid), "title": source["title"], "scope": source["scope"]}
         if source["scope"] != tools.bundle.scope:
             excluded += 1
+            unready += int(provided_fact)
             continue
         entry = {"data": row.data, "source": ref, "value": decimal(checked["normalized_amount"])}
-        if fact.kind == "litigation":
+        if fact.kind in {"litigation", "guarantee"}:
             references = {str(sid): ref}
             for cite in fact.citations:
                 key = str(cite.segment_id)
@@ -374,12 +403,18 @@ async def read_summary(db, tools, database):
                         "scope": cited["scope"],
                     }
             entry["sources"] = list(references.values())
+        if fact.detection == "EXPLICITLY_NONE":
+            if provided_fact:
+                absences.append(entry)
+            continue
         if not fact.amount:
             nonmonetary.append(entry)
+            unready += int(provided_fact)
         elif fact.amount.currency == "KRW" and entry["value"] is not None:
             records.append(entry)
         else:
             excluded += 1
+            unready += int(provided_fact)
     equity = None
     b = tools.bundle
     # The immutable CSV has annual rows; non-December periods cannot be inferred.
@@ -406,6 +441,8 @@ async def read_summary(db, tools, database):
                 r["data"].get("obligation_type"),
                 r["data"].get("aggregation_level"),
                 r["data"].get("maturity"),
+                r["data"].get("maturity_bucket"),
+                r["data"].get("loan_period"),
             )
         )
     clean = []
@@ -422,6 +459,9 @@ async def read_summary(db, tools, database):
             clean.append(r)
         else:
             excluded += 1
-    result = build_summary(b, clean, nonmonetary, equity)
+            unready += int(
+                r["data"]["kind"] == "guarantee" and r["data"]["direction"] == "PROVIDED"
+            )
+    result = build_summary(b, clean, nonmonetary, equity, absences, unready)
     result["excluded_facts"] = excluded
     return result

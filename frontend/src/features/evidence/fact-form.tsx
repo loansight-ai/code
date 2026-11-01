@@ -128,6 +128,8 @@ export function FactForm({
                 case_count: null,
                 filing_date: null,
                 case_note: null,
+                maturity_bucket: null,
+                loan_period: null,
               })
             }}
           >
@@ -250,6 +252,44 @@ export function FactForm({
                 <option value="TOTAL">총계행</option>
               </select>
             </label>
+            {['guarantee', 'borrowing_maturity'].includes(data.kind) && (
+              <>
+                <label>
+                  공시 만기 구간{' '}
+                  <select
+                    value={data.maturity_bucket ?? ''}
+                    onChange={(e) =>
+                      patch({ maturity_bucket: e.target.value || null })
+                    }
+                  >
+                    <option value="">미확보</option>
+                    <option value="M3">3개월 이내</option>
+                    <option value="M6">3개월 초과~6개월</option>
+                    <option value="M12">6개월 초과~12개월</option>
+                    <option value="Y2">1년 초과~2년</option>
+                    <option value="Y3">2년 초과~3년</option>
+                    <option value="OVER3">3년 초과</option>
+                    <option value="UNDISCLOSED">공시상 만기 미기재</option>
+                  </select>
+                </label>
+                <label>
+                  대출기간{' '}
+                  <input
+                    maxLength={200}
+                    placeholder="2025.04~2028.02"
+                    value={data.loan_period ?? ''}
+                    onChange={(e) =>
+                      patch({ loan_period: e.target.value || null })
+                    }
+                  />
+                </label>
+                <p>
+                  공시된 독립 구간을 인용합니다. 구간표가 없을 때 확인된
+                  만기일·대출기간으로 계산하며, 단순 미확보를 ‘공시상 만기
+                  미기재’로 기록하지 않습니다.
+                </p>
+              </>
+            )}
             {data.kind === 'guarantee' && (
               <>
                 <label>

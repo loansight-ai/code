@@ -1,13 +1,19 @@
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router'
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router'
 import { z } from 'zod'
 import { SessionContext } from '../features/session/session-context'
 import { ApiError } from '../features/session/api'
 import { getBundle, openBundle } from '../features/evidence/bundle-api'
 import { BundlePanel } from '../features/evidence/bundle-panel'
 import { ExtractionWorkspace } from '../features/evidence/extraction-workspace'
-import { MaturityLadder } from '../features/evidence/exposure-panels'
+import { PfMaturityPanel } from '../features/risk/pf-maturity-panel'
 import { LiveSignals } from '../features/risk/live-signals'
 import { PredictionWorkspace } from '../features/analysis/workspace-panels'
 import { useCollectedData } from '../features/company/collected-api'
@@ -85,6 +91,7 @@ export function EvidenceBundlePage() {
   const { bundleId = '', section = 'evidence' } = useParams()
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') ?? 'notes'
+  const { hash } = useLocation()
   const session = useContext(SessionContext)
   const owner =
     session?.phase === 'ready' ? session.session?.workspace_id : undefined
@@ -105,6 +112,21 @@ export function EvidenceBundlePage() {
     importId: data?.collection_import_id ?? undefined,
     enabled: !!data?.collection_import_id && section === 'prediction',
   })
+  useEffect(() => {
+    const anchor = hash.slice(1)
+    if (
+      owner &&
+      data &&
+      section === 'evidence' &&
+      tab === 'notes' &&
+      [
+        'evidence-guarantees',
+        'evidence-maturity-summary',
+        'evidence-litigation',
+      ].includes(anchor)
+    )
+      document.getElementById(anchor)?.scrollIntoView({ block: 'start' })
+  }, [owner, data, section, tab, hash])
   if (!valid || !owner || query.isPending || query.isError || !data)
     return (
       <main className="page">
@@ -132,8 +154,10 @@ export function EvidenceBundlePage() {
             <h1>주석 확인과 위험징후</h1>
             <p className="extraction-page-description">
               {data.company_name ?? data.corp_code} · {data.period} ·{' '}
-              {data.scope} · 공통 추출 항목의 검출 상태와 원문 근거를
-              확인합니다.
+              {data.scope} ·{' '}
+              {tab === 'signals'
+                ? '보증·조건부 의무의 만기 집중과 공시 근거를 확인합니다.'
+                : '공통 추출 항목의 검출 상태와 원문 근거를 확인합니다.'}
             </p>
           </div>
           <nav className="extraction-tabs" aria-label="주석 확인 메뉴">
@@ -159,16 +183,18 @@ export function EvidenceBundlePage() {
         </div>
         {tab === 'signals' ? (
           <div className="extraction-signals">
-            {params.get('detail') === 'maturity' && (
-              <MaturityLadder
-                key={`maturity:${owner}:${data.bundle_revision}`}
+            <PfMaturityPanel
+              key={`maturity:${owner}:${data.bundle_revision}`}
+              bundle={data}
+              showDetails={params.get('detail') === 'maturity'}
+            />
+            <details className="pf-rule-details">
+              <summary>위험규칙 입력·검수 상태</summary>
+              <LiveSignals
+                key={`${owner}:${data.bundle_revision}`}
                 bundle={data}
               />
-            )}
-            <LiveSignals
-              key={`${owner}:${data.bundle_revision}`}
-              bundle={data}
-            />
+            </details>
           </div>
         ) : tab === 'summary' ? (
           <section className="panel extraction-summary">

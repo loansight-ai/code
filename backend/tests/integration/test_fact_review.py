@@ -239,6 +239,128 @@ async def test_litigation_detail_fields_require_direct_evidence(client, fact_cor
     }
 
 
+async def test_reviewed_maturity_bands_loan_period_and_explicit_absence(
+    client, fact_corpus, environment
+):
+    _, url, _, original = fact_corpus
+    _, _, database = environment
+    absence_text = "당기 시험회사가 제공한 지급보증은 해당사항 없음."
+    entries = list(
+        segments(
+            original["report_id"],
+            "note_section",
+            {
+                "id": "maturity-ladder",
+                "seq": "11",
+                "note_title": "보증 만기",
+                "body": absence_text,
+                "tables": json.dumps(
+                    [
+                        {
+                            "caption": "시험회사 제공 보증·조건부 의무 만기 구간 및 대출기간",
+                            "unit": "단위: 백만원",
+                            "cells": [
+                                ["유형", "당기 대출잔액", "만기 구간", "대출기간"],
+                                ["PF 대출보증", "100", "3개월 이내", "-"],
+                                ["자금보충", "50", "-", "25.04~28.02"],
+                            ],
+                        }
+                    ]
+                ),
+            },
+        )
+    )
+    async with database.transaction() as db:
+        for entry in entries:
+            db.add(EvidenceSegment(**entry))
+    body = next(e for e in entries if e["kind"] == "text")
+    table = next(e for e in entries if e["kind"] == "table")
+    negative = await create(
+        client,
+        url,
+        {
+            "category": "off_balance",
+            "kind": "guarantee",
+            "statement": "제공 지급보증 없음",
+            "subject": "시험회사",
+            "direction": "PROVIDED",
+            "period": "2025.12",
+            "detection": "EXPLICITLY_NONE",
+            "citations": [
+                {"segment_id": str(body["id"]), "field": f, "quote": absence_text}
+                for f in ["statement", "subject", "direction", "period", "absence"]
+            ],
+        },
+    )
+    opening = (await client.post(url + f"/facts/{negative['id']}/open")).json()
+    approved, _ = await decision(client, url, negative, opening=opening["opening_id"])
+    assert approved.status_code == 200, approved.text
+    negative = approved.json()["fact"]
+    absence = (await client.get(url + "/exposure-summary")).json()["maturity_ladder"]
+    assert absence["state"] == "EXPLICIT_NONE" and absence["total"] is None
+    assert absence["absence_quotes"][0]["quote"] == absence_text
+    for row, value, kind, extra in [
+        (1, "100", "PF_GUARANTEE", {"maturity_bucket": "M3"}),
+        (2, "50", "FUNDING_SUPPORT", {"loan_period": "25.04~28.02"}),
+    ]:
+        fields = [
+            "statement",
+            "subject",
+            "direction",
+            "period",
+            "obligation_type",
+            "aggregation_level",
+            "amount_role",
+            "amount",
+            "unit",
+            *extra,
+        ]
+        candidate = await create(
+            client,
+            url,
+            {
+                "category": "off_balance",
+                "kind": "guarantee",
+                "statement": table["data"]["table"]["cells"][row][0],
+                "subject": "시험회사",
+                "direction": "PROVIDED",
+                "period": "2025.12",
+                "obligation_type": kind,
+                "aggregation_level": "DETAIL",
+                "amount_role": "LOAN_BALANCE",
+                **extra,
+                "amount": {
+                    "raw_value": value,
+                    "currency": "KRW",
+                    "unit": "백만원",
+                    "cell": {"segment_id": str(table["id"]), "row": row, "column": 1},
+                },
+                "citations": [
+                    {"segment_id": str(table["id"]), "field": f, "quote": table["text"]}
+                    for f in fields
+                ],
+            },
+        )
+        assert candidate["validation"]["status"] == "CITATIONS_VALID", candidate["validation"]
+        opened = (await client.post(url + f"/facts/{candidate['id']}/open")).json()
+        response, _ = await decision(client, url, candidate, opening=opened["opening_id"])
+        assert response.status_code == 200, response.text
+    conflict = (await client.get(url + "/exposure-summary")).json()["maturity_ladder"]
+    assert conflict["state"] == "CONFLICT" and conflict["within_percent"] is None
+    rejected, _ = await decision(client, url, negative, "REJECT")
+    assert rejected.status_code == 200, rejected.text
+    summary = (await client.get(url + "/exposure-summary")).json()
+    ladder = summary["maturity_ladder"]
+    assert ladder["state"] == "RECALCULATED"
+    assert ladder["total"] == summary["provided"]["totals"]["loan_balance"] == "150000000"
+    assert (
+        ladder["within_amount"]
+        == summary["maturity"]["obligation"]["values"]["within"]
+        == "100000000"
+    )
+    assert ladder["bins"][4]["amount"] == "50000000"
+
+
 async def test_review_open_required_audited_idempotent_and_revision(client, fact_corpus):
     _, url, data, _ = fact_corpus
     fact = await create(client, url, data)
