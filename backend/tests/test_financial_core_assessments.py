@@ -1,8 +1,14 @@
 import copy
 import unittest
+from decimal import Decimal
 from unittest.mock import patch
 
-from app.modules.financial.core_assessments import assess_core_metrics, with_core_assessments
+from app.modules.financial.core_assessments import (
+    assess_core_metrics,
+    boundary_proximity,
+    relative_band,
+    with_core_assessments,
+)
 from app.modules.financial.core_benchmarks import build_benchmark, dataset, with_core_benchmark
 from app.modules.financial.domain import map_facts
 
@@ -82,29 +88,31 @@ class CoreAssessmentsTest(unittest.TestCase):
         self.assertEqual(coverage["q3"], "18.195")
         self.assertEqual(coverage["aggregate"], "5.3733")
 
-    def test_exact_quartile_and_median_boundaries_and_reverse_debt_direction(self):
+    def test_exact_quartile_and_median_boundaries_use_value_order_for_debt_too(self):
         cases = [
-            ("current_ratio", "94", "CAUTION"),
-            ("current_ratio", "94.448537", "WATCH"),
-            ("current_ratio", "166.550495", "REFERENCE_RANGE"),
-            ("debt_ratio", "102", "CAUTION"),
-            ("debt_ratio", "101.992157", "WATCH"),
-            ("debt_ratio", "53.131086", "REFERENCE_RANGE"),
+            ("current_ratio", "94", "하위 25% 구간"),
+            ("current_ratio", "94.448537", "25~50% 구간"),
+            ("current_ratio", "166.550495", "50~75% 구간"),
+            ("current_ratio", "349.47898", "50~75% 구간"),
+            ("current_ratio", "349.478981", "상위 25% 구간"),
+            ("debt_ratio", "102", "상위 25% 구간"),
+            ("debt_ratio", "101.992157", "50~75% 구간"),
+            ("debt_ratio", "53.131086", "50~75% 구간"),
         ]
         for key, current, expected in cases:
             with self.subTest(key=key, current=current):
                 item = assessment(result(key, current), key)
-                self.assertEqual(item["status"], expected)
+                self.assertEqual(item["status"], "RELATIVE_POSITION")
+                self.assertEqual(item["label"], expected)
                 self.assertTrue(item["comparison_allowed"])
                 self.assertEqual(item["reference"]["kind"], "INDUSTRY_MEDIAN")
 
     def test_fixed_reference_no_longer_drives_status(self):
-        # 118.4 < old 150 reference, but > supplied Q1: watch, not caution.
-        self.assertEqual(assessment(result())["status"], "WATCH")
+        self.assertEqual(assessment(result())["label"], "25~50% 구간")
         # 2.5 < old 3x reference but > actual median 2.01x.
         self.assertEqual(
-            assessment(result("interest_coverage", "2.5"), "interest_coverage")["status"],
-            "REFERENCE_RANGE",
+            assessment(result("interest_coverage", "2.5"), "interest_coverage")["label"],
+            "50~75% 구간",
         )
 
     def test_scope_period_formula_lease_and_property_mismatches_are_on_hold(self):
@@ -113,14 +121,20 @@ class CoreAssessmentsTest(unittest.TestCase):
             result(period="2025.06"),
             result("debt_ratio", "200", lease="exclude"),
             result("operating_roa", "1"),
-            result(industry="부동산 임대"),
+            result(
+                "interest_coverage",
+                "1",
+                industry="부동산 임대",
+                fiscal_year="2016",
+                period="2016.12",
+            ),
             result(industry=None),
         ]
         for data in cases:
             key = data["metrics"][0]["key"]
             with self.subTest(context=data["context"], key=key, industry=data["industry"]):
                 item = assessment(data, key)
-                self.assertEqual(item["status"], "NOT_EVALUATED")
+                self.assertIn(item["status"], ("BENCHMARK_PENDING", "NOT_COMPARABLE"))
                 self.assertFalse(item["comparison_allowed"])
 
     def test_nonpositive_denominators_and_approximate_values_do_not_get_ranked(self):
@@ -144,9 +158,10 @@ class CoreAssessmentsTest(unittest.TestCase):
             data = result("debt_ratio", "-10")
             next(f for f in data["facts"] if f["key"] == "equity")["value"] = value
             item = assessment(data, "debt_ratio")
-            self.assertEqual(item["status"], "WARNING")
+            self.assertEqual(item["status"], "CAPITAL_REVIEW")
+            self.assertEqual(item["label"], "자본잠식 여부 확인 필요")
             self.assertFalse(item["comparison_allowed"])
-            self.assertIn("완전자본잠식", item["reason"])
+            self.assertIsNone(item["band"])
         data = result("debt_ratio", "50")
         data["facts"].append(
             {"key": "capital", "period": "current", "value": "200", "state": "CONFIRMED"}
@@ -159,7 +174,7 @@ class CoreAssessmentsTest(unittest.TestCase):
             {"key": "operating_profit", "period": "current", "value": "-1", "state": "CONFIRMED"}
         )
         item = assessment(data, "operating_margin")
-        self.assertEqual(item["status"], "WATCH")
+        self.assertEqual(item["status"], "RELATIVE_POSITION")
         self.assertIn("영업적자", item["flags"])
 
     def test_missing_year_and_quartile_are_not_filled_with_zero_or_other_years(self):
@@ -185,7 +200,93 @@ class CoreAssessmentsTest(unittest.TestCase):
             repeated = with_core_assessments(decorated)
         self.assertEqual(repeated, decorated)
         self.assertIsNone(with_core_assessments(None))
-        self.assertIn("셀별 출처", decorated["core_ratio_benchmark"]["source_note"])
+        self.assertIn("ECOS/OFS 출처", decorated["core_ratio_benchmark"]["source_note"])
+
+    def test_provenance_sample_size_and_unrounded_ci_precision(self):
+        benchmark = build_benchmark(result())
+        liquidity = benchmark["metrics"][0]
+        self.assertEqual(liquidity["source_kind"], "OFS")
+        self.assertEqual(liquidity["sample_count"], 1676)
+        self.assertEqual(liquidity["q1_ci_low"], "90.27952073798397")
+        self.assertEqual(liquidity["resampling_change_rate"], "0.026611455847255373")
+        coverage = next(m for m in benchmark["metrics"] if m["key"] == "interest_coverage")
+        self.assertEqual(coverage["source_kind"], "ECOS")
+        self.assertIsNone(coverage["sample_count"])
+        retail = build_benchmark(result("interest_coverage", industry="도소매"))
+        row = next(m for m in retail["metrics"] if m["key"] == "interest_coverage")
+        self.assertEqual(row["median"], "1.17361476")
+        self.assertEqual(Decimal(row["q1_ci_low"]), Decimal("-279.97352623662334") / 100)
+        self.assertEqual(row["resampling_change_rate"], "0.08576024844720496")
+
+    def test_all_three_boundaries_and_valid_order_are_required(self):
+        for field in ("q1", "median", "q3"):
+            data = with_core_benchmark(result())
+            data["core_ratio_benchmark"]["metrics"][0][field] = None
+            self.assertEqual(assessment(data)["label"], "비교 기준 확인 중")
+        data = with_core_benchmark(result())
+        data["core_ratio_benchmark"]["metrics"][0]["q1"] = "999"
+        self.assertFalse(assessment(data)["comparison_allowed"])
+
+    def test_equal_boundaries_apply_conditions_in_order(self):
+        d = Decimal
+        for value, expected in (("99.99999", 0), ("100", 2), ("100.00001", 3)):
+            self.assertEqual(relative_band(d(value), d(100), d(100), d(100)), expected)
+
+    def test_ci_endpoints_ecos_exclusion_and_invalid_ci_internal_state(self):
+        data = with_core_benchmark(result())
+        row = data["core_ratio_benchmark"]["metrics"][0]
+        for point in (row["q1_ci_low"], row["q1_ci_high"]):
+            self.assertEqual(boundary_proximity(Decimal(point), row), "NEAR")
+        self.assertEqual(boundary_proximity(Decimal("999999"), row), "OUTSIDE")
+        row["q1_ci_low"], row["q1_ci_high"] = "20", "10"
+        self.assertEqual(boundary_proximity(Decimal("999999"), row), "UNKNOWN")
+        for field in ("q1", "median", "q3"):
+            row[f"{field}_ecos"] = True
+        self.assertEqual(boundary_proximity(Decimal("15"), row), "NOT_APPLICABLE")
+        data["metrics"][0]["values"][0]["value"] = "15"
+        self.assertIsNone(assessment(data)["boundary_note"])
+
+    def test_rental_rows_use_actual_industry_and_partial_rows_stay_pending(self):
+        current = assessment(result(industry="부동산 임대"))
+        self.assertTrue(current["comparison_allowed"])
+        old = assessment(
+            result(
+                "interest_coverage",
+                "1",
+                industry="부동산 임대",
+                fiscal_year="2016",
+                period="2016.12",
+            ),
+            "interest_coverage",
+        )
+        self.assertEqual(old["label"], "비교 기준 확인 중")
+        self.assertIn("부동산업", old["reason"])
+        roa = assessment(result("operating_roa", "1", industry="부동산 임대"), "operating_roa")
+        self.assertIn("손익기간 미확인", roa["reason"])
+
+    def test_comparison_uses_formula_inputs_before_display_rounding(self):
+        data = with_core_benchmark(result(current="100"))
+        data["facts"].append(
+            {
+                "key": "current_assets",
+                "period": "current",
+                "value": "99.99999",
+                "state": "CONFIRMED",
+            }
+        )
+        row = data["core_ratio_benchmark"]["metrics"][0]
+        row.update(q1="100", median="150", q3="200")
+        self.assertEqual(assessment(data)["label"], "하위 25% 구간")
+
+    def test_legacy_pinned_display_upgrades_without_mutating_saved_snapshot(self):
+        data = result()
+        data["core_ratio_benchmark"] = {"version": "old-csv-hash", "metrics": []}
+        original = copy.deepcopy(data)
+        decorated = with_core_assessments(data)
+        self.assertEqual(data, original)
+        self.assertEqual(
+            decorated["core_ratio_benchmark"]["source_file"], "2016-2025_화면비교기준.csv"
+        )
 
 
 if __name__ == "__main__":

@@ -294,6 +294,10 @@ async def test_core_quartiles_are_pinned_and_legacy_decoration_does_not_write(
     assert benchmark["industry_code"] == "C10-34"
     liquidity = next(m for m in benchmark["metrics"] if m["key"] == "current_ratio")
     assert liquidity["median"] == "166.550495"
+    assert benchmark["source_file"] == "2016-2025_화면비교기준.csv"
+    assert liquidity["sample_count"] == 1676
+    assert liquidity["q1_ecos"] is False
+    assert liquidity["q1_ci_low"] == "90.27952073798397"
     assert (
         next(a for a in result["core_card_assessments"] if a["key"] == "current_ratio")[
             "reference"
@@ -311,6 +315,17 @@ async def test_core_quartiles_are_pinned_and_legacy_decoration_does_not_write(
     async with database.transaction() as db:
         run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
         assert "core_ratio_benchmark" not in run.result
+
+    # Old pinned display data upgrades on read; original saved JSON remains intact.
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        run.result = {**run.result, "core_ratio_benchmark": {"version": "old", "metrics": []}}
+    upgraded = (await client.get(url)).json()["result"]
+    assert upgraded["core_ratio_benchmark"] == benchmark
+    assert upgraded["facts"] == saved_facts
+    async with database.transaction() as db:
+        run = await db.get(FinancialRun, UUID(submitted["analysis_run_id"]))
+        assert run.result["core_ratio_benchmark"]["version"] == "old"
 
 
 async def test_full_flow_atomic_facts_provenance_and_workspace_isolation(

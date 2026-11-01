@@ -10,7 +10,7 @@ const fixture = (name: string) =>
   )
 const result = {
   ...fixture('financial-result'),
-  ...fixture('core-ratio-benchmark'),
+  ...fixture('relative-ratio-benchmark'),
   bok_benchmark: fixture('bok-benchmark'),
 }
 const id = result.analysis_run_id
@@ -62,11 +62,16 @@ test('core cards display quartile positions and accessible five-year details', a
     name: '공통 핵심 5개 비율',
     exact: true,
   })
-  await expect(section.getByText('업종 중앙값 · 2025 166.6%')).toBeVisible()
-  await expect(section.getByText('참고 150.0%')).toBeVisible()
-  await expect(section.getByText('업종 중앙값 · 2025 2.0배')).toBeVisible()
+  await expect(section.getByText('중앙값 166.6%')).toBeVisible()
+  await expect(section.getByText('OFS 수집 표본 1,676개 기업')).toBeVisible()
+  await expect(section.getByText('중앙값 2.0배')).toBeVisible()
   await expect(section.getByText(/자사는 기말 총자산/)).toBeVisible()
-  expect(await section.locator('.vs-core-quartile-risk').count()).toBe(4)
+  expect(await section.locator('.vs-core-quartile-risk').count()).toBe(0)
+  await expect(
+    section.getByText(
+      '경계 부근: 표본 구성에 따라 상대 구간이 달라질 수 있습니다.',
+    ),
+  ).toBeVisible()
   await section.screenshot({ path: testInfo.outputPath('core-quartiles.png') })
   await section.getByRole('button', { name: '이자보상비율 상세 보기' }).click()
   const dialog = page.getByRole('dialog', { name: '이자보상비율 산식' })
@@ -77,7 +82,11 @@ test('core cards display quartile positions and accessible five-year details', a
   ).toHaveCount(6)
   await expect(
     dialog.getByRole('row', { name: /업종 비교자료 출처/ }),
-  ).toContainText('CSV에 셀별 출처')
+  ).toContainText('ECOS/OFS 출처')
+  const current = dialog.getByRole('region', {
+    name: '이자보상비율 현재 비교 기준',
+  })
+  await expect(current.getByText('해당 없음')).toHaveCount(3)
   await page.screenshot({
     path: testInfo.outputPath('core-quartile-detail.png'),
   })
@@ -91,4 +100,38 @@ test('core cards display quartile positions and accessible five-year details', a
     ),
   ).toBe(true)
   expect(errors).toEqual([])
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(section.getByText('OFS 수집 표본 1,676개 기업')).toBeVisible()
+  expect(
+    await section.evaluate(
+      (node) =>
+        node.scrollWidth <= node.clientWidth + 1 &&
+        node.getBoundingClientRect().right <= innerWidth + 1,
+    ),
+  ).toBe(true)
+  await section.screenshot({
+    path: testInfo.outputPath('relative-ratios-mobile.png'),
+  })
+  await section.getByRole('button', { name: '유동비율 상세 보기' }).click()
+  const mobileDialog = page.getByRole('dialog', { name: '유동비율 산식' })
+  await expect(mobileDialog.getByText(/평균 2.7% 변경/)).toBeVisible()
+  expect(
+    await mobileDialog.evaluate(
+      (node) => node.scrollWidth <= node.clientWidth + 1,
+    ),
+  ).toBe(true)
+  expect(
+    await mobileDialog
+      .locator('.core-relative-detail')
+      .evaluate(
+        (node) =>
+          node.getBoundingClientRect().right <= innerWidth - 16 &&
+          [...node.querySelectorAll('p')].every(
+            (p) => p.scrollWidth <= p.clientWidth + 1,
+          ),
+      ),
+  ).toBe(true)
+  await page.screenshot({
+    path: testInfo.outputPath('relative-ratios-mobile-detail.png'),
+  })
 })

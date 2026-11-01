@@ -422,6 +422,56 @@
   background: #b42318;
   opacity: 0.14;
 }
+.vs-core-relative-label {
+  display: block;
+  color: #263f58;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.vs-core-relative .vs-core-bullet-area {
+  margin-top: 8px;
+  min-height: 90px;
+}
+.vs-core-source {
+  display: grid;
+  gap: 2px;
+  color: #737b75;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.vs-core-relative-bullet .vs-core-current-bar {
+  color: #385e7c;
+}
+.vs-core-boundary-marker {
+  top: -3px;
+  height: 17px;
+  width: 1px;
+  background: #adb8bd;
+}
+.vs-core-boundary-note {
+  margin: 7px 0 0;
+  color: #526877;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.core-relative-detail {
+  min-width: 0;
+  max-width: 100%;
+}
+.core-relative-detail .formula-definition {
+  table-layout: auto;
+}
+.core-relative-detail p {
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.core-relative-detail td small {
+  display: block;
+  font-size: 10px;
+  color: #7b837e;
+}
 .vs-core-reference-row {
   display: flex;
   justify-content: space-between;

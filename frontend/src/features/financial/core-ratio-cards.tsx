@@ -2,6 +2,7 @@ import { DataBadge, MetricStatus, MetricValue } from './data-status'
 import { dataState, displayedMetricValue } from './data-state'
 import type { FinancialMetric, FinancialResult } from './api'
 import { bokGap, bokValue } from './bok-data'
+import { RelativeRatioCards } from './relative-ratio-cards'
 
 const specs = [
   {
@@ -76,6 +77,10 @@ const statusLabels = {
   CONTEXT_REQUIRED: '업종 확인',
   WATCH: '관찰',
   REFERENCE_RANGE: '중앙값 이상',
+  RELATIVE_POSITION: '상대 구간',
+  BENCHMARK_PENDING: '비교 기준 확인 중',
+  NOT_COMPARABLE: '비교할 수 없음',
+  CAPITAL_REVIEW: '자본잠식 여부 확인 필요',
 }
 const statusTones = {
   WARNING: 'warning',
@@ -88,6 +93,10 @@ const statusTones = {
   CONTEXT_REQUIRED: 'unassessed',
   WATCH: 'watch',
   REFERENCE_RANGE: 'unassessed',
+  RELATIVE_POSITION: 'unassessed',
+  BENCHMARK_PENDING: 'unassessed',
+  NOT_COMPARABLE: 'unassessed',
+  CAPITAL_REVIEW: 'unassessed',
 }
 
 export function CoreRatioCards({
@@ -102,6 +111,11 @@ export function CoreRatioCards({
   const usesEcos =
     !demo &&
     specs.some((spec) => bokValue(result, spec.key)?.source_kind === 'ECOS')
+  if (
+    !demo &&
+    result.core_ratio_benchmark?.contract_version === 'core-relative-bands-v1'
+  )
+    return <RelativeRatioCards result={result} onFormula={onFormula} />
   return (
     <section className="vs-panel vs-core-panel" aria-labelledby="vs-core-title">
       <div className="vs-heading">
