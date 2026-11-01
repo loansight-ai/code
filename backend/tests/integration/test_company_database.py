@@ -43,7 +43,6 @@ async def test_csv_filter_uses_exists_before_count_and_page(catalog, environment
                         fiscal_year=year,
                         scope=scope,
                         receipt_no="20260320000001",
-                        data={},
                     )
                 )
     url = "/api/v1/companies"

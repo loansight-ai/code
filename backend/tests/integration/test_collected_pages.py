@@ -53,23 +53,18 @@ async def collected(environment, monkeypatch):
                 fiscal_year=2025,
                 scope="CFS",
                 receipt_no=RECEIPT,
-                data={
-                    "corp_code": CORP,
-                    "rcept_no": RECEIPT,
-                    "bsns_year": "2025",
-                    "fs_div": "CFS",
-                    "bs_ca": "30000000000",
-                    "bs_cl": "20000000000",
-                    "is_rev": "12000000000",
-                    "is_int_exp": "0",
-                },
+                bs_ca="30000000000",
+                bs_cl="20000000000",
+                is_rev="12000000000",
+                is_int_exp="0",
             )
         )
         session.add(
             CollectedEventCoverage(
                 import_id=import_id,
                 corp_code=CORP,
-                data={"corp_code": CORP, "audit_doc_ok": 0, "audit_doc_reports": 1},
+                audit_doc_ok=0,
+                audit_doc_reports=1,
             )
         )
         session.add(
@@ -80,7 +75,7 @@ async def collected(environment, monkeypatch):
                 receipt_no=RECEIPT,
                 event_date=date(2026, 3, 18),
                 verified=None,
-                data={"corp_code": CORP, "verified": None, "detail": "검수 전"},
+                detail="검수 전",
             )
         )
 
