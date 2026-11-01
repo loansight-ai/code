@@ -18,6 +18,8 @@ import {
 } from './fact-api'
 import { FactForm } from './fact-form'
 import type { EvidenceBundle } from './bundle-api'
+import { StatusBadge } from '../../shared/components/status-badge'
+import { ClipboardCheck, ArrowRight } from 'lucide-react'
 
 const states = {
   PENDING: '검수 대기',
@@ -92,109 +94,139 @@ export function FactPanel({ bundle }: { bundle: EvidenceBundle }) {
     onSuccess: () => client.invalidateQueries({ queryKey: key }),
   })
   return (
-    <section className="panel" aria-label="구조화 사실 검수">
-      <h2>구조화 사실 검수</h2>
-      <p>
-        덤프와 구조화 HTML에서 추출한 사실을 함께 검토합니다. 승인은 사실별로
-        기록되며, 예측 모델 투입은 보류됩니다.
-      </p>
-      <Button disabled={audit.isPending} onClick={() => audit.mutate()}>
-        덤프 감사기록을 후보로 가져오기
-      </Button>{' '}
-      <Button
-        disabled={!extraction.data?.available || running || start.isPending}
-        onClick={() => start.mutate()}
-      >
-        Codex로 사실 후보 추출
-      </Button>
-      {!extraction.data?.available && (
-        <p>Codex 추출은 서버 인증·실행 제한 설정 후 사용할 수 있습니다.</p>
-      )}
-      <p>검색한 원문의 ‘사실 후보 작성’에서 직접 추가할 수도 있습니다.</p>
-      {(audit.isError || start.isError) && (
-        <p role="alert">{reviewError(audit.error ?? start.error)}</p>
-      )}
-      {audit.isSuccess && (
-        <p>감사기록 후보를 확인했습니다. 같은 후보를 중복 저장하지 않습니다.</p>
-      )}
-      {extraction.data?.run && (
-        <div>
-          <p>
-            사실 추출 작업: {extraction.data.run.status}
-            {running ? ' · 실행 중' : ''}
-          </p>
-          {extraction.data.run.result && (
-            <>
-              <p>
-                저장 후보 {extraction.data.run.result.candidate_count ?? 0}개 ·
-                추출 범위{' '}
-                {extraction.data.run.result.execution_status === 'COMPLETED'
-                  ? '탐색 완료'
-                  : '일부만 확인'}
-              </p>
-              <p>{extraction.data.run.result.limitations}</p>
-              {extraction.data.run.result.stop_reason && (
-                <p>중단 사유: {extraction.data.run.result.stop_reason}</p>
-              )}
-            </>
-          )}
-          {extraction.data.run.error_code && (
-            <p>작업 오류: {extraction.data.run.error_code}</p>
-          )}
+    <section className="panel bundle-facts-panel" aria-label="구조화 사실 검수">
+      <div className="panel-heading">
+        <h2>
+          <ClipboardCheck size={18} aria-hidden="true" />
+          구조화 사실 검수
+        </h2>
+        <StatusBadge>
+          {list.data ? `목록 ${list.data.facts.length}개` : '검수 대기'}
+        </StatusBadge>
+      </div>
+      <div className="bundle-panel-body">
+        <p className="bundle-intro">
+          덤프와 구조화 HTML에서 추출한 사실을 함께 검토합니다. 승인은 사실별로
+          기록되며, 예측 모델 투입은 보류됩니다.
+        </p>
+        <div className="bundle-action-row">
+          <Button
+            variant="outline"
+            disabled={audit.isPending}
+            onClick={() => audit.mutate()}
+          >
+            감사기록 후보 가져오기
+          </Button>{' '}
+          <Button
+            disabled={!extraction.data?.available || running || start.isPending}
+            onClick={() => start.mutate()}
+          >
+            Codex로 사실 후보 추출
+          </Button>
         </div>
-      )}
-      {extraction.isError && (
-        <p role="alert">추출 작업 상태를 불러오지 못했습니다.</p>
-      )}
-      {list.isError && <p role="alert">사실 후보를 불러오지 못했습니다.</p>}
-      {list.data?.facts.length === 0 && (
-        <p>저장된 사실 후보가 없습니다. 위험이 없다는 뜻은 아닙니다.</p>
-      )}
-      <ul>
-        {list.data?.facts.map((f) => (
-          <li key={f.id}>
-            <Button variant="ghost" onClick={() => setSelected(f.id)}>
-              {kinds[f.data.kind][1]} · {f.data.statement} · {states[f.state]}
-            </Button>
+        {!extraction.data?.available && (
+          <p className="bundle-help">
+            Codex 추출은 서버 인증·실행 제한 설정 후 사용할 수 있습니다.
+          </p>
+        )}
+        <p className="bundle-help">
+          검색한 원문의 ‘사실 후보 작성’에서 직접 추가할 수도 있습니다.
+        </p>
+        {(audit.isError || start.isError) && (
+          <p role="alert">{reviewError(audit.error ?? start.error)}</p>
+        )}
+        {audit.isSuccess && (
+          <p>
+            감사기록 후보를 확인했습니다. 같은 후보를 중복 저장하지 않습니다.
+          </p>
+        )}
+        {extraction.data?.run && (
+          <div>
             <p>
-              {f.validation.status === 'BLOCKED'
-                ? '근거 보완 필요'
-                : '인용 일치 확인'}{' '}
-              · 수정 {f.revision}차 ·{' '}
-              {f.origin.kind === 'CODEX_EXTRACTION'
-                ? 'Codex 추출'
-                : f.origin.kind === 'DUMP_AUDIT_CANDIDATE'
-                  ? '덤프 감사기록'
-                  : '사용자 작성'}
+              사실 추출 작업: {extraction.data.run.status}
+              {running ? ' · 실행 중' : ''}
             </p>
-            {f.related?.some((r) => r.relation === 'POSSIBLE_CONFLICT') && (
-              <p>다른 값의 관련 후보가 있습니다. 충돌 여부를 검토하세요.</p>
+            {extraction.data.run.result && (
+              <>
+                <p>
+                  저장 후보 {extraction.data.run.result.candidate_count ?? 0}개
+                  · 추출 범위{' '}
+                  {extraction.data.run.result.execution_status === 'COMPLETED'
+                    ? '탐색 완료'
+                    : '일부만 확인'}
+                </p>
+                <p>{extraction.data.run.result.limitations}</p>
+                {extraction.data.run.result.stop_reason && (
+                  <p>중단 사유: {extraction.data.run.result.stop_reason}</p>
+                )}
+              </>
             )}
-            {f.related?.some((r) => r.relation === 'SAME_FIELDS') && (
-              <p>동일 필드의 관련 후보가 있습니다. 원문을 비교하세요.</p>
+            {extraction.data.run.error_code && (
+              <p>작업 오류: {extraction.data.run.error_code}</p>
             )}
-          </li>
-        ))}
-      </ul>
-      {offset > 0 && (
-        <Button onClick={() => setOffset(Math.max(0, offset - 30))}>
-          이전 사실
-        </Button>
-      )}
-      {list.data?.next_offset != null && (
-        <Button onClick={() => setOffset(list.data!.next_offset!)}>
-          다음 사실
-        </Button>
-      )}
-      {selected && (
-        <FactReview
-          key={selected}
-          bundle={bundle}
-          factId={selected}
-          onSelect={setSelected}
-          onClose={() => setSelected(null)}
-        />
-      )}
+          </div>
+        )}
+        {extraction.isError && (
+          <p role="alert">추출 작업 상태를 불러오지 못했습니다.</p>
+        )}
+        {list.isError && <p role="alert">사실 후보를 불러오지 못했습니다.</p>}
+        {list.data?.facts.length === 0 && (
+          <p>저장된 사실 후보가 없습니다. 위험이 없다는 뜻은 아닙니다.</p>
+        )}
+        <ul className="bundle-fact-list">
+          {list.data?.facts.map((f) => (
+            <li key={f.id}>
+              <Button
+                className="bundle-fact-open"
+                variant="ghost"
+                onClick={() => setSelected(f.id)}
+              >
+                <span>
+                  {kinds[f.data.kind][1]} · {f.data.statement} ·{' '}
+                  {states[f.state]}
+                </span>
+                <ArrowRight size={16} aria-hidden="true" />
+              </Button>
+              <p>
+                {f.validation.status === 'BLOCKED'
+                  ? '근거 보완 필요'
+                  : '인용 일치 확인'}{' '}
+                · 수정 {f.revision}차 ·{' '}
+                {f.origin.kind === 'CODEX_EXTRACTION'
+                  ? 'Codex 추출'
+                  : f.origin.kind === 'DUMP_AUDIT_CANDIDATE'
+                    ? '덤프 감사기록'
+                    : '사용자 작성'}
+              </p>
+              {f.related?.some((r) => r.relation === 'POSSIBLE_CONFLICT') && (
+                <p>다른 값의 관련 후보가 있습니다. 충돌 여부를 검토하세요.</p>
+              )}
+              {f.related?.some((r) => r.relation === 'SAME_FIELDS') && (
+                <p>동일 필드의 관련 후보가 있습니다. 원문을 비교하세요.</p>
+              )}
+            </li>
+          ))}
+        </ul>
+        {offset > 0 && (
+          <Button onClick={() => setOffset(Math.max(0, offset - 30))}>
+            이전 사실
+          </Button>
+        )}
+        {list.data?.next_offset != null && (
+          <Button onClick={() => setOffset(list.data!.next_offset!)}>
+            다음 사실
+          </Button>
+        )}
+        {selected && (
+          <FactReview
+            key={selected}
+            bundle={bundle}
+            factId={selected}
+            onSelect={setSelected}
+            onClose={() => setSelected(null)}
+          />
+        )}
+      </div>
     </section>
   )
 }
@@ -251,11 +283,13 @@ export function FactReview({
     opened.data?.fact.version === fact.version &&
     opened.data.current_validation.status === 'CITATIONS_VALID'
   return (
-    <section className="panel" aria-label="선택 사실 검수">
-      <h3>사실 검수</h3>
-      <Button variant="ghost" onClick={onClose}>
-        검수 닫기
-      </Button>
+    <section className="bundle-fact-review" aria-label="선택 사실 검수">
+      <div className="bundle-search-heading">
+        <h3>사실 검수</h3>
+        <Button variant="ghost" onClick={onClose}>
+          검수 닫기
+        </Button>
+      </div>
       {history.isError && <p role="alert">사실을 불러오지 못했습니다.</p>}
       {fact && (
         <>
@@ -285,7 +319,7 @@ export function FactReview({
               결정하세요.
             </p>
           )}
-          <label>
+          <label className="bundle-review-reason">
             검수 사유{' '}
             <textarea
               maxLength={2000}

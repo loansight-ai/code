@@ -31,6 +31,7 @@ const searchSchema = z.object({
 const baselineSchema = z.object({
   bundle_id: z.string().uuid(),
   bundle_revision: z.string(),
+  dictionary_version: z.string().optional(),
   items: z
     .array(
       searchSchema.extend({

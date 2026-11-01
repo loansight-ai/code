@@ -6,6 +6,8 @@ import { request } from '../session/api'
 import { Button } from '../../shared/components/button'
 import { FactReview } from '../evidence/fact-panel'
 import type { EvidenceBundle } from '../evidence/bundle-api'
+import { StatusBadge } from '../../shared/components/status-badge'
+import { ListChecks } from 'lucide-react'
 
 const labels: Record<string, string> = {
   READY: '규칙 입력 준비',
@@ -104,118 +106,132 @@ export function LiveSignals({ bundle }: { bundle: EvidenceBundle }) {
   })
   const data = query.data
   return (
-    <section className="panel" aria-label="현재 위험징후 규칙">
-      <h2>현재 위험징후 규칙</h2>
-      <p>
-        승인된 사실의 원문·기간·충돌을 다시 확인해 규칙 입력을 준비합니다. 예측
-        모델 투입과 담당자 최종 판단은 별도입니다.
-      </p>
-      <Button
-        variant="outline"
-        disabled={query.isFetching}
-        onClick={() => void query.refetch()}
-      >
-        규칙 입력 새로고침
-      </Button>
-      {query.isPending && <p>규칙 입력을 확인하고 있습니다.</p>}
-      {query.isError && (
-        <p role="alert">
-          규칙 입력을 확인하지 못했습니다. 위험 없음으로 해석할 수 없습니다.
+    <section
+      className="panel bundle-signals-panel"
+      aria-label="현재 위험징후 규칙"
+    >
+      <div className="panel-heading">
+        <h2>
+          <ListChecks size={18} aria-hidden="true" />
+          현재 위험징후 규칙
+        </h2>
+        <StatusBadge>입력 확인</StatusBadge>
+      </div>
+      <div className="bundle-panel-body">
+        <p className="bundle-intro">
+          승인된 사실의 원문·기간·충돌을 다시 확인해 규칙 입력을 준비합니다.
+          예측 모델 투입과 담당자 최종 판단은 별도입니다.
         </p>
-      )}
-      {data && (
-        <>
-          <p>
-            {labels[data.evaluation_status] ?? data.evaluation_status} · 입력
-            준비 {data.ready_inputs}/{data.total_facts}개 사실
+        <Button
+          variant="outline"
+          disabled={query.isFetching}
+          onClick={() => void query.refetch()}
+        >
+          규칙 입력 새로고침
+        </Button>
+        {query.isPending && <p>규칙 입력을 확인하고 있습니다.</p>}
+        {query.isError && (
+          <p role="alert">
+            규칙 입력을 확인하지 못했습니다. 위험 없음으로 해석할 수 없습니다.
           </p>
-          {data.evaluations.length > 0 && (
+        )}
+        {data && (
+          <>
             <p>
-              {['WARNING', 'CAUTION', 'OBSERVATION']
-                .map((k) => `${labels[k]} ${data.severity_counts[k] ?? 0}건`)
-                .join(' · ')}{' '}
-              · 설정된 규칙 범위
+              {labels[data.evaluation_status] ?? data.evaluation_status} · 입력
+              준비 {data.ready_inputs}/{data.total_facts}개 사실
             </p>
-          )}
-          <ul>
-            {data.categories.map((c) => (
-              <li key={c.key}>
-                <strong>{c.title}</strong> · {labels[c.status] ?? c.status} ·
-                준비 {c.ready_inputs}개 · 정의된 규칙 {c.configured_rules}개
-              </li>
+            {data.evaluations.length > 0 && (
+              <p>
+                {['WARNING', 'CAUTION', 'OBSERVATION']
+                  .map((k) => `${labels[k]} ${data.severity_counts[k] ?? 0}건`)
+                  .join(' · ')}{' '}
+                · 설정된 규칙 범위
+              </p>
+            )}
+            <ul className="bundle-rule-categories">
+              {data.categories.map((c) => (
+                <li key={c.key}>
+                  <strong>{c.title}</strong> · {labels[c.status] ?? c.status} ·
+                  준비 {c.ready_inputs}개 · 정의된 규칙 {c.configured_rules}개
+                </li>
+              ))}
+            </ul>
+            {data.total_facts === 0 && (
+              <p>
+                규칙에 연결할 사실이 없습니다. 검색·추출 후 사실 검수가
+                필요합니다.
+              </p>
+            )}
+            {data.facts.map((f) => (
+              <article className="bundle-rule-fact" key={f.fact_id}>
+                <h3>{f.statement}</h3>
+                <p>
+                  {labels[f.gate] ?? f.gate} · 기준 기간 {f.period ?? '미확인'}{' '}
+                  · 수정 {f.revision}차
+                </p>
+                <p>
+                  {f.detection === 'EXPLICITLY_NONE'
+                    ? '해당 사실 범위의 명시적 없음 기재'
+                    : '기재된 사실 · 사건 발생 여부는 규칙 정의에 따라 구분'}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelected(f.fact_id)}
+                >
+                  사실·검수 근거 보기
+                </Button>
+              </article>
             ))}
-          </ul>
-          {data.total_facts === 0 && (
-            <p>
-              규칙에 연결할 사실이 없습니다. 검색·추출 후 사실 검수가
-              필요합니다.
-            </p>
-          )}
-          {data.facts.map((f) => (
-            <article key={f.fact_id}>
-              <h3>{f.statement}</h3>
-              <p>
-                {labels[f.gate] ?? f.gate} · 기준 기간 {f.period ?? '미확인'} ·
-                수정 {f.revision}차
-              </p>
-              <p>
-                {f.detection === 'EXPLICITLY_NONE'
-                  ? '해당 사실 범위의 명시적 없음 기재'
-                  : '기재된 사실 · 사건 발생 여부는 규칙 정의에 따라 구분'}
-              </p>
-              <Button variant="outline" onClick={() => setSelected(f.fact_id)}>
-                사실·검수 근거 보기
+            {offset > 0 && (
+              <Button onClick={() => setOffset(Math.max(0, offset - 30))}>
+                이전 규칙 입력
               </Button>
-            </article>
-          ))}
-          {offset > 0 && (
-            <Button onClick={() => setOffset(Math.max(0, offset - 30))}>
-              이전 규칙 입력
-            </Button>
-          )}
-          {data.next_offset !== null && (
-            <Button onClick={() => setOffset(data.next_offset!)}>
-              다음 규칙 입력
-            </Button>
-          )}
-          {data.evaluations.map((e, i) => (
-            <article key={`${e.rule_id}:${e.fact_id}:${i}`}>
-              <h3>{e.title}</h3>
-              <p>
-                {labels[e.result] ?? e.result}
-                {e.severity ? ` · ${labels[e.severity]}` : ''}
-                {e.event_relation ? ` · ${labels[e.event_relation]}` : ''}
-              </p>
-              <p>
-                {e.axis} · {e.rule_id} · 규칙 {e.rule_version}
-              </p>
-              <p>판정 기준: {e.policy_source}</p>
-              <Button variant="ghost" onClick={() => setSelected(e.fact_id)}>
-                판정 근거 확인
+            )}
+            {data.next_offset !== null && (
+              <Button onClick={() => setOffset(data.next_offset!)}>
+                다음 규칙 입력
               </Button>
-            </article>
-          ))}
-          {data.limitations.map((s) => (
-            <p key={s}>{s}</p>
-          ))}
-          <details>
-            <summary>규칙·입력 버전</summary>
-            <p>{data.version}</p>
-            <p>규칙 {data.registry_revision}</p>
-            <p>입력 {data.input_revision}</p>
-            <p>예측 모델 입력 보류</p>
-          </details>
-        </>
-      )}
-      {selected && (
-        <FactReview
-          key={selected}
-          bundle={bundle}
-          factId={selected}
-          onSelect={setSelected}
-          onClose={() => setSelected(null)}
-        />
-      )}
+            )}
+            {data.evaluations.map((e, i) => (
+              <article key={`${e.rule_id}:${e.fact_id}:${i}`}>
+                <h3>{e.title}</h3>
+                <p>
+                  {labels[e.result] ?? e.result}
+                  {e.severity ? ` · ${labels[e.severity]}` : ''}
+                  {e.event_relation ? ` · ${labels[e.event_relation]}` : ''}
+                </p>
+                <p>
+                  {e.axis} · {e.rule_id} · 규칙 {e.rule_version}
+                </p>
+                <p>판정 기준: {e.policy_source}</p>
+                <Button variant="ghost" onClick={() => setSelected(e.fact_id)}>
+                  판정 근거 확인
+                </Button>
+              </article>
+            ))}
+            {data.limitations.map((s) => (
+              <p key={s}>{s}</p>
+            ))}
+            <details className="bundle-disclosure bundle-rule-versions">
+              <summary>규칙·입력 버전</summary>
+              <p>{data.version}</p>
+              <p>규칙 {data.registry_revision}</p>
+              <p>입력 {data.input_revision}</p>
+              <p>예측 모델 입력 보류</p>
+            </details>
+          </>
+        )}
+        {selected && (
+          <FactReview
+            key={selected}
+            bundle={bundle}
+            factId={selected}
+            onSelect={setSelected}
+            onClose={() => setSelected(null)}
+          />
+        )}
+      </div>
     </section>
   )
 }

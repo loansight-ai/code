@@ -101,7 +101,7 @@ export function FactForm({
     setData((old) => ({ ...old, ...values }))
   }
   return (
-    <section className="panel" aria-label="사실 후보 편집">
+    <section className="bundle-fact-form" aria-label="사실 후보 편집">
       <h3>{initial ? '수정본 작성' : '사실 후보 작성'}</h3>
       <p>
         채운 항목마다 원문의 정확한 발췌를 연결하세요. 저장 후 검수 대기 상태가

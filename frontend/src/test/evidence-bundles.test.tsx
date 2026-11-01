@@ -52,7 +52,7 @@ const session: SessionState = {
   expire: vi.fn(),
 }
 
-function mock() {
+function mock(facts: unknown[] = []) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
     const url = String(input)
     let body: unknown = base
@@ -66,7 +66,8 @@ function mock() {
     else if (url.endsWith('/agent')) body = { available: false, run: null }
     else if (url.endsWith('/fact-extraction'))
       body = { available: false, run: null }
-    else if (url.includes('/facts?')) body = { facts: [], next_offset: null }
+    else if (url.includes('/facts?')) body = { facts, next_offset: null }
+    else if (url.endsWith(`/segments/${sid}`)) body = candidate
     else if (url.includes('/signals?'))
       body = {
         bundle_id: id,
@@ -161,15 +162,15 @@ it('opens dump-only evidence without a structure or financial analysis and rende
   mock()
   mount()
   const user = userEvent.setup()
-  await screen.findByRole('heading', { name: '주석·위험징후' })
-  await user.click(screen.getByRole('button', { name: '공통 6항목 검색' }))
-  await screen.findByText('항목 0 · 1개 후보 · 검수 전')
-  await user.click(screen.getByText('항목 0 · 1개 후보 · 검수 전'))
-  const first = screen
-    .getByText('항목 0 · 1개 후보 · 검수 전')
-    .closest('details')!
+  await screen.findByRole('heading', { name: '주석 확인과 위험징후' })
+  const overview = screen.getByRole('region', { name: '추출 현황' })
+  expect(within(overview).getAllByRole('row')).toHaveLength(7)
+  await user.click(screen.getByRole('button', { name: '담보 제공' }))
+  const detail = screen.getByRole('complementary', { name: '선택 항목 근거' })
+  expect(within(detail).getByText('검색 후보')).toBeInTheDocument()
+  expect(within(detail).getAllByText('미확보')).toHaveLength(3)
   await user.click(
-    within(first).getByRole('button', { name: '담보 내역 · 표' }),
+    await within(detail).findByRole('button', { name: '원문 열기' }),
   )
   const table = await screen.findByRole('table', { name: '저장된 근거 표' })
   expect(
@@ -179,6 +180,68 @@ it('opens dump-only evidence without a structure or financial analysis and rende
   expect(
     screen.queryByRole('button', { name: '다음 본문' }),
   ).not.toBeInTheDocument()
+})
+
+it('shows structured amounts without treating raw matches as detected facts', async () => {
+  mock([
+    {
+      id: sid,
+      root_id: sid,
+      supersedes_id: null,
+      revision: 1,
+      version: 0,
+      state: 'PENDING',
+      model_eligible: false,
+      origin: { kind: 'MANUAL' },
+      validation: {
+        status: 'CITATIONS_VALID',
+        issues: [],
+        normalized_amount: '342000000000',
+      },
+      data: {
+        category: 'off_balance',
+        kind: 'guarantee',
+        statement: 'PF 대출 지급보증',
+        subject: '시험기업',
+        direction: 'PROVIDED',
+        period: null,
+        counterparty: '검증 상대방',
+        amount_role: 'LIMIT',
+        amount: {
+          raw_value: '3,420',
+          currency: 'KRW',
+          unit: '억원',
+          cell: { segment_id: sid, row: 0, column: 1 },
+        },
+        maturity: '2027.06.30',
+        status: null,
+        detection: 'DETECTED',
+        citations: [
+          {
+            segment_id: sid,
+            field: 'statement',
+            quote: 'PF 대출 지급보증을 제공하고 있습니다.',
+          },
+        ],
+      },
+    },
+  ])
+  mount()
+  const user = userEvent.setup()
+  await screen.findByRole('heading', { name: '주석 확인과 위험징후' })
+  await user.click(screen.getByRole('button', { name: '부외거래·후속사건' }))
+  const detail = screen.getByRole('complementary', { name: '선택 항목 근거' })
+  await within(detail).findByText('3,420 억원')
+  expect(within(detail).getByText('검출')).toBeInTheDocument()
+  expect(within(detail).getByText('검수 전 후보 · 보증')).toBeInTheDocument()
+  expect(within(detail).getByText('미확보')).toBeInTheDocument()
+  expect(within(detail).getByText('2027.06.30')).toBeInTheDocument()
+  await user.selectOptions(
+    within(detail).getByRole('combobox', { name: '관련 근거' }),
+    `source:${sid}`,
+  )
+  expect(within(detail).getByText('검색 후보')).toBeInTheDocument()
+  expect(within(detail).queryByText('3,420 억원')).not.toBeInTheDocument()
 })
 
 it('hides the previous owner data immediately during a session change', async () => {

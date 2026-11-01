@@ -1,0 +1,342 @@
+.extraction-page .extraction-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.extraction-page-heading h1 {
+  margin: 0 0 7px;
+  font-size: calc(18px * var(--font-scale, 1.3));
+  line-height: 1.4;
+}
+.extraction-page-description {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--evidence-small);
+  line-height: 1.7;
+}
+.extraction-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 6px;
+  background: #eceeea;
+}
+.extraction-tabs button {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 13px;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--evidence-small);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.extraction-tabs button[aria-current='page'] {
+  background: white;
+  color: var(--text);
+  box-shadow: 0 1px 4px #20241c09;
+  font-weight: 600;
+}
+.extraction-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.extraction-layout > .panel {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 6px;
+}
+.extraction-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.extraction-heading h2,
+.extraction-detail-title h2 {
+  margin: 0;
+  font-size: var(--evidence-body);
+  font-weight: 600;
+  line-height: 1.6;
+}
+.extraction-tags {
+  display: flex;
+  gap: 6px;
+  color: var(--muted);
+  font-size: calc(9px * var(--font-scale, 1.3));
+}
+.extraction-tags span {
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.extraction-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.evidence-workspace .extraction-status-table {
+  width: 100%;
+  min-width: 510px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: calc(10px * var(--font-scale, 1.3));
+  text-align: left;
+  white-space: normal;
+}
+.extraction-status-table th,
+.extraction-status-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #eff0ed;
+  vertical-align: middle;
+  line-height: 1.6;
+  text-align: left;
+}
+.extraction-status-table thead th {
+  padding-block: 9px;
+  background: #f6f7f5;
+  color: var(--muted);
+  font-size: calc(9px * var(--font-scale, 1.3));
+  font-weight: 400;
+}
+.extraction-status-table th:nth-child(1) {
+  width: 30%;
+}
+.extraction-status-table th:nth-child(2) {
+  width: 10%;
+}
+.extraction-status-table th:nth-child(3) {
+  width: 18%;
+}
+.extraction-status-table th:nth-child(4) {
+  width: 12%;
+}
+.extraction-status-table th:nth-child(5) {
+  width: 30%;
+}
+.extraction-status-table tbody th {
+  font-weight: 500;
+  background: transparent;
+}
+.extraction-status-table tbody tr {
+  cursor: pointer;
+}
+.extraction-status-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.extraction-status-table tbody tr:hover,
+.extraction-status-table tbody tr.is-selected {
+  background: #fafbf8;
+}
+.extraction-status-table tbody th button {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.extraction-status-table td:nth-child(2) {
+  color: var(--muted);
+}
+.extraction-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.extraction-location {
+  overflow-wrap: anywhere;
+}
+.extraction-location span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.extraction-status {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: calc(9px * var(--font-scale, 1.3));
+  line-height: 1.5;
+  white-space: nowrap;
+  background: #fff3d9;
+  color: #8d641d;
+}
+.extraction-status.is-found {
+  background: #fff0bc;
+  color: #7b601a;
+}
+.extraction-status.is-absent {
+  background: #eceeea;
+  color: #5c635a;
+}
+.extraction-status.is-failed {
+  background: #fdeae7;
+  color: #b43b30;
+}
+.extraction-footnote,
+.extraction-review-state,
+.extraction-empty,
+.extraction-error {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: calc(9px * var(--font-scale, 1.3));
+  line-height: 1.8;
+}
+.extraction-detail-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.extraction-detail-title h2 {
+  overflow-wrap: anywhere;
+}
+.extraction-direction {
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: #665b43;
+  color: #fff0b8;
+  font-size: calc(9px * var(--font-scale, 1.3));
+}
+.extraction-source-select {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  color: var(--muted);
+  font-size: calc(9px * var(--font-scale, 1.3));
+}
+.extraction-source-select select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 22px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+  color: var(--gray);
+  font: inherit;
+  appearance: none;
+  text-overflow: ellipsis;
+}
+.extraction-source-select svg {
+  position: absolute;
+  right: 7px;
+  pointer-events: none;
+}
+.extraction-detail-fields {
+  margin: 0;
+  font-size: calc(10px * var(--font-scale, 1.3));
+}
+.extraction-detail-fields > div {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.extraction-detail-fields dt {
+  color: var(--muted);
+}
+.extraction-detail-fields dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.extraction-detail-fields .is-amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.extraction-quote {
+  margin: 16px 0 0;
+  padding: 12px;
+  border-radius: 4px;
+  border: 0;
+  background: #f6f7f4;
+  color: var(--gray);
+  font-size: calc(10px * var(--font-scale, 1.3));
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.extraction-quote p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  margin: 0;
+}
+.extraction-detail .extraction-open-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  margin-top: 10px;
+  padding: 0;
+  color: var(--gray);
+  font-size: calc(9px * var(--font-scale, 1.3));
+  font-weight: 400;
+}
+.extraction-tools {
+  margin-top: 24px;
+}
+.extraction-tools > summary {
+  width: fit-content;
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: var(--evidence-small);
+  cursor: pointer;
+}
+.extraction-tools[open] > summary {
+  margin-bottom: 12px;
+}
+.extraction-signals > .panel {
+  border-radius: 6px;
+}
+.extraction-summary {
+  padding: 20px;
+}
+.extraction-source-dialog {
+  width: min(860px, 100vw);
+}
+@media (max-width: 1100px) {
+  .extraction-page .extraction-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .extraction-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .extraction-layout > .panel {
+    padding: 14px;
+  }
+  .extraction-heading {
+    align-items: flex-start;
+  }
+  .extraction-tabs {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+  .extraction-tabs button {
+    padding: 8px 9px;
+  }
+  .extraction-detail-fields > div {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 8px;
+  }
+}
