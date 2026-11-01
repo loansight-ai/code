@@ -23,8 +23,8 @@ PROMPT_VERSION = "note-agent-v1"
 OUTPUT_VERSION = "note-findings-v1"
 
 
-def definitions():
-    tools = NoteSearchTools.definitions()
+def definitions(tool_class=NoteSearchTools):
+    tools = tool_class.definitions()
     for tool in tools:
         schema = tool["parameters"]
         schema["properties"]["category_key"] = {
@@ -116,14 +116,44 @@ async def submit(database, settings, identity, structure_id):
 
 
 async def prepare(database, settings, job_id):
+    from app.modules.evidence.bundle_models import BundleAgentRun, EvidenceBundle
+    from app.modules.evidence.bundle_tools import BundleTools
+    from app.modules.evidence.bundle_tools import baseline as bundle_baseline
+
     async with database.transaction() as db:
         run = await db.scalar(select(NoteAgentRun).where(NoteAgentRun.job_id == job_id))
-        if run is None:
-            raise AgentError("note_agent_run_missing")
+        bundled = run is None
+        if bundled:
+            run = await db.scalar(select(BundleAgentRun).where(BundleAgentRun.job_id == job_id))
+            if run is None:
+                raise AgentError("note_agent_run_missing")
+            bundle = await db.get(EvidenceBundle, run.bundle_id)
+            workspace_id, source_id = bundle.workspace_id, bundle.id
+            tool_class, baseline_fn = BundleTools, bundle_baseline
+        else:
+            workspace_id, source_id = run.workspace_id, run.structure_id
+            tool_class, baseline_fn = NoteSearchTools, run_baseline
         # Identity is server-owned; no session token or code is sent to the runtime.
-        identity = Identity(uuid4(), uuid4(), run.workspace_id, "")
-        config, structure_id = run.config, run.structure_id
-        baseline = await run_baseline(db, identity, structure_id)
+        identity = Identity(uuid4(), uuid4(), workspace_id, "")
+        config, structure_id = run.config, source_id
+        baseline = await baseline_fn(db, identity, structure_id)
+        job = await db.get(Job, job_id)
+        if bundled and job.attempt > 1:
+            return {
+                **baseline,
+                "kind": "NOTE_AGENT",
+                "execution_status": "INCOMPLETE",
+                "stop_reason": "bundle_agent_interrupted_no_auto_retry",
+                "items": [
+                    {
+                        "key": c[0],
+                        "search_status": "INCOMPLETE",
+                        "findings": [],
+                        "limitations": "중단된 탐색은 자동 재호출하지 않았습니다.",
+                    }
+                    for c in CATEGORIES
+                ],
+            }
     trace, reads, seen, searched = [], set(), set(), set()
 
     async def call(name, arguments):
@@ -146,7 +176,7 @@ async def prepare(database, settings, job_id):
             if category not in {c[0] for c in CATEGORIES}:
                 raise ValueError("category_required")
             async with database.transaction() as db:
-                tools = await NoteSearchTools.owned(db, identity, structure_id)
+                tools = await tool_class.owned(db, identity, structure_id)
                 result = await tools.call(name, arguments)
             if name == "read_note_context":
                 # Citation validation also checks source membership and exact text below.
@@ -191,7 +221,7 @@ async def prepare(database, settings, job_id):
     try:
         async with asyncio.timeout(config["timeout_seconds"]):
             response = await runtime_for(config, settings).run(
-                prompt, definitions(), call, AgentOutput.model_json_schema()
+                prompt, definitions(tool_class), call, AgentOutput.model_json_schema()
             )
             output = AgentOutput.model_validate_json(response.text)
             if {i.key for i in output.items} != {c[0] for c in CATEGORIES}:
@@ -211,7 +241,7 @@ async def prepare(database, settings, job_id):
                 if item.key not in searched or failed:
                     item.search_status = "INCOMPLETE"
             async with database.transaction() as db:
-                tools = await NoteSearchTools.owned(db, identity, structure_id)
+                tools = await tool_class.owned(db, identity, structure_id)
                 for citation in citations:
                     await tools.validate_citations([citation])
             result.update(

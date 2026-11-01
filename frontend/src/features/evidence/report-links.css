@@ -1,0 +1,94 @@
+.report-evidence {
+  margin: 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--gray);
+  background: #fff;
+}
+.report-evidence-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 3px;
+  background: #f6f7f4;
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.6;
+  list-style: none;
+  cursor: pointer;
+}
+.report-evidence-heading::-webkit-details-marker {
+  display: none;
+}
+.report-evidence-heading > span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.report-evidence-heading:hover {
+  background: #eeefe9;
+}
+.report-evidence-heading:focus-visible {
+  outline: 3px solid var(--observation);
+  outline-offset: 3px;
+}
+.report-evidence-count {
+  color: var(--muted);
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 400;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.report-evidence[open] > .report-evidence-heading {
+  border-bottom: 1px solid var(--border);
+  border-radius: 3px 3px 0 0;
+}
+.report-evidence[open] .report-evidence-chevron {
+  transform: rotate(180deg);
+}
+.report-evidence-content {
+  padding: 12px;
+}
+.report-evidence-description {
+  color: var(--muted);
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.7;
+}
+.report-evidence-list {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.report-evidence-item + .report-evidence-item {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.report-evidence-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: calc(11px * var(--font-scale));
+}
+.report-evidence-period strong {
+  color: #15181d;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.report-evidence-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 108px), 1fr));
+  gap: 6px;
+}
+.report-evidence-actions > .button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 8px;
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+}

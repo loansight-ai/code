@@ -7,6 +7,7 @@ import type { DartCompany } from './api'
 import { Button } from '../../shared/components/button'
 import { StatePanel } from '../../shared/components/state-panel'
 import { StatusBadge } from '../../shared/components/status-badge'
+import { ReportEvidenceLinks } from '../evidence/report-links'
 
 export function CompanyCriteriaPanel({
   company,
@@ -145,6 +146,7 @@ export function CompanyCriteriaPanel({
         />
       )}
       <CompanyReportSelect corpCode={company?.corp_code ?? null} />
+      <ReportEvidenceLinks corpCode={company?.corp_code ?? null} />
       <fieldset className="scope-field" disabled={!company}>
         <legend>회계 범위</legend>
         <div>

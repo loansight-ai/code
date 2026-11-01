@@ -25,6 +25,7 @@ import {
 } from '../features/financial/note-progress'
 import { useCollectedData } from '../features/company/collected-api'
 import { PredictionWorkspace } from '../features/analysis/workspace-panels'
+import { CombinedEvidenceLink } from '../features/evidence/report-links'
 
 export function FinancialSummaryPage() {
   const { financialId = '', section = 'summary' } = useParams()
@@ -237,7 +238,14 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
           ) : section === 'cashflow' ? (
             <FinancialCashflow result={result} />
           ) : section === 'prediction' ? (
-            <PredictionWorkspace observations={observations.data} />
+            <>
+              <PredictionWorkspace observations={observations.data} />
+              <CombinedEvidenceLink
+                corpCode={result.context.corp_code}
+                receiptNo={result.context.receipt_no}
+                scope={result.context.scope}
+              />
+            </>
           ) : (
             <StatePanel
               state="empty"
@@ -254,6 +262,12 @@ function FinancialPage({ id, section }: { id: string; section: string }) {
                   : '기업 검색에서 주석 구조화·Codex 데이터 보완 옵션을 선택해 분석할 수 있습니다.'
               }
             >
+              <CombinedEvidenceLink
+                corpCode={result.context.corp_code}
+                receiptNo={result.context.receipt_no}
+                scope={result.context.scope}
+                structureId={run.data.note_workflow?.structure_id ?? undefined}
+              />
               {run.data.note_workflow?.structure_id && (
                 <Link
                   to={`/notes/${run.data.note_workflow.structure_id}/${section}`}

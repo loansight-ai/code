@@ -24,6 +24,7 @@ import { ApiError } from '../features/session/api'
 import { Button } from '../shared/components/button'
 import { StatePanel } from '../shared/components/state-panel'
 import { StatusBadge } from '../shared/components/status-badge'
+import { CombinedEvidenceLink } from '../features/evidence/report-links'
 
 export function NoteResultsPage() {
   const { structureId: rawId = '' } = useParams()
@@ -259,6 +260,12 @@ function ResultsContent({
         <StatusBadge tone="caution">내용 검수 전</StatusBadge>
       </div>
       <div className="note-source-meta">
+        <CombinedEvidenceLink
+          corpCode={metadata.corp_code}
+          receiptNo={metadata.receipt_no}
+          scope={metadata.scope}
+          structureId={id}
+        />
         <span>기업 고유번호 {metadata.corp_code}</span>
         <span>접수번호 {metadata.receipt_no}</span>
         <span>{metadata.segment_count?.toLocaleString()}개 구간</span>

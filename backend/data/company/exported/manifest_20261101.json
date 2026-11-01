@@ -1,0 +1,57 @@
+{
+  "dataset": "OFS company export",
+  "exported_on": "2026-11-01",
+  "source_as_of": "2026-10-26",
+  "archive": {
+    "filename": "loansight_ofs_20261031.dump",
+    "bytes": 3044186621,
+    "created_at_header": "2026-10-31 16:47:23",
+    "database_version": "16.15",
+    "full_archive_hash_verified": false
+  },
+  "sources": {
+    "financial": [
+      "public.fs4_report",
+      "public.fs4_value"
+    ],
+    "events": "public.risk_event",
+    "coverage": "public.event_coverage"
+  },
+  "wide_view": "public.mv_fs4_wide_ok",
+  "scope": "OFS",
+  "rows": {
+    "financial": 18394,
+    "events": 2698,
+    "coverage": 2271
+  },
+  "warnings": {
+    "coverage_without_financial": 181,
+    "event_companies_without_financial": 92,
+    "unverified_events": 2698,
+    "incomplete_audit_companies": 386,
+    "repeated_financial_receipts": [
+      "20260324000091"
+    ]
+  },
+  "quality": {
+    "original_dump_status_filter_preserved": true,
+    "rule_zero_values_independently_verified": false,
+    "source_note_artifacts_imported": false,
+    "fs4_report_flag_in_archive": false,
+    "fiscal_2026_rows": 35
+  },
+  "files": {
+    "event_coverage_20261101.csv": {
+      "sha256": "2d56644eed1689bd7628b3e62a7c22e90a1ee4102a3ccc7c9e048c841a76adb4",
+      "bytes": 428729
+    },
+    "fs4_wide_ok_20261101.csv": {
+      "sha256": "abfb2793a8aa5080f565a927cf2c60efced719d2130e40c1ddb62a86dfef05fa",
+      "bytes": 18567081
+    },
+    "risk_event_20261101.csv": {
+      "sha256": "6b5b903ebaea1bcf995490bbbcd8255a6a597ee961642fc571966b2857c00543",
+      "bytes": 2302577
+    }
+  }
+}

@@ -11,9 +11,10 @@ from app.core.runtime import process_health, run
 from app.integrations.agents.runtime import AgentError
 from app.integrations.messaging.rabbitmq import JobMessage, channel_and_queue, connect
 from app.modules.evidence import agent as evidence_agent
-from app.modules.evidence import dart_service
+from app.modules.evidence import dart_service, fact_extraction
 from app.modules.evidence import service as evidence
 from app.modules.evidence.dart_collector import CollectionError
+from app.modules.evidence.fact_extraction import PreparedFacts
 from app.modules.evidence.parser import PreparedNotes
 from app.modules.financial import enrichment
 from app.modules.financial import service as financial
@@ -27,7 +28,7 @@ logger = structlog.get_logger()
 
 async def execute(
     database: Database, job_id, settings: Settings | None = None
-) -> dict | PreparedNotes | PreparedFinancials | PreparedEnrichment:
+) -> dict | PreparedNotes | PreparedFinancials | PreparedEnrichment | PreparedFacts:
     async with database.transaction() as db:
         job = await db.get(Job, job_id)
         task_type = job.task_type
@@ -35,8 +36,10 @@ async def execute(
         return await evidence.prepare(database, settings, job_id)
     if task_type == "DART_COLLECT" and settings is not None:
         return await dart_service.prepare(database, settings, job_id, job.owner_token)
-    if task_type == "NOTE_AGENT" and settings is not None:
+    if task_type in {"NOTE_AGENT", "BUNDLE_AGENT"} and settings is not None:
         return await evidence_agent.prepare(database, settings, job_id)
+    if task_type == "FACT_EXTRACTION" and settings is not None:
+        return await fact_extraction.prepare(database, settings, job_id)
     if task_type == "FINANCIAL_ANALYSIS" and settings is not None:
         return await financial.prepare(database, settings, job_id)
     if task_type == "FINANCIAL_NOTE_ENRICHMENT" and settings is not None:
@@ -77,6 +80,8 @@ async def run_job(database: Database, settings: Settings, message: JobMessage) -
             await financial.complete(database, message.job_id, owner, result)
         elif isinstance(result, PreparedEnrichment):
             await enrichment.complete(database, message.job_id, owner, result)
+        elif isinstance(result, PreparedFacts):
+            await fact_extraction.complete(database, message.job_id, owner, result)
         else:
             await service.finish(database, message.job_id, owner, result)
     except asyncio.CancelledError:

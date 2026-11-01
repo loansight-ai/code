@@ -206,6 +206,8 @@ async def claim(
                 "NOTE_STRUCTURE",
                 "DART_COLLECT",
                 "NOTE_AGENT",
+                "BUNDLE_AGENT",
+                "FACT_EXTRACTION",
                 "FINANCIAL_ANALYSIS",
                 "FINANCIAL_NOTE_ENRICHMENT",
             }
@@ -242,7 +244,7 @@ async def finish(database: Database, job_id: UUID, owner: UUID, result: dict) ->
 async def complete_job(db: AsyncSession, job: Job, result: dict) -> None:
     """Caller must hold the Job lock and validate the active execution lease."""
     partial = (
-        result.get("kind") in {"NOTE_AGENT", "FINANCIAL_NOTE_ENRICHMENT"}
+        result.get("kind") in {"NOTE_AGENT", "FINANCIAL_NOTE_ENRICHMENT", "FACT_EXTRACTION"}
         and result.get("execution_status") != "COMPLETED"
     )
     partial = partial or (

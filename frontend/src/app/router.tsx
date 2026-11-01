@@ -6,6 +6,10 @@ import { LiveAnalysisPage } from '../pages/live-analysis-page'
 import { FinancialSummaryPage } from '../pages/financial-summary-page'
 import { AnalysisEntryPage } from '../pages/analysis-entry-page'
 import { VisualSummaryPreviewPage } from '../pages/visual-summary-preview-page'
+import {
+  EvidenceBundlePage,
+  EvidenceReportEntry,
+} from '../pages/evidence-bundle-page'
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +19,14 @@ export const router = createBrowserRouter([
       { path: '/workspace/:section', element: <AnalysisEntryPage /> },
       { path: '/analyses/:analysisId/:section?', element: <AnalysisPage /> },
       { path: '/notes/:structureId/:section?', element: <LiveAnalysisPage /> },
+      {
+        path: '/reports/:corpCode/:receiptNo/:reportScope/:section',
+        element: <EvidenceReportEntry />,
+      },
+      {
+        path: '/evidence/:bundleId/:section?',
+        element: <EvidenceBundlePage />,
+      },
       {
         path: '/preview/financial-summary',
         loader: ({ request }) =>

@@ -4,7 +4,7 @@
 
 Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업 검색·원문 수집과 [핵심 재무 분석](#financial-api)을 구현했으며 위험규칙·외부 모델 연동은 후속입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
-로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 저장된 결과는 프론트 원문 뷰어에 연결했으며 사실 추출·검수는 후속 작업입니다.
+로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 저장된 결과는 원문 뷰어와 [통합 사실 추출·검수](data/evidence/README.md#structured-facts)에 연결합니다.
 
 <a id="financial-api"></a>
 
@@ -127,11 +127,11 @@ Codex에는 계정/금액이 미확보된 대상만 전달하며 기존 `NoteSea
 
 ```sh
 # backend 디렉터리에서 실행. validate는 DB 연결 없이 전체 파일을 검사한다.
-python -m app.modules.company.exported validate --exported-on 2026-10-30 --source-as-of 2026-10-26
+python -m app.modules.company.exported validate --exported-on 2026-11-01 --source-as-of 2026-10-26
 alembic upgrade head
-python -m app.modules.company.exported load --exported-on 2026-10-30 --source-as-of 2026-10-26
+python -m app.modules.company.exported load --exported-on 2026-11-01 --source-as-of 2026-10-26
 # load 결과의 import_id를 사용한다.
-python -m app.modules.company.exported show --import-id <UUID> --corp-code 00164478 --receipt-no 20260318001395 --scope CFS
+python -m app.modules.company.exported show --import-id <UUID> --corp-code 00164478 --receipt-no 20260318001395 --scope OFS
 ```
 
 다른 폴더는 `validate`/`load`의 `--directory`로 지정한다. 파일명 날짜는
@@ -139,6 +139,11 @@ python -m app.modules.company.exported show --import-id <UUID> --corp-code 00164
 Compose에서는 최신 소스를 포함한 이미지를 빌드한 뒤
 `docker compose -f deploy/compose.yaml run --rm --no-deps api /app/.venv/bin/python -m app.modules.company.exported ...`
 로 실행한다. 마이그레이션은 기존 [마이그레이션 안내](#마이그레이션)를 따른다.
+
+현재 묶음은 덤프의 `public` 스키마에서 생성한 **OFS 18,394행**이다. 이전 CFS 우선
+파일은 `data/company/exported/archive/20261030/`와 기존 DB 적재 버전에 보존한다.
+원천·회계 범위·제외된 회사/연도·주석 0의 한계는
+[현재 데이터 설명서](data/company/exported/README_export_20261101.md)를 따른다.
 
 | 테이블 | 역할과 키 |
 | --- | --- |
@@ -166,18 +171,19 @@ CSV로 덮어쓰거나 임의 생성하지 않는다. 현재 보고서 목록은
 금액 계산 시 기존 재무 도메인의 Decimal 변환을 사용해야 한다. 원본의 0을 바꾸거나
 미확보를 0으로 채우지 않는다. 사건 검증 미완료·주석 0의 불확실성은 적재로 해소되지
 않으며 원문 아티팩트/검수 완료를 생성하지 않는다. `nt_dev` 의미·리스 포함 여부·
-`nt_pf`/`nt_rental` 사용은 [데이터 설명서](data/company/exported/README_export_20261030.md)의
+`nt_pf`/`nt_rental` 사용은 [데이터 설명서](data/company/exported/README_export_20261101.md)의
 미확정 사항으로 유지한다. 사건 후보와 조회 범위의 파일 간 참조·후보 수는 검사하지만,
 공시 내용의 사실 검증을 수행하는 것은 아니다.
 
 검증은 `python -m unittest discover -s tests -p 'test_company_exported*.py' -v`로 실행한다.
 PostgreSQL 통합 검사는 이름이 `_test`로 끝나는 별도 DB의
 `LOANSIGHT_TEST_DATABASE_URL`을 명시해야 하며 각 테스트는 격리된 스키마를 사용한다.
-실제 적재 건수와 실행 결과는 [수집 CSV 검증 기록](../docs/reviews/23_company-exported-data-validation.md)을 따른다.
+현재 OFS 전환·실제 적재·자동 선택 결과는 [OFS 적용 검증](../docs/reviews/26_ofs-export-application-validation.md),
+최초 CFS 우선 적재 이력은 [이전 검증 기록](../docs/reviews/23_company-exported-data-validation.md)을 따른다.
 
 ### 화면 조회와 수집 데이터 기반 분석
 
-`GET /api/v1/companies/{corp_code}/collected-data?receipt_no={접수번호}&scope=CFS`
+`GET /api/v1/companies/{corp_code}/collected-data?receipt_no={접수번호}&scope=OFS`
 는 수집 데이터 보유 여부, 해당 보고서·회계 범위의 재무, 최근 5개 사업연도의 원보고서
 값, 회사 전체 사건 후보와 조회 범위를 반환한다. `fiscal_year`로 사업연도를 제한하고,
 `import_id`를 지정하면 해당 버전에 고정한다. 생략 시 해당 기업의 조회 범위를 가진
@@ -206,6 +212,18 @@ CSV 분석과 `enrich_notes=true` 조합은 거부한다. 원문·Codex 보완�
 요청한다. 사건/조회 범위는 수집 기준일까지의 회사 전체 이력이며 결산 당시의 사실이나
 모델 입력으로 취급하지 않는다. 화면 연결 검증은
 [수집 데이터 화면 검증](../docs/reviews/24_collected-data-pages-validation.md)을 따른다.
+
+<a id="dump-evidence"></a>
+
+## 덤프 선택 적재와 통합 공시 근거
+
+시범 보고서 4건의 주석·사업보고서 구간·감사 자료를 별도 원천 DB에 선택 적재하고,
+기존 소유 HTML 구조화 결과와 불변 근거 묶음으로 연결한다. 공통 6항목 검색·문맥 열람·
+Codex 보완 탐색·구조화 사실 추출·사실별 검수 이력과 주석/예측 화면 진입을 지원한다.
+선택 목록·적재 명령·API·권한·
+원천 보존·미구현 범위는 [통합 근거 실행 안내](data/evidence/README.md)에서 관리한다.
+승인된 사실의 기간·근거·충돌 재검증과 위험규칙 실행기/화면을 연결했다. 상세 조건이
+미확정인 현재 운영 규칙은 '정의 대기'이며 [규칙 입력 계약](data/evidence/README.md#risk-inputs)을 따른다.
 
 ## 재무제표 주석 구조화 모듈
 

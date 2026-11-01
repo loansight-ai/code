@@ -10,6 +10,7 @@ import { StatePanel } from '../shared/components/state-panel'
 import { NoteResultsPage } from './note-results-page'
 import { FinancialStart } from '../features/financial/financial-start'
 import { useCollectedData } from '../features/company/collected-api'
+import { CombinedEvidenceLink } from '../features/evidence/report-links'
 
 const titles: Record<string, string> = {
   summary: '핵심 재무 요약',
@@ -204,7 +205,15 @@ export function LiveAnalysisPage() {
         </>
       )}
       {section === 'prediction' && (
-        <PredictionWorkspace observations={observations.data} />
+        <>
+          <PredictionWorkspace observations={observations.data} />
+          <CombinedEvidenceLink
+            corpCode={metadata.corp_code}
+            receiptNo={metadata.receipt_no}
+            scope={metadata.scope}
+            structureId={id}
+          />
+        </>
       )}
       {section === 'review' && (
         <LiveReviewWorkspace

@@ -9,6 +9,7 @@ from sqlalchemy.engine import make_url
 from app.core.config import Settings
 from app.core.database import Base, Database
 from app.main import create_app
+from tests.integration.evidence_fixtures import corpus, fact_corpus  # noqa: F401
 
 
 @pytest.fixture

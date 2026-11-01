@@ -13,6 +13,7 @@ import { getFinancialRun } from '../features/financial/api'
 import { FinancialInformation } from '../features/financial/financial-information'
 import { analysisMenus } from './analysis-menu'
 import { ApiError } from '../features/session/api'
+import { getBundle } from '../features/evidence/bundle-api'
 import {
   rememberFinancialRun,
   useActiveFinancialRun,
@@ -24,6 +25,7 @@ export function Shell() {
     structureId,
     financialId: routeFinancialId,
     section,
+    bundleId,
   } = useParams()
   const session = useSession()
   const location = useLocation()
@@ -31,6 +33,13 @@ export function Shell() {
   const workspace =
     session.phase === 'ready' ? session.session?.workspace_id : undefined
   const rememberedFinancialId = useActiveFinancialRun(workspace)
+  const bundleQuery = useQuery({
+    queryKey: ['server', workspace, 'evidence-bundle', bundleId],
+    queryFn: ({ signal }) => getBundle(bundleId!, signal),
+    enabled: !!bundleId && !!workspace,
+    retry: false,
+  })
+  const bundle = workspace ? bundleQuery.data : undefined
   const financialId =
     routeFinancialId ??
     (location.pathname === '/' && params.get('data') !== 'demo'
@@ -81,7 +90,10 @@ export function Shell() {
   const live = useNoteWorkspace(structureId?.toLowerCase())
   const metadata = live.data
   const corp =
-    financialContext?.corp_code ?? metadata?.corp_code ?? params.get('corp')
+    financialContext?.corp_code ??
+    metadata?.corp_code ??
+    bundle?.corp_code ??
+    params.get('corp')
   const publicCompany = useQuery({
     queryKey: ['dart', 'workspace-company', corp],
     queryFn: ({ signal }) => searchCompanies(corp!, 0, signal),
@@ -93,6 +105,7 @@ export function Shell() {
     company?.name ??
     publicCompany?.corp_name ??
     metadata?.company_name ??
+    bundle?.company_name ??
     financial?.result?.company_name ??
     (corp ? `DART ${corp}` : '기업을 선택해 주세요')
   const searchPath = company
@@ -101,15 +114,19 @@ export function Shell() {
       ? `/?${new URLSearchParams({ q: financialContext.corp_code, corp: financialContext.corp_code, report: financialContext.receipt_no, scope: financialContext.scope })}`
       : metadata
         ? `/?${new URLSearchParams({ q: metadata.corp_code, corp: metadata.corp_code, report: metadata.receipt_no, scope: metadata.scope })}`
-        : `/${location.search}`
+        : bundle
+          ? `/?${new URLSearchParams({ corp: bundle.corp_code, q: bundle.corp_code, report: bundle.receipt_no, scope: bundle.scope })}`
+          : `/${location.search}`
   const [helpOpen, setHelpOpen] = useState(false)
-  const base = financialId
-    ? `/financials/${financialId}`
-    : company
-      ? `/analyses/${company.id}`
-      : structureId
-        ? `/notes/${structureId}`
-        : '/workspace'
+  const base = bundleId
+    ? `/evidence/${bundleId}`
+    : financialId
+      ? `/financials/${financialId}`
+      : company
+        ? `/analyses/${company.id}`
+        : structureId
+          ? `/notes/${structureId}`
+          : '/workspace'
   const active =
     section ??
     (location.pathname === '/examples/financial-cashflow'
@@ -121,6 +138,7 @@ export function Shell() {
     ? 'OFS'
     : (financialContext?.scope ??
       metadata?.scope ??
+      bundle?.scope ??
       params.get('scope') ??
       (company && !visualDemo ? 'CFS' : 'OFS'))
   return (
@@ -149,7 +167,9 @@ export function Shell() {
                   ? '/examples/financial-summary'
                   : visualDemo && path === 'cashflow'
                     ? '/examples/financial-cashflow'
-                    : `${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`
+                    : bundleId && !['evidence', 'prediction'].includes(path)
+                      ? `${searchPath}`
+                      : `${financialId && !['summary', 'cashflow'].includes(path) && financial?.note_workflow?.structure_id ? `/notes/${financial.note_workflow.structure_id}` : base}/${path}${location.search}`
               }
               className={`nav-item ${location.pathname !== '/' && active === path ? 'active' : ''}`}
             >
@@ -200,7 +220,9 @@ export function Shell() {
                       ? `${financialContext.period} 결산 보고서`
                       : metadata
                         ? `${metadata.period} 결산 보고서`
-                        : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
+                        : bundle
+                          ? `${bundle.period} 결산 보고서`
+                          : `${params.get('report')?.slice(0, 4) ?? '보고서 선택 전'}${params.get('report') ? ' 사업보고서' : ''}`}
                 </span>
                 <span>{scope === 'OFS' ? '별도(OFS)' : '연결(CFS)'}</span>
                 {financialContext && (

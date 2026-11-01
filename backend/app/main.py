@@ -16,11 +16,14 @@ from app.modules.company.reports import ReportRepository
 from app.modules.company.repository import CompanyRepository, run_imports
 from app.modules.company.router import router as company_router
 from app.modules.company.sync import CompanySync, run_weekly
+from app.modules.evidence.bundle_router import router as bundle_router
 from app.modules.evidence.dart_router import router as collection_router
+from app.modules.evidence.fact_router import router as fact_router
 from app.modules.evidence.router import router as evidence_router
 from app.modules.evidence.search_router import router as note_search_router
 from app.modules.financial.router import router as financial_router
 from app.modules.identity.router import router as identity_router
+from app.modules.risk.router import router as risk_router
 from app.modules.tasks.router import router as tasks_router
 
 
@@ -69,6 +72,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(tasks_router)
     app.include_router(evidence_router)
+    app.include_router(bundle_router)
+    app.include_router(fact_router)
+    app.include_router(risk_router)
     app.include_router(note_search_router)
     app.include_router(collection_router)
     app.include_router(financial_router)

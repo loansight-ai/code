@@ -60,6 +60,8 @@ export const stageLabels: Record<string, string> = {
   DISPATCH: '연결 점검 중',
   NOTE_STRUCTURE: '주석 구조화 중',
   NOTE_AGENT: '주석 근거 보완 탐색 중',
+  BUNDLE_AGENT: '통합 공시 근거 보완 탐색 중',
+  FACT_EXTRACTION: '구조화 사실 후보 추출 중',
   DART_COLLECT: 'DART 원문·주석 HTML 수집 중',
   FINANCIAL_ANALYSIS: '공시 재무 수집·계산 중',
   FINANCIAL_NOTE_ENRICHMENT: '구조화 주석의 재무값 보완·검증 중',

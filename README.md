@@ -7,11 +7,17 @@
 - 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 위험규칙·외부 모델·검토 내용의 서버 저장은 후속입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
-주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. [Codex 보완 탐색](backend/README.md#note-agent)은 서버 인증·실행 제한 설정 후 사용할 수 있으며, 인용을 검증한 사실 후보를 검수 전 상태로 저장합니다. OpenAI API 어댑터와 담당자 사실 검수 저장은 후속입니다.
+주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. [Codex 보완 탐색](backend/README.md#note-agent)은 서버 인증·실행 제한 설정 후 사용할 수 있으며, 인용을 검증한 사실 후보를 검수 전 상태로 저장합니다. 통합 근거 화면에서는 [구조화 사실 추출·원문 대조·검수 이력](backend/data/evidence/README.md#structured-facts)을 지원합니다. OpenAI API 어댑터는 후속입니다.
 
 핵심 재무 분석의 **주석 구조화·Codex 데이터 보완** 옵션을 선택하면 구조화 완료 후 미확보 계정 탐색·검증·재계산을 자동 진행하며, 보완값에서 구조화된 주석 셀을 열 수 있습니다. 실행·저장 계약은 [재무 주석 보완 안내](backend/README.md#financial-note-enrichment)를 따릅니다.
 
 ## 서비스 범위
+
+덤프의 시범 보고서 4건을 선택 적재해 기존 HTML 구조화 결과와 함께 검색·열람하는
+[통합 공시 근거](backend/README.md#dump-evidence)를 연결했습니다. 주석·위험징후와
+위험 사건 예측 화면에서 사실 후보를 추출하고 원문과 대조해 승인·반려·수정할 수 있습니다.
+승인 사실의 [위험규칙 입력 검증·실행기](backend/data/evidence/README.md#risk-inputs)를 연결했습니다.
+구체적인 판정 조건·임계값 확정과 규칙 등록·모델 추론은 후속입니다.
 
 기업·보고서 선택 → 수집/직접 입력 → 재무·주석 분석 → 현재 위험징후·외부 모델 예측 → 담당자 체크·검토 메모로 이어집니다. 제조·건설·도소매·부동산 임대 4개 업종을 대상으로 합니다.
 

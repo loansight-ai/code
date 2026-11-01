@@ -59,6 +59,10 @@ function TaskPanel() {
           })
           .safeParse(selected.result)
       : null
+  const bundleLink =
+    selected && isTerminal(selected)
+      ? z.object({ bundle_id: z.string().uuid() }).safeParse(selected.result)
+      : null
   const mounted = useRef(true)
   useEffect(() => {
     mounted.current = true
@@ -155,13 +159,17 @@ function TaskPanel() {
                           ? '주석 구조화'
                           : task.task_type === 'DART_COLLECT'
                             ? 'DART 원문 수집'
-                            : task.task_type === 'NOTE_AGENT'
+                            : ['NOTE_AGENT', 'BUNDLE_AGENT'].includes(
+                                  task.task_type,
+                                )
                               ? '주석 근거 보완 탐색'
                               : task.task_type === 'FINANCIAL_ANALYSIS'
                                 ? '핵심 재무 분석'
                                 : task.task_type === 'FINANCIAL_NOTE_ENRICHMENT'
                                   ? '재무 주석 데이터 보완'
-                                  : task.task_type}
+                                  : task.task_type === 'FACT_EXTRACTION'
+                                    ? '구조화 사실 후보 추출'
+                                    : task.task_type}
                     </strong>
                     <span>{statusLabels[task.status] ?? task.status}</span>
                   </div>
@@ -239,6 +247,19 @@ function TaskPanel() {
                       }}
                     >
                       재무 결과 보기
+                    </Link>
+                  </Button>
+                )}
+                {bundleLink?.success && (
+                  <Button asChild variant="outline">
+                    <Link
+                      to={`/evidence/${bundleLink.data.bundle_id}/evidence`}
+                      onClick={() => {
+                        setOpen(false)
+                        setSelected(null)
+                      }}
+                    >
+                      통합 근거 결과 보기
                     </Link>
                   </Button>
                 )}
