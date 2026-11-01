@@ -135,6 +135,110 @@ async def test_exposure_summary_revalidates_reviewed_amounts_and_source_changes(
     ]
 
 
+async def test_litigation_detail_fields_require_direct_evidence(client, fact_corpus, environment):
+    _, url, _, original = fact_corpus
+    _, _, database = environment
+    note = "보고기간 종료일 현재 소송의 결과는 합리적으로 예측할 수 없습니다."
+    entries = list(
+        segments(
+            original["report_id"],
+            "note_section",
+            {
+                "id": "litigation-detail",
+                "seq": "10",
+                "note_title": "소송 현황",
+                "body": note,
+                "tables": json.dumps(
+                    [
+                        {
+                            "caption": (
+                                "시험회사는 피고이며 원고는 가나다시. 소제기일 2024.03.11. "
+                                "사건번호 2024가합100. 1심 진행 중."
+                            ),
+                            "unit": "단위: 백만원",
+                            "cells": [
+                                ["구분", "당기 소송가액", "전기"],
+                                ["손해배상 청구", "152", "-"],
+                            ],
+                        }
+                    ]
+                ),
+            },
+        )
+    )
+    async with database.transaction() as db:
+        for entry in entries:
+            db.add(EvidenceSegment(**entry))
+    table = next(e for e in entries if e["kind"] == "table")
+    body = next(e for e in entries if e["kind"] == "text")
+    sid = str(table["id"])
+    data = {
+        "category": "litigation",
+        "kind": "litigation",
+        "statement": "손해배상 청구",
+        "subject": "시험회사",
+        "direction": "DEFENDANT",
+        "period": "2025.12",
+        "aggregation_level": "DETAIL",
+        "case_number": "2024가합100",
+        "filing_date": "2024-03-11",
+        "counterparty": "가나다시",
+        "status": "1심 진행 중",
+        "case_note": note,
+        "amount_role": "CLAIM",
+        "amount": {
+            "raw_value": "152",
+            "currency": "KRW",
+            "unit": "백만원",
+            "cell": {"segment_id": sid, "row": 1, "column": 1},
+        },
+        "citations": [
+            {"segment_id": sid, "field": f, "quote": table["text"]}
+            for f in [
+                "statement",
+                "subject",
+                "direction",
+                "period",
+                "aggregation_level",
+                "case_number",
+                "filing_date",
+                "counterparty",
+                "status",
+                "amount_role",
+                "amount",
+                "unit",
+            ]
+        ]
+        + [{"segment_id": str(body["id"]), "field": "case_note", "quote": note}],
+    }
+    fact = await create(client, url, data)
+    assert fact["validation"]["status"] == "CITATIONS_VALID", fact["validation"]
+    opened = (await client.post(url + f"/facts/{fact['id']}/open")).json()
+    approved, _ = await decision(client, url, fact, opening=opened["opening_id"])
+    assert approved.status_code == 200, approved.text
+    summary = (await client.get(url + "/exposure-summary")).json()["litigation"]
+    case = summary["top_cases"][0]
+    assert (case["filing_date"], case["plaintiff"], case["status"]) == (
+        "2024-03-11",
+        "가나다시",
+        "1심 진행 중",
+    )
+    assert summary["notes"][0]["quote"] == note
+    assert str(body["id"]) in {s["segment_id"] for s in summary["notes"][0]["sources"]}
+    bad = copy.deepcopy(data)
+    bad["filing_date"] = "2023-03-11"
+    assert "filing_date_not_supported" in {
+        i["code"] for i in (await create(client, url, bad))["validation"]["issues"]
+    }
+    bad = copy.deepcopy(data)
+    for cite in bad["citations"]:
+        if cite["field"] == "filing_date":
+            cite["quote"] = "2024.03.11"
+    assert "filing_date_context_required" in {
+        i["code"] for i in (await create(client, url, bad))["validation"]["issues"]
+    }
+
+
 async def test_review_open_required_audited_idempotent_and_revision(client, fact_corpus):
     _, url, data, _ = fact_corpus
     fact = await create(client, url, data)

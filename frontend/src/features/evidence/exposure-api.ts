@@ -76,10 +76,25 @@ const schema = z.object({
         label: z.string(),
         claim: z.string(),
         sources: z.array(source),
+        filing_date: z.string().nullable().optional(),
+        plaintiff: z.string().nullable().optional(),
+        status: z.string().nullable().optional(),
       }),
     ),
     sources: z.array(source),
     plaintiff_facts: z.number(),
+    detected: z.boolean().default(false),
+    case_list_available: z.boolean().default(false),
+    notes: z
+      .array(z.object({ quote: z.string(), sources: z.array(source) }))
+      .default([]),
+    plaintiff: z
+      .object({
+        case_count: z.number().nullable(),
+        claim: amount,
+        sources: z.array(source),
+      })
+      .optional(),
   }),
   excluded_facts: z.number(),
 })

@@ -126,6 +126,8 @@ export function FactForm({
                 project_count: null,
                 case_number: null,
                 case_count: null,
+                filing_date: null,
+                case_note: null,
               })
             }}
           >
@@ -294,6 +296,16 @@ export function FactForm({
             {data.kind === 'litigation' && (
               <>
                 <label>
+                  소제기일{' '}
+                  <input
+                    type="date"
+                    value={data.filing_date ?? ''}
+                    onChange={(e) =>
+                      patch({ filing_date: e.target.value || null })
+                    }
+                  />
+                </label>
+                <label>
                   사건번호{' '}
                   <input
                     maxLength={100}
@@ -318,6 +330,20 @@ export function FactForm({
                     }
                   />
                 </label>
+                <label>
+                  소송 관련 원문 설명{' '}
+                  <textarea
+                    maxLength={2000}
+                    value={data.case_note ?? ''}
+                    onChange={(e) =>
+                      patch({ case_note: e.target.value || null })
+                    }
+                  />
+                </label>
+                <p>
+                  소제기일은 공시일·기일과 구분하고, 피고 사건의 상대방에는
+                  원고를 기록합니다. 각 항목의 직접 인용을 연결하세요.
+                </p>
               </>
             )}
             <p>

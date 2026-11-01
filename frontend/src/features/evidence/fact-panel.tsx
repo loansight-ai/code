@@ -447,6 +447,18 @@ function FactSummary({ fact }: { fact: Fact }) {
     CLAIM: '청구액',
     GUARANTEE: '보증액',
     PRINCIPAL: '원금',
+    LOAN_BALANCE: '대출잔액',
+    COMMITMENT: '보증·약정',
+    RELATED_PARTY: '특수관계자 제공분',
+    PROVISION: '소송충당부채',
+    DETAIL: '상세행',
+    SUBTOTAL: '소계행',
+    TOTAL: '총계행',
+    PF_GUARANTEE: 'PF 대출보증',
+    COMPLETION_SUPPORT: '책임준공 미이행 시 채무인수',
+    FUNDING_SUPPORT: '자금보충',
+    BUYER_GUARANTEE: '수분양자 중도금 보증',
+    OTHER: '기타 보증·조건부 의무',
   }
   return (
     <>
@@ -463,12 +475,25 @@ function FactSummary({ fact }: { fact: Fact }) {
             'amount_role',
             'maturity',
             'status',
+            ...(
+              [
+                'obligation_type',
+                'aggregation_level',
+                'project_count',
+                'case_number',
+                'case_count',
+                'filing_date',
+                'case_note',
+              ] as const
+            ).filter((k) => fact.data[k] != null && fact.data[k] !== 'UNKNOWN'),
           ] as const
         ).map((k) => (
           <div key={k}>
             <dt>{fields[k]}</dt>
             <dd>
-              {fact.data[k] ? (labels[fact.data[k]] ?? fact.data[k]) : '미확인'}
+              {fact.data[k] != null && fact.data[k] !== ''
+                ? (labels[String(fact.data[k])] ?? String(fact.data[k]))
+                : '미확인'}
             </dd>
           </div>
         ))}

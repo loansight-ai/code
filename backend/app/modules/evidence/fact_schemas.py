@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Literal
 from uuid import UUID
 
@@ -36,6 +37,8 @@ FieldKey = Literal[
     "project_count",
     "case_number",
     "case_count",
+    "filing_date",
+    "case_note",
 ]
 
 
@@ -94,6 +97,8 @@ class FactInput(BaseModel):
     project_count: int | None = Field(default=None, ge=0)
     case_number: str | None = Field(default=None, min_length=1, max_length=100)
     case_count: int | None = Field(default=None, ge=0)
+    filing_date: date | None = None
+    case_note: str | None = Field(default=None, min_length=1, max_length=2000)
 
     @model_validator(mode="after")
     def kind_matches_category(self):
@@ -111,7 +116,9 @@ class FactInput(BaseModel):
             raise ValueError("fact_kind_category_mismatch")
         if self.kind != "guarantee" and (self.obligation_type or self.project_count is not None):
             raise ValueError("guarantee_metadata_kind_mismatch")
-        if self.kind != "litigation" and (self.case_number or self.case_count is not None):
+        if self.kind != "litigation" and (
+            self.case_number or self.case_count is not None or self.filing_date or self.case_note
+        ):
             raise ValueError("litigation_metadata_kind_mismatch")
         return self
 

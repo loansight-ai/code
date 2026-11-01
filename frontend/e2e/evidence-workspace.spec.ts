@@ -257,6 +257,20 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
   await expect(
     main.getByRole('region', { name: '소송 현황 피고' }).getByText('12건'),
   ).toBeVisible()
+  const litigation = main.getByRole('region', { name: '소송 현황 피고' })
+  await expect(litigation.getByText('386억', { exact: true })).toBeVisible()
+  await expect(
+    litigation
+      .getByRole('table', { name: '피고 소송가액 상위 사건' })
+      .getByRole('row'),
+  ).toHaveCount(4)
+  await expect(litigation.getByText('2024.03.11')).toBeVisible()
+  const compositionBounds = await composition.boundingBox()
+  const litigationBounds = await litigation.boundingBox()
+  expect(litigationBounds!.width).toBeGreaterThanOrEqual(
+    compositionBounds!.width,
+  )
+  await litigation.screenshot({ path: info.outputPath('litigation-card.png') })
   await expect(overview.getByRole('row')).toHaveCount(7)
   await expect(
     detail.getByText('감사의견 기재: 적정', { exact: true }),
@@ -274,6 +288,15 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
   const exposureDialog = page.getByRole('dialog', {
     name: '구성·만기·소송 원문',
   })
+  await expect(
+    exposureDialog.getByRole('table', { name: '저장된 근거 표' }),
+  ).toBeVisible()
+  await exposureDialog
+    .getByRole('button', { name: '닫기', exact: true })
+    .click()
+  await litigation
+    .getByRole('button', { name: '하자보수금 청구 원문 열기' })
+    .click()
   await expect(
     exposureDialog.getByRole('table', { name: '저장된 근거 표' }),
   ).toBeVisible()

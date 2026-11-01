@@ -89,7 +89,9 @@ def select_level(records):
 
 
 def source_refs(records):
-    return list({r["source"]["segment_id"]: r["source"] for r in records}.values())
+    return list(
+        {s["segment_id"]: s for r in records for s in r.get("sources", [r["source"]])}.values()
+    )
 
 
 def composition(records, direction):
@@ -190,16 +192,31 @@ def unique_items(records):
 
 
 def litigation(records, nonmonetary):
-    nonmonetary = [
-        r
-        for r in nonmonetary
-        if r["data"]["kind"] == "litigation" and r["data"]["direction"] == "DEFENDANT"
-    ]
-    cases = [
-        r
-        for r in records
-        if r["data"]["kind"] == "litigation" and r["data"]["direction"] == "DEFENDANT"
-    ]
+    all_cases = [r for r in [*records, *nonmonetary] if r["data"]["kind"] == "litigation"]
+    cases = [r for r in all_cases if r["data"]["direction"] == "DEFENDANT"]
+    plaintiffs = [r for r in all_cases if r["data"]["direction"] == "PLAINTIFF"]
+
+    def single(values):
+        known = {v for v in values if v is not None and v != ""}
+        return next(iter(known)) if len(known) == 1 else None
+
+    def reported(entries, role):
+        return single(
+            r["value"]
+            for r in entries
+            if r["data"].get("aggregation_level") == "TOTAL" and r["data"]["amount_role"] == role
+        )
+
+    def reported_count(entries):
+        return single(
+            r["data"].get("case_count")
+            for r in entries
+            if r["data"].get("aggregation_level") == "TOTAL"
+        )
+
+    def metadata(entries, key):
+        return single(r["data"].get(key) for r in entries)
+
     grouped = defaultdict(list)
     for r in cases:
         number = r["data"].get("case_number")
@@ -209,33 +226,42 @@ def litigation(records, nonmonetary):
         if number is None:
             continue
         # One case may have several sources; repeated reported claims are never summed.
-        claim = {r["value"] for r in entries if r["data"]["amount_role"] == "CLAIM"}
+        claim_entries = [
+            r for r in entries if r["data"]["amount_role"] == "CLAIM" and r["value"] is not None
+        ]
+        claim = {r["value"] for r in claim_entries}
         if len(claim) == 1:
             details.append(
                 {
                     "case_number": number,
-                    "label": entries[0]["data"]["statement"],
+                    "label": metadata(claim_entries, "statement") or number,
                     "claim": text(next(iter(claim))),
+                    "filing_date": metadata(entries, "filing_date"),
+                    "plaintiff": metadata(entries, "counterparty"),
+                    "status": metadata(entries, "status"),
                     "sources": source_refs(entries),
                 }
             )
-    official = [r for r in cases if r["data"].get("aggregation_level") == "TOTAL"]
-    claims = {r["value"] for r in official if r["data"]["amount_role"] == "CLAIM"}
-    provisions = {r["value"] for r in official if r["data"]["amount_role"] == "PROVISION"}
-    counts = {
-        r["data"].get("case_count")
-        for r in [*official, *nonmonetary]
-        if r["data"]["kind"] == "litigation"
-        and r["data"]["direction"] == "DEFENDANT"
-        and r["data"].get("aggregation_level") == "TOTAL"
-        and r["data"].get("case_count") is not None
-    }
+    notes = defaultdict(list)
+    for r in cases:
+        if r["data"].get("case_note"):
+            notes[r["data"]["case_note"]].append(r)
     return {
-        "case_count": next(iter(counts)) if len(counts) == 1 else None,
-        "claim": text(next(iter(claims))) if len(claims) == 1 else None,
-        "provision": text(next(iter(provisions))) if len(provisions) == 1 else None,
+        "case_count": reported_count(cases),
+        "claim": text(reported(cases, "CLAIM")),
+        "provision": text(reported(cases, "PROVISION")),
         "top_cases": sorted(details, key=lambda r: Decimal(r["claim"]), reverse=True)[:3],
-        "sources": source_refs([*cases, *nonmonetary]),
+        "sources": source_refs(cases),
+        "detected": bool(cases),
+        "case_list_available": any(k is not None for k in grouped),
+        "notes": [
+            {"quote": quote, "sources": source_refs(entries)} for quote, entries in notes.items()
+        ],
+        "plaintiff": {
+            "case_count": reported_count(plaintiffs),
+            "claim": text(reported(plaintiffs, "CLAIM")),
+            "sources": source_refs(plaintiffs),
+        },
         "plaintiff_facts": sum(
             r["data"]["kind"] == "litigation" and r["data"]["direction"] == "PLAINTIFF"
             for r in records
@@ -336,6 +362,18 @@ async def read_summary(db, tools, database):
             excluded += 1
             continue
         entry = {"data": row.data, "source": ref, "value": decimal(checked["normalized_amount"])}
+        if fact.kind == "litigation":
+            references = {str(sid): ref}
+            for cite in fact.citations:
+                key = str(cite.segment_id)
+                if key not in references:
+                    cited = await resolve(tools, cite.segment_id)
+                    references[key] = {
+                        "segment_id": key,
+                        "title": cited["title"],
+                        "scope": cited["scope"],
+                    }
+            entry["sources"] = list(references.values())
         if not fact.amount:
             nonmonetary.append(entry)
         elif fact.amount.currency == "KRW" and entry["value"] is not None:

@@ -88,8 +88,17 @@ function mount() {
     </MemoryRouter>,
   )
 }
-function mock({ blocked = false, stale = false } = {}) {
+function mock({
+  blocked = false,
+  stale = false,
+  metadata = {},
+}: {
+  blocked?: boolean
+  stale?: boolean
+  metadata?: Record<string, unknown>
+} = {}) {
   let fact = structuredClone(candidate)
+  Object.assign(fact.data, metadata)
   const calls: Record<string, unknown>[] = []
   const fetch = vi
     .spyOn(globalThis, 'fetch')
@@ -176,6 +185,35 @@ function mock({ blocked = false, stale = false } = {}) {
     })
   return { calls, fetch }
 }
+
+it('shows the selected litigation metadata before a reviewer can approve', async () => {
+  mock({
+    metadata: {
+      category: 'litigation',
+      kind: 'litigation',
+      statement: '손해배상 청구',
+      direction: 'DEFENDANT',
+      counterparty: '가나다시',
+      filing_date: '2024-03-11',
+      case_number: '2024가합100',
+      case_note: '소송 결과를 예측할 수 없습니다.',
+    },
+  })
+  mount()
+  const user = userEvent.setup()
+  await user.click(
+    await screen.findByRole('button', {
+      name: '소송 · 손해배상 청구 · 검수 대기',
+    }),
+  )
+  const panel = await screen.findByRole('region', { name: '선택 사실 검수' })
+  expect(within(panel).getByText('2024-03-11')).toBeInTheDocument()
+  expect(within(panel).getByText('2024가합100')).toBeInTheDocument()
+  expect(
+    within(panel).getByText('소송 결과를 예측할 수 없습니다.'),
+  ).toBeInTheDocument()
+  expect(within(panel).getByRole('button', { name: '승인' })).toBeDisabled()
+})
 
 it('requires opening evidence and a reason, records approval and keeps model input withheld', async () => {
   const { calls } = mock()

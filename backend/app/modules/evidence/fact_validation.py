@@ -95,6 +95,30 @@ async def validate(tools, fact):
         require("maturity", fact.maturity)
     if fact.status:
         require("status", fact.status)
+    if fact.case_note:
+        require("case_note", fact.case_note)
+    if fact.filing_date:
+        date_quotes = require("filing_date")
+        if not any(re.search(r"소제기|소송제기|제소|제기일", normalize(q)) for q in date_quotes):
+            block(
+                "filing_date",
+                "filing_date_context_required",
+                "공시일·기일이 아닌 소제기일의 근거가 필요합니다.",
+            )
+        expected = (fact.filing_date.year, fact.filing_date.month, fact.filing_date.day)
+        observed = {
+            tuple(map(int, parts))
+            for quote in date_quotes
+            for parts in re.findall(
+                r"(?<!\d)(\d{4})[년./-]\s*(\d{1,2})[월./-]\s*(\d{1,2})(?!\d)", quote
+            )
+        }
+        if expected not in observed:
+            block(
+                "filing_date",
+                "filing_date_not_supported",
+                "소제기일의 날짜를 직접 인용해야 합니다.",
+            )
     if fact.obligation_type:
         q = require("obligation_type")
         markers = {

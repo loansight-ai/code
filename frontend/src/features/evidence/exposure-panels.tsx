@@ -1,7 +1,6 @@
 import { useContext, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { ArrowUpRight } from 'lucide-react'
 import { Button } from '../../shared/components/button'
 import { Modal } from '../../shared/components/modal'
 import { BundleContext } from './bundle-panel'
@@ -14,6 +13,8 @@ import {
 } from './exposure-api'
 import './exposure-panels.css'
 import { SessionContext } from '../session/session-context'
+import { ExposureSourceLinks as SourceLinks } from './exposure-source-links'
+import { LitigationPanel } from './litigation-panel'
 
 const types = [
   ['PF_GUARANTEE', 'PF 대출보증'],
@@ -33,25 +34,6 @@ const buckets = [
   ['undisclosed', '만기 미공시'],
 ] as const
 type OpenSource = (source: ExposureSource) => void
-
-function SourceLinks({
-  sources,
-  onOpen,
-}: {
-  sources: ExposureSource[]
-  onOpen: OpenSource
-}) {
-  return (
-    <span className="exposure-sources">
-      {sources.map((s) => (
-        <button key={s.segment_id} title={s.title} onClick={() => onOpen(s)}>
-          {s.title}
-          <ArrowUpRight size={11} aria-hidden="true" />
-        </button>
-      ))}
-    </span>
-  )
-}
 
 function SourceDrawer({
   bundle,
@@ -357,64 +339,13 @@ export function ExposurePanels({ bundle }: { bundle: EvidenceBundle }) {
             부족하면 전체 비중으로 해석할 수 없습니다.
           </p>
         </section>
-        <section
-          className="panel exposure-litigation"
-          aria-label="소송 현황 피고"
-        >
-          <div className="exposure-panel-heading">
-            <h2>
-              소송 현황 <span>(피고)</span>
-            </h2>
-            <span className="exposure-unavailable">억원</span>
-          </div>
-          <dl className="exposure-litigation-stats">
-            <div>
-              <dt>공시 건수</dt>
-              <dd>
-                {data?.litigation.case_count == null
-                  ? '미확보'
-                  : `${data.litigation.case_count}건`}
-              </dd>
-            </div>
-            <div>
-              <dt>소송가액</dt>
-              <dd>{money(data?.litigation.claim)}</dd>
-            </div>
-            <div>
-              <dt>소송충당부채</dt>
-              <dd>{money(data?.litigation.provision)}</dd>
-            </div>
-          </dl>
-          {!!data?.litigation.top_cases.length && (
-            <>
-              <h3>소송가액 상위 3건</h3>
-              <ol className="exposure-case-list">
-                {data.litigation.top_cases.map((c) => (
-                  <li key={c.case_number}>
-                    <div>
-                      <strong>{c.label}</strong>
-                      <span>{money(c.claim)}억원</span>
-                    </div>
-                    <small>{c.case_number}</small>
-                    <SourceLinks sources={c.sources} onOpen={setSource} />
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
-          <SourceLinks
-            sources={data?.litigation.sources ?? []}
-            onOpen={setSource}
-          />
-          <p className="exposure-footnote">
-            {data?.litigation.top_cases.length
-              ? '사건번호와 소송가액이 확인된 개별 사건만 표시합니다.'
-              : '개별 사건이 미확보되면 공시된 합계만 표시합니다.'}{' '}
-            원고 사건은 참고 정보이며 피고 금액에 합산하지 않습니다. 소송가액은
-            손실 확정액이 아닙니다.
-          </p>
-        </section>
       </div>
+      <LitigationPanel
+        data={data?.litigation}
+        loading={query.isPending}
+        error={query.isError}
+        onOpen={setSource}
+      />
       {!!data?.excluded_facts && (
         <p className="exposure-exclusions">
           검수 대기·근거 변경·기간/회계 범위 미확인·충돌 등으로 사실{' '}

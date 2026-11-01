@@ -31,6 +31,8 @@ export const fields = {
   project_count: '사업장 수',
   case_number: '사건번호',
   case_count: '공시 소송 건수',
+  filing_date: '소제기일',
+  case_note: '소송 관련 원문 설명',
 } as const
 const citation = z.object({
   segment_id: z.string().uuid(),
@@ -71,6 +73,8 @@ export const factDataSchema = z.object({
   project_count: z.number().nullable().optional(),
   case_number: z.string().nullable().optional(),
   case_count: z.number().nullable().optional(),
+  filing_date: z.string().nullable().optional(),
+  case_note: z.string().nullable().optional(),
 })
 const validation = z.object({
   status: z.enum(['BLOCKED', 'CITATIONS_VALID']),

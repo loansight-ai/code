@@ -190,3 +190,78 @@ def test_project_counts_are_not_summed_across_obligations_for_the_same_project()
         bundle(), [record("10"), record("10", source="summary", aggregation_level="TOTAL")]
     )
     assert result["provided"]["totals"]["loan_balance"] == "10"
+
+
+def test_litigation_metadata_and_plaintiff_totals_are_kept_separate():
+    defendant = record(
+        "386",
+        "CLAIM",
+        kind="litigation",
+        direction="DEFENDANT",
+        aggregation_level="TOTAL",
+        case_count=12,
+    )
+    plaintiff = record(
+        "214",
+        "CLAIM",
+        kind="litigation",
+        direction="PLAINTIFF",
+        aggregation_level="TOTAL",
+        case_count=5,
+        source="plaintiff",
+    )
+    detail = record(
+        "152",
+        "CLAIM",
+        kind="litigation",
+        direction="DEFENDANT",
+        case_number="2024가합100",
+        counterparty="입주자대표회의",
+        filing_date="2024-03-11",
+        status="1심 진행 중",
+        case_note="소송 결과를 합리적으로 예측할 수 없습니다.",
+        row=2,
+    )
+    result = build_summary(bundle(), [defendant, plaintiff, detail])["litigation"]
+    assert (result["claim"], result["case_count"]) == ("386", 12)
+    assert (result["plaintiff"]["claim"], result["plaintiff"]["case_count"]) == ("214", 5)
+    assert result["detected"] and result["case_list_available"]
+    case = result["top_cases"][0]
+    assert (case["filing_date"], case["plaintiff"], case["status"]) == (
+        "2024-03-11",
+        "입주자대표회의",
+        "1심 진행 중",
+    )
+    assert result["notes"][0]["quote"] == detail["data"]["case_note"]
+    assert len(result["sources"]) == 1
+
+
+def test_conflicting_case_metadata_is_not_chosen_arbitrarily():
+    a = record(
+        "152",
+        "CLAIM",
+        kind="litigation",
+        direction="DEFENDANT",
+        case_number="A",
+        filing_date="2024-03-11",
+        status="1심",
+        counterparty="가",
+    )
+    b = record(
+        "152",
+        "CLAIM",
+        kind="litigation",
+        direction="DEFENDANT",
+        case_number="A",
+        filing_date="2023-03-11",
+        status="2심",
+        counterparty="나",
+        source="second",
+    )
+    result = build_summary(bundle(), [a, b])["litigation"]["top_cases"]
+    assert len(result) == 1 and result[0]["claim"] == "152"
+    assert (
+        result[0]["filing_date"] is None
+        and result[0]["plaintiff"] is None
+        and result[0]["status"] is None
+    )

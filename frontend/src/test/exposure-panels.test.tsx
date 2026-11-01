@@ -73,6 +73,32 @@ it('shows the loan-balance numerator, received exclusion and unknown-maturity am
   expect(
     screen.getByRole('region', { name: '소송 현황 피고' }),
   ).toHaveTextContent('12건')
+  const litigation = screen.getByRole('region', { name: '소송 현황 피고' })
+  expect(
+    within(litigation).getByRole('table', { name: '피고 소송가액 상위 사건' }),
+  ).toHaveTextContent('2024.03.11')
+  expect(litigation).toHaveTextContent(/원고 \(참고\):\s*5건\s*·\s*214억/)
+  expect(litigation).toHaveTextContent('1심 진행 중')
+})
+
+it('shows a reported summary without inventing individual cases or quotes', async () => {
+  const data = exposureFixture(bundle)
+  mount({
+    ...data,
+    litigation: {
+      ...data.litigation,
+      top_cases: [],
+      case_list_available: false,
+      notes: [],
+    },
+  })
+  await screen.findByText('건별 목록 미확보')
+  const litigation = screen.getByRole('region', { name: '소송 현황 피고' })
+  expect(within(litigation).getByText('386억')).toBeInTheDocument()
+  expect(within(litigation).queryByText('2024.03.11')).not.toBeInTheDocument()
+  expect(
+    within(litigation).getByText('소송 결과 관련 원문 인용 미확보'),
+  ).toBeInTheDocument()
 })
 
 it('keeps missing financial values and maturity information separate from numeric zero', async () => {
