@@ -4,12 +4,17 @@
 
 - 팀: KB Bridge 4조참치 · 프로젝트명 확정: 2026-10-22
 - 기획 기준: 기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4
-- 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 위험규칙·외부 모델·검토 내용의 서버 저장은 후속입니다.
+- 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 통합 사실의 서버 검수와 위험규칙 입력 실행기를 구현했으며, 운영 규칙 등록·모델 추론·검토 메모 서버 저장은 후속입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
 주석 결과 화면에서 [공통 6항목 기본 검색](backend/README.md#note-search-api)을 실행해 근거 후보를 저장·추가 조회하고 원문으로 이동할 수 있습니다. [Codex 보완 탐색](backend/README.md#note-agent)은 서버 인증·실행 제한 설정 후 사용할 수 있으며, 인용을 검증한 사실 후보를 검수 전 상태로 저장합니다. 통합 근거 화면에서는 [구조화 사실 추출·원문 대조·검수 이력](backend/data/evidence/README.md#structured-facts)을 지원합니다. OpenAI API 어댑터는 후속입니다.
 
 핵심 재무 분석의 **주석 구조화·Codex 데이터 보완** 옵션을 선택하면 구조화 완료 후 미확보 계정 탐색·검증·재계산을 자동 진행하며, 보완값에서 구조화된 주석 셀을 열 수 있습니다. 실행·저장 계약은 [재무 주석 보완 안내](backend/README.md#financial-note-enrichment)를 따릅니다.
+
+**공통 핵심 5개 비율**에는 [화면 상대 구간 기준](backend/README.md#핵심-5개-비율-카드-평가)을
+적용했습니다. 주석 화면에는 추출 현황·선택 근거, 승인 사실의 보증 구성·1년 내 만기·소송
+현황을 연결했으며, 위험징후 탭은 [PF 만기 사다리](backend/data/evidence/README.md#pf-maturity-ladder)를
+제공합니다. 확보된 값의 상대 위치·만기 분포와 운영 위험규칙 판정은 구분합니다.
 
 ## 서비스 범위
 
@@ -23,7 +28,9 @@
 
 **AI 모델 학습은 이 저장소에서 진행하지 않습니다.** 외부 모델 파일/추론 API와 사용 가능 상태를 연동합니다. 예측 조건이 충족되지 않으면 확률을 보류하고, 최종 여신 판단은 담당자가 수행합니다.
 
-초기 사용자는 서버가 발급한 **5자리 숫자 코드**로 구분하고 서버 세션으로 작업·메모를 복원합니다. 향후 정식 로그인은 기존 사용자 ID에 연결합니다. 코드만으로 진입하는 초기 사용 범위와 세부 규칙은 [사용자 식별 설계](docs/design/05_project-and-deployment.md#identity)를 따릅니다.
+초기 사용자는 서버가 발급한 **5자리 숫자 코드**로 구분하고 서버 세션으로 작업을 복원합니다. 검토 메모 초안은 브라우저에 저장하며 서버의 사실 승인 이력과 구분합니다. 향후 정식 로그인은 기존 사용자 ID에 연결합니다. 코드만으로 진입하는 초기 사용 범위와 세부 규칙은 [사용자 식별 설계](docs/design/05_project-and-deployment.md#identity)를 따릅니다.
+
+현재 구현과 기획의 차이·위험단계 참고 기준·미완료 범위는 [현행 상태표](docs/design/06_delivery-and-validation.md#current-status)에서 관리합니다.
 
 ## 설계 문서
 
@@ -38,6 +45,8 @@
 | [화면·검토](docs/design/04_ui-and-review.md) | 공통 UI·원문 열람·담당자 체크·초안 편집/재생성 |
 | [프로젝트 구조·배포](docs/design/05_project-and-deployment.md) | 코드 구조·Compose/k3s·사용자 식별·운영 |
 | [개발·제공 동작 계획](docs/design/06_delivery-and-validation.md) | 구현 순서·현행 기능 37개 연결·검수·미정 항목 |
+| [덤프·구조화 근거 통합](docs/design/07_dump-evidence-integration.md) | 선택 적재·사실 검수·규칙 입력과 확장 계획 |
+| [업종별 지표·징후 참고](docs/03_업종별_핵심재무지표_상환연체위험징후지표_v0.0.3.md) | 지표·위험단계 제안. 운영 등록/승인과 구분 |
 | [커버리지 검토](docs/reviews/01_architecture-coverage-v0.4.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
 
 기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.4](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
@@ -92,7 +101,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 기본 화면은 실제 DART 기업 검색을 제공하며 `/?data=demo`에서는 가상 기업·수치로 분석 화면을 둘러볼 수 있습니다. 서버 세션·작업 알림은 연결됐습니다. 실제 공시 수집·주석 구조화 결과의 화면 조회·위험 판정·모델 추론은 후속 구현입니다.
+Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 기본 화면은 실제 DART 기업 검색을 제공하며 `/?data=demo`에서는 가상 기업·수치로 분석 화면을 둘러볼 수 있습니다. 서버 세션·작업 알림은 연결됐습니다. 실제 공시 수집·주석 구조화 결과 조회·사실 검수·규칙 입력 상태는 연결됐습니다. 운영 규칙에 따른 위험 판정과 모델 추론은 후속입니다.
 
 ## 협업
 
@@ -115,4 +124,4 @@ Node.js 24.22.1·pnpm 10.34.9가 필요합니다. 기본 화면은 실제 DART �
 
 ## 2026.10.29 기획 기준 개정
 
-기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4 기준입니다. 연결(CFS) 우선·없으면 별도(OFS) 전환과 새 징후 기준을 적용합니다. 복합 위험 7유형·23개 후보·별도 기준 모델 비교는 현행 범위에서 제외합니다. 기존 설계·구현 이력과 화면설계서는 보존하며, 이 README 개정만으로 실행 코드의 실제 회계 선택·위험규칙이 바뀌었다고 주장하지 않습니다. 기존 시스템 설계와 충돌하는 기획 범위는 [현재 상세 기획](https://github.com/loansight-ai/docs/blob/main/01-planning/README.md)을 우선 확인합니다.
+기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4의 개정 내용은 연결(CFS) 우선·없으면 별도(OFS) 전환과 새 징후 기준입니다. 이는 기획 방향이며 현재 실행 코드에 적용됐다는 뜻은 아닙니다. 현재 구현은 이후 사용자 요청에 따른 OFS 기본·CFS 명시적 분리입니다. 복합 위험 7유형·23개 후보·별도 기준 모델 비교는 현행 범위에서 제외합니다. 기존 설계·구현 이력과 화면설계서는 보존하며, 이 README 개정만으로 실행 코드의 실제 회계 선택·위험규칙이 바뀌었다고 주장하지 않습니다. 기존 시스템 설계와 충돌하는 기획 범위는 [현재 상세 기획](https://github.com/loansight-ai/docs/blob/main/01-planning/README.md)을 우선 확인합니다.

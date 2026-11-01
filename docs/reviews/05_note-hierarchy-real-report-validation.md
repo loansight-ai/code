@@ -51,10 +51,10 @@
 
 ## 산출물과 해석 범위
 
-검증 산출물은 Git에서 제외한 `.run/dart-real-report-check/`에 있다. 아래 링크는 이번 작업 환경의 로컬 산출물이며 새 체크아웃에 포함되지 않는다.
+검증 산출물은 당시 Git 제외 경로 `.run/dart-real-report-check/`에 보관했다. 아래 경로의 산출물은 현재 작업공간에서 확인되지 않으며 새 체크아웃에도 포함되지 않는다. 재검증 시 다시 생성해야 한다.
 
-- [연결 주석 검토 HTML](../../.run/dart-real-report-check/CFS/result/review.html), [별도 주석 검토 HTML](../../.run/dart-real-report-check/OFS/result/review.html)
-- [기계 판독용 검증 요약](../../.run/dart-real-report-check/validation-summary.json), [Chrome 검증 결과](../../.run/dart-real-report-check/browser-validation.json)
+- 연결 주석 검토 HTML `.run/dart-real-report-check/CFS/result/review.html`, 별도 주석 검토 HTML `.run/dart-real-report-check/OFS/result/review.html`
+- 기계 판독용 검증 요약 `.run/dart-real-report-check/validation-summary.json`, Chrome 검증 결과 `.run/dart-real-report-check/browser-validation.json`
 - 원본 ZIP·공시검색 응답·선택 보고서 정보·보고서 목차·연결/별도 입력 HTML·화면 캡처·이번 검증의 다운로드/처리 스크립트도 같은 폴더에 보관했다.
 
 이번 검증으로 실제 보고서 한 건의 주석 HTML에 대해 패키지 실행·원문 보존·산출물 표시가 동작함을 확인했다. 결과 상태는 여전히 `rule_based_draft_not_gold`, `semantic_accuracy_measured=false`다. 직접 부모 미확정 48/50개와 절대 깊이 미확정 67/67개를 보존했으며, 검토 화면의 미확정 안내는 절대 깊이 미확정 항목을 포함하므로 직접 부모 미확정 집계와 구분한다. 검토 큐 개수도 부모 오류 수나 정확도 지표가 아니다.

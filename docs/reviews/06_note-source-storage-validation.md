@@ -30,7 +30,7 @@ Windows 동시 저장 검사에서 파일 교체 경합과 일반 경로/확장 
 
 다른 사용자로 동일 구조화 ID 조회 시 404를 확인했다. 최종 이미지 재생성 후에도 기존 결과와 구간·원문 해시를 조회하고 재접수 시 같은 ID를 재사용했다. 이어 새 사용자로 두 입력을 접수해 최종 Worker의 새 작업도 SUCCEEDED로 종료되고 동일 구간 수가 저장됨을 확인했다. 기존 개발 DB·MQ·원문 볼륨을 삭제하지 않았다.
 
-로컬 근거는 Git 제외 경로인 [검증 요약](../../.run/note-source-storage-live/summary.json)과 같은 폴더의 CFS/OFS metadata·segments JSON에 있다. 새 체크아웃에는 포함되지 않는다. 검사 스크립트는 `.run/check-note-storage-live.py`에 보관했다. API 조회를 기다리는 해당 스크립트의 짧은 polling은 검증용이며 프론트의 상태 갱신 방식은 기존 SSE를 유지한다.
+로컬 근거는 Git 제외 경로인 검증 요약 `.run/note-source-storage-live/summary.json`과 같은 폴더의 CFS/OFS metadata·segments JSON에 있다. 현재 작업공간에서 해당 산출물은 확인되지 않으며 새 체크아웃에도 포함되지 않는다. 재검증 시 다시 생성해야 한다. 검사 스크립트는 `.run/check-note-storage-live.py`에 보관했다. API 조회를 기다리는 해당 스크립트의 짧은 polling은 검증용이며 프론트의 상태 갱신 방식은 기존 SSE를 유지한다.
 
 ## 자동 검증 범위
 

@@ -2,7 +2,7 @@
 
 [Issue #9](https://github.com/loansight-ai/code/issues/9)의 실행 기반과 [Issue #11](https://github.com/loansight-ai/code/issues/11)의 사용자·세션·비동기 작업 흐름을 제공합니다.
 
-Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업 검색·원문 수집과 [핵심 재무 분석](#financial-api)을 구현했으며 위험규칙·외부 모델 연동은 후속입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
+Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pyproject.toml`, 실제 설치 버전은 `uv.lock`에서 관리합니다. 사용자 식별·해시 세션·접근 범위·Outbox·RabbitMQ·Worker·Relay·SSE를 구현했습니다. DART 기업 검색·원문 수집과 [핵심 재무 분석](#financial-api)을 구현하고 위험규칙 입력 실행기를 연결했습니다. 운영 규칙 등록·외부 모델 추론은 후속입니다. 목표 구조와 후속 순서는 [프로젝트 설계](../docs/design/05_project-and-deployment.md), [개발 계획](../docs/design/06_delivery-and-validation.md#roadmap)을 따릅니다.
 
 로컬 재무제표 주석 HTML을 처리하는 [dart-note-hierarchy wheel](app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl) v0.8.4를 uv·Docker 의존성에 등록했습니다. 인증된 접수 API→Outbox→RabbitMQ→Worker로 구조화하고 원문과 구간을 영속 저장합니다. 저장된 결과는 원문 뷰어와 [통합 사실 추출·검수](data/evidence/README.md#structured-facts)에 연결합니다.
 
@@ -38,7 +38,7 @@ Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pypro
 
 **저장·계산:** `financial_run`은 Workspace·Job·입력 기준·결과 JSONB 스냅샷을, `financial_fact`는 계정×비교기간별 `Numeric(38,6)` 금액과 출처/매핑 상태를 저장합니다. 계산은 Decimal로 수행하고 지표는 소수 4자리 문자열로 저장하며 UI에서 소수 1자리로 표시합니다. 원본 금액은 원 단위로 유지합니다. Worker가 소유 토큰과 실행 임대를 검사한 뒤 재무값·결과·작업 완료·이벤트를 같은 트랜잭션으로 확정합니다. 중복 전달이나 만료된 실행은 결과를 추가 저장하지 않습니다.
 
-공통 재무·운전자본·투자 지출을 함께 저장하고 핵심 비율·증감·영업이익 변동 분해를 서버에서 계산합니다. 총자산영업이익률은 **해당 비교기간의 영업이익 ÷ 해당 기말 자산총계 × 100**으로 계산하며 기말 기준을 산식과 잔액 기준에 표시합니다. 전기말 자산이나 리스 옵션으로 분모를 조정하지 않습니다. 필요한 값이 없으면 미확보, 자산총계가 0 이하이면 계산 불가로 처리하고 음수 영업이익은 음수 비율로 유지합니다. 산식 v3부터 적용하며 기존 스냅샷은 다시 수집·분석해야 반영됩니다. 차입 합계는 필요한 구성 금액이 모두 확보된 경우만 산출하며, 리스 제외는 부채비율과 총차입금 계산에 적용합니다. 임대보증금은 별도로 표시합니다. 회전일수의 기간/첫해 정책, EBITDA·CAPEX·현금보상·금융비용 범위는 미정이므로 `NOT_COMPUTABLE`과 사유를 반환합니다. PF·금리·만기 상세와 동종 상장사 분포는 보류합니다. 한국은행 업종 평균은 [비교 계약](#bok-benchmark)에 따라 제공합니다.
+공통 재무·운전자본·투자 지출을 함께 저장하고 핵심 비율·증감·영업이익 변동 분해를 서버에서 계산합니다. 총자산영업이익률은 **해당 비교기간의 영업이익 ÷ 해당 기말 자산총계 × 100**으로 계산하며 기말 기준을 산식과 잔액 기준에 표시합니다. 전기말 자산이나 리스 옵션으로 분모를 조정하지 않습니다. 필요한 값이 없으면 미확보, 자산총계가 0 이하이면 계산 불가로 처리하고 음수 영업이익은 음수 비율로 유지합니다. 산식 v3부터 적용하며 기존 스냅샷은 다시 수집·분석해야 반영됩니다. 차입 합계는 필요한 구성 금액이 모두 확보된 경우만 산출하며, 리스 제외는 부채비율과 총차입금 계산에 적용합니다. 임대보증금은 별도로 표시합니다. 회전일수의 기간/첫해 정책, EBITDA·CAPEX·현금보상·금융비용 범위는 미정이므로 `NOT_COMPUTABLE`과 사유를 반환합니다. 정형 재무 결과만으로 PF·금리·만기 상세나 동종 상장사 전체 분포를 만들지 않습니다. 검수한 주석 사실의 보증·만기·소송 집계는 [별도 근거 계약](data/evidence/README.md#exposure-summary)으로 제공합니다. 한국은행 업종 평균은 [비교 계약](#bok-benchmark)에 따라 제공합니다.
 
 ### 재무 산식 v4 보완
 
@@ -46,7 +46,7 @@ Python **3.12.15**, uv **0.13.5**를 사용합니다. 의존성 범위는 `pypro
 
 CSV 분석은 `bs_cpltd`를 유동성장기차입금에 연결한다. 원천 설명서에서 별도 유동성사채와 함께 총차입금을 구성하는 항목임을 확인했으며 임의의 광의 차입 합계로 대체하지 않는다. `bs_nca`, `bs_ncl`, `cf_int_paid`, `cf_tax_paid`, `cf_intan_acq`도 각각 대응 계정에 연결한다. 지출 부호는 원천 그대로 보존하며 지출액 범위 정책을 확정하지 않는다. 회전율의 가장 오래된 비교기간은 동일 수집 버전·회계 범위의 추가 연도 잔액이 있을 때만 `opening_balance` fact로 연결한다. 화면의 비교기간은 기존 3개이며 추가 잔액은 지표 분모의 근거로만 사용한다. DART 단일 보고서에는 그 기초 잔액이 없을 수 있으므로 해당 기간만 보류한다.
 
-새 회전율과 비유동장기적합률은 기존 5개 영역·업종 핵심 표·산식 창에 연결한다. 건설 표에는 이자보상비율·차입금의존도·단기차입 비중을 함께 표시한다. 선수금 제외 부채비율·개발비 자산화 비중은 범위/산식 미정, 수주잔고는 원천 미연결로 구분한다. EBITDA·현금보상·CAPEX·회전일수/CCC·PF·만기 상세는 계속 보류하며, 위험징후 자동 판정은 추가하지 않는다. 기존 스냅샷을 덮어쓰지 않으므로 **새 산식은 다시 수집·분석한 결과부터 적용**된다.
+새 회전율과 비유동장기적합률은 기존 5개 영역·업종 핵심 표·산식 창에 연결한다. 건설 표에는 이자보상비율·차입금의존도·단기차입 비중을 함께 표시한다. 선수금 제외 부채비율·개발비 자산화 비중은 범위/산식 미정, 수주잔고는 원천 미연결로 구분한다. EBITDA·현금보상·CAPEX·회전일수/CCC의 미정 산식은 계속 보류하며 위험징후 자동 판정은 추가하지 않는다. 주석 검수 사실의 PF 만기 상세는 [만기 사다리 계약](data/evidence/README.md#pf-maturity-ladder)으로 별도 제공한다. 기존 스냅샷을 덮어쓰지 않으므로 **새 산식은 다시 수집·분석한 결과부터 적용**된다.
 
 현재 추세는 **선택한 보고서의 당기·전기·전전기 비교금액**입니다. 이를 무조건 3개 연간 기간으로 해석하지 않습니다. 특히 리츠·결산 변경은 실제 보고기간과 비교 가능성 확인이 필요합니다. 별도 과거 보고서의 최신 정정값을 합쳐 만든 5개년 시계열은 후속입니다.
 
@@ -273,7 +273,7 @@ result.write("../.run/note-hierarchy-demo")
 
 다른 pip 환경에서는 `python -m pip install ./app/modules/dart_note_hierarchy-0.8.4-py3-none-any.whl`로 설치할 수 있습니다(`backend/` 기준). PyPI에는 게시하지 않았으므로 wheel 경로를 지정합니다. Dockerfile은 `uv sync` 전에 wheel을 복사하며 API·Worker·Relay가 같은 버전의 이미지를 사용합니다.
 
-wheel에는 테스트·평가 workflows·기업 데이터·수집기·API 키가 포함되지 않습니다. 전체 회귀 테스트와 데이터셋 평가는 패키지 원본 저장소에서 수행해야 합니다. 후속 근거 저장·검수 연동은 [주석 구조화 경계](../docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
+wheel에는 테스트·평가 workflows·기업 데이터·수집기·API 키가 포함되지 않습니다. 전체 회귀 테스트와 데이터셋 평가는 패키지 원본 저장소에서 수행해야 합니다. 현재 근거 저장·검수와 확장 경계는 [주석 구조화 경계](../docs/design/01_data-and-analysis.md#note-hierarchy)를 따릅니다.
 
 2026-10-27 문서 검증에서는 분리 가상환경의 pip 설치와 `pip check`, `note-hierarchy`·`python -m note_hierarchy` 버전 조회, 위 uv 일회성 실행을 확인했습니다. v0.8.4 Python API와 패키지 내 가상 예제로 JSON·검토 HTML 생성, 원문 해시·초안 상태 보존, 다른 작업 디렉터리에서의 CLI 실행도 확인했습니다. 전체 회귀 테스트·실제 기업 정확도·서비스 연동 검증은 실행하지 않았습니다.
 
@@ -306,7 +306,7 @@ curl.exe -b ../.run/note-cookies.txt -H "Origin: http://localhost:8000" -H "Cont
 
 구간 목록은 `node_id`(저장된 부모 관계의 하위 노드 포함), `q`(본문 부분 검색), `tables_only=true`로 필터링합니다. `total`은 필터 결과 수이며 프론트는 30개씩 추가 조회합니다. 원문 뷰어의 HTML 전체는 한 번에 가져옵니다.
 
-`source-view`는 Workspace 권한을 확인한 뒤 SHA-256 검증을 거쳐 원문 바이트를 읽고, 저장된 XPath에 구간 앵커를 부여한 파생 HTML을 JSON으로 반환합니다. 원본 파일은 수정하지 않습니다. 미완료는 409, 다른 사용자 결과는 404, 파일 누락·변조 또는 위치 불일치는 503이며 응답은 `no-store`, `nosniff`입니다. 클라이언트는 DOMPurify의 태그·속성 허용 목록으로 HTML을 정제하고 스크립트·외부 리소스를 막는 CSP 및 `sandbox="allow-same-origin"` iframe에서 표시합니다. 원문 자체의 스타일·링크·이미지는 허용하지 않으며 앱의 열람 서식을 적용합니다. 구간 선택 시 해당 앵커를 강조합니다. 열람 사실·담당자 검수 기록과 교차참조 이동은 아직 제공하지 않습니다.
+`source-view`는 Workspace 권한을 확인한 뒤 SHA-256 검증을 거쳐 원문 바이트를 읽고, 저장된 XPath에 구간 앵커를 부여한 파생 HTML을 JSON으로 반환합니다. 원본 파일은 수정하지 않습니다. 미완료는 409, 다른 사용자 결과는 404, 파일 누락·변조 또는 위치 불일치는 503이며 응답은 `no-store`, `nosniff`입니다. 클라이언트는 DOMPurify의 태그·속성 허용 목록으로 HTML을 정제하고 스크립트·외부 리소스를 막는 CSP 및 `sandbox="allow-same-origin"` iframe에서 표시합니다. 원문 자체의 스타일·링크·이미지는 허용하지 않으며 앱의 열람 서식을 적용합니다. 구간 선택 시 해당 앵커를 강조합니다. 이 HTML 조회 API 자체는 열람·검수를 저장하지 않습니다. 연결된 사실의 열람·승인 이력은 [통합 사실 검수](data/evidence/README.md#structured-facts)로 저장하며 일반 교차참조 해석은 후속입니다.
 
 원본은 `LOANSIGHT_ARTIFACT_ROOT` 아래 SHA-256 기반 불변 파일로 저장하고, PostgreSQL에는 `source_artifact`·`note_structure`·`source_segment`를 저장합니다. Native API/Worker는 같은 디렉터리를 사용해야 하며 기본값은 실행 디렉터리 기준 `.run/artifacts`입니다. Compose는 두 프로세스에 `/data/artifacts`와 `source-artifacts` named volume을 공유합니다. DB와 이 볼륨을 함께 보존해야 합니다. `LOANSIGHT_NOTE_IMPORT_MAX_BYTES`는 요청당 기술적 크기 제한이며 기본 20 MiB입니다.
 
@@ -336,9 +336,9 @@ Worker는 저장된 파서·규칙 버전으로 처리하고 원문 해시·구�
 
 초기 응답 크기 제한은 기술적 기본값이며 업무 판정 기준이 아닙니다. 검색어 최대 20개·각 100자, 검색 페이지 기본 10/최대 30개, 목차 페이지 기본 30/최대 100개, 검색 발췌 600자입니다. 문맥은 앞뒤 각각 기본 2/최대 5개·구간당 4,000자이며 긴 대상 본문은 `next_text_offset`으로 계속 읽습니다. 표 행은 기본 10/최대 30개·행당 최대 40셀·셀당 1,000자, 주변 표 문맥은 최대 12개·각 1,000자입니다. 표 문맥·행/셀 잘림과 원문 링크를 제공하므로 제한된 응답을 전체 표로 해석하지 않습니다. 표 HTML 파싱은 별도 스레드로 실행합니다.
 
-`note_search_run`에 6항목별 검색어·검색 완료 여부·후보 수·상위 5개 후보·추가 조회 위치·미확보 영역·출처/버전을 저장합니다. 같은 실행의 중복 요청은 유일 제약과 충돌 처리로 하나의 결과를 반환합니다. 전체 보고서 검색 범위는 `PARTIAL`, AI는 `NOT_RUN`, 검수는 `PENDING`입니다. 후보가 없으면 `NO_MATCH`이며 ‘공시상 없음’으로 바꾸지 않습니다. 실행 전체가 실패하면 부분 결과를 완료로 저장하지 않습니다. 수동 도구 조회 이력·LLM 탐색 이력 저장은 후속입니다.
+`note_search_run`에 6항목별 검색어·검색 완료 여부·후보 수·상위 5개 후보·추가 조회 위치·미확보 영역·출처/버전을 저장합니다. 같은 실행의 중복 요청은 유일 제약과 충돌 처리로 하나의 결과를 반환합니다. 전체 보고서 검색 범위는 `PARTIAL`, AI는 `NOT_RUN`, 검수는 `PENDING`입니다. 후보가 없으면 `NO_MATCH`이며 ‘공시상 없음’으로 바꾸지 않습니다. 실행 전체가 실패하면 부분 결과를 완료로 저장하지 않습니다. 수동 도구 조회 전체 이력은 저장하지 않습니다. Codex 보완 탐색의 도구 호출·중단 이력은 [별도 실행](#note-agent)에 저장합니다.
 
-공급자 연결은 `NoteSearchTools.owned(...)`로 권한을 확인한 실행 범위를 만든 뒤 `definitions()`의 JSON Schema와 `call(name, arguments)`를 사용합니다. 도구는 `list_note_sections`, `search_note_segments`, `read_note_context`만 허용하며 Workspace·SQL·파일 경로 같은 추가 인자를 거부합니다. `validate_citations()`는 같은 revision의 실제 구간·발췌 일치를 검사하는 내부 함수이며 의미 검수를 대신하지 않습니다. Codex 연결은 [보완 탐색](#note-agent)을 따릅니다. OpenAI API 실행·시점 기준 예측 검색·담당자 사실 검수 저장은 후속입니다. [기본 검색 검증 기록](../docs/reviews/13_note-evidence-search-validation.md)을 참고합니다.
+공급자 연결은 `NoteSearchTools.owned(...)`로 권한을 확인한 실행 범위를 만든 뒤 `definitions()`의 JSON Schema와 `call(name, arguments)`를 사용합니다. 도구는 `list_note_sections`, `search_note_segments`, `read_note_context`만 허용하며 Workspace·SQL·파일 경로 같은 추가 인자를 거부합니다. `validate_citations()`는 같은 revision의 실제 구간·발췌 일치를 검사하는 내부 함수이며 의미 검수를 대신하지 않습니다. Codex 연결은 [보완 탐색](#note-agent)을 따릅니다. 통합 묶음의 [사실 검수 저장](data/evidence/README.md#structured-facts)은 구현했습니다. OpenAI API 실행·시점 기준 예측 검색은 후속입니다. [기본 검색 검증 기록](../docs/reviews/13_note-evidence-search-validation.md)을 참고합니다.
 
 <a id="note-agent"></a>
 ### Codex 에이전트 보완 탐색
@@ -520,7 +520,7 @@ uv run python -m app.modules.company.sync --force
 uv run python -m app.modules.company.sync --watch
 ```
 
-Compose 수동 동기화는 `docker compose -f deploy/compose.yaml exec api /app/.venv/bin/python -m app.modules.company.sync --force`입니다. 기존 `catalog --refresh`도 사용 가능하지만 원장만 갱신하며, 변경 비교와 검토 목록은 다음 동기화에서 처리합니다. 서비스 대상 4개 업종 판정·공시 목록·실제 분석 연결은 후속 범위입니다. 공개 기업 목록 검색은 사용자 세션 없이 가능하며 사용자별 검토 데이터는 포함하지 않습니다.
+Compose 수동 동기화는 `docker compose -f deploy/compose.yaml exec api /app/.venv/bin/python -m app.modules.company.sync --force`입니다. 기존 `catalog --refresh`도 사용 가능하지만 원장만 갱신하며, 변경 비교와 검토 목록은 다음 동기화에서 처리합니다. 기업별 공시 목록·실제 재무 분석은 연결됐으며 서비스 대상 4개 업종의 최종 업무 판정은 별도입니다. 공개 기업 목록 검색은 사용자 세션 없이 가능하며 사용자별 검토 데이터는 포함하지 않습니다.
 
 `.env`를 수정해도 실행 중인 컨테이너 환경이 즉시 바뀌지는 않습니다. 이미 DB·MQ가 실행 중이면 아래 명령으로 API·Worker·Relay만 재생성할 수 있습니다. **환경값 변경만으로 이미지 재빌드는 필요하지 않습니다.**
 

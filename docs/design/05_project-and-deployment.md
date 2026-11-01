@@ -2,7 +2,8 @@
 
 > v0.4 · 2026-10-28 · 설계 초안
 
-이번 변경은 설계 목표의 개정이다. 실행 코드·DB 마이그레이션·실제 화면 구현 완료를 뜻하지 않는다.
+아래 v0.4의 API·테이블·기능은 설계 목표이며 전체 구현 완료를 뜻하지 않는다. 현재 구현과
+10/29 기획과의 차이는 [현행 상태표](06_delivery-and-validation.md#current-status)를 우선 확인한다.
 
 [전체 아키텍처](../01_LoanSight_AI_Architecture_v0.4.md) / 코드 배치·공통 이미지·SaaS/Self-hosted·사용자 식별·운영
 
@@ -147,7 +148,7 @@ loansight-ai/
 | 테스트 | [pytest](https://docs.pytest.org/en/stable/) + pytest-asyncio + HTTPX | 계산·비동기 처리·API 검증 |
 | 코드 품질 | [Ruff](https://docs.astral.sh/ruff/) | 린트·포맷 통일 |
 
-FastAPI는 내장 SSE를 지원하는 버전을 선택한다. SQLAlchemy의 요청·작업별 세션과 Psycopg의 전용 LISTEN 연결은 분리한다. MQ 클라이언트의 재연결과 별개로 작업의 멱등성·임대·이벤트 재생은 [API·작업 처리 계약](02_api-and-jobs.md#mq)에 따라 구현한다. Tenacity는 재시도해도 안전한 외부 호출의 일시 오류에만 적용하고 분석 작업 전체의 재시도는 DB·Outbox로 관리한다.
+FastAPI는 내장 SSE를 지원하는 버전을 선택한다. SQLAlchemy의 요청·작업별 세션과 Psycopg의 전용 LISTEN 연결은 분리한다. MQ 클라이언트의 재연결과 별개로 작업의 멱등성·임대·이벤트 재생은 [API·작업 처리 계약](02_api-and-jobs.md#mq)에 따라 구현한다. Tenacity는 설계 후보이며 현재 pyproject 의존성에는 없다. 실제 외부 호출의 제한된 재시도와 분석 작업 전체의 재시도·임대 복구는 구현된 코드와 DB·Outbox 계약을 따른다.
 
 금액·재무 계산은 표준 라이브러리 `Decimal`을 사용한다. `pandas`·`openpyxl`은 데이터 가공·엑셀 입출력 요구가 생길 때 추가한다. LLM 공급자 SDK와 모델 추론 런타임은 [외부 연동 계약](03_ai-integration.md)에 맞춰 선택하며 모델 학습용 의존성은 기본 구성에 포함하지 않는다.
 

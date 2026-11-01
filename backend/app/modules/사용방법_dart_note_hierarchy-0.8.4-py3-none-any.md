@@ -220,7 +220,7 @@ unknown_leaves = [n for n in leaves if n["level"] is None]
 
 `link_periods=True`는 같은 직속 계층의 연속 당기·전기 표를 후보로 잡고, 같은 축의 라벨과 제목·단위·기간 역할을 비교한다. 연속 `당기·당기·전기·전기` 묶음도 처리한다. 표를 전치하거나 금액을 합산하지 않는다.
 
-`period_table_candidates`는 후보 전체, `period_title_links`는 연결된 제목 그룹, `period_table_runs`는 연속 묶음의 교차 비교와 보류 정보를 담는다. 제목 연결은 셀·금액의 일대일 대응을 보장하지 않는다. 자세한 내용은 [표·기간 연결](finance/README.md)을 참고한다.
+`period_table_candidates`는 후보 전체, `period_title_links`는 연결된 제목 그룹, `period_table_runs`는 연속 묶음의 교차 비교와 보류 정보를 담는다. 제목 연결은 셀·금액의 일대일 대응을 보장하지 않는다. 자세한 내용은 패키지 원본 저장소의 `finance/README.md` (이 저장소에 미포함)을 참고한다.
 
 ## 9. 설정 변경
 
@@ -247,7 +247,7 @@ processor = DocumentProcessor(
 
 파일로 저장했다면 `config="my_rules.json"` 또는 CLI `--config my_rules.json`을 사용한다. `strategy="sequential"`은 이전 순차 방식과 비교할 때만 선택한다. 이 방식에는 최신 부분 관계 필드가 모두 있지 않을 수 있다.
 
-딕셔너리는 부분 병합, 배열은 전체 교체다. 알 수 없는 키와 잘못된 타입·정규식은 거부한다. 설정 적용 범위는 처리기 호출마다 격리된다. 자세한 설명은 [설정 문서](config/README.md)를 참고한다.
+딕셔너리는 부분 병합, 배열은 전체 교체다. 알 수 없는 키와 잘못된 타입·정규식은 거부한다. 설정 적용 범위는 처리기 호출마다 격리된다. 자세한 설명은 패키지 원본 저장소의 `config/README.md` (이 저장소에 미포함)를 참고한다.
 
 ## 10. 전체 소스의 유지보수 도구
 

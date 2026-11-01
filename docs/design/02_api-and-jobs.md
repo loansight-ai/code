@@ -2,13 +2,19 @@
 
 > v0.4 · 2026-10-28 · 설계 초안
 
-이번 변경은 설계 목표의 개정이다. 실행 코드·DB 마이그레이션·실제 화면 구현 완료를 뜻하지 않는다.
+아래 v0.4의 API·테이블·기능은 설계 목표이며 전체 구현 완료를 뜻하지 않는다. 현재 구현과
+10/29 기획과의 차이는 [현행 상태표](06_delivery-and-validation.md#current-status)를 우선 확인한다.
 
 [전체 아키텍처](../01_LoanSight_AI_Architecture_v0.4.md) / REST·분석 재사용·RabbitMQ·SSE·GNB 진행 알림
 
 <a id="api"></a>
 
 ## API 경로와 접근 전제
+
+다음 표는 v0.4 목표 API이며 현행 OpenAPI 목록이 아니다. 실제 재무는
+[재무 API](../../backend/README.md#financial-api), 구조화 HTML은 [주석 API](../../backend/README.md#note-import-api),
+보고서 묶음·사실 검수·규칙 입력·`exposure-summary` 집계는 [통합 근거 API](../../backend/data/evidence/README.md)를 따른다.
+특히 `/analyses/{id}/signals`·`/reviews` 목표 경로와 현재 `/me/evidence-bundles/{id}/signals`·`facts`를 혼동하지 않는다.
 
 | 메서드 | 경로 | 설명 |
 |---|---|---|
