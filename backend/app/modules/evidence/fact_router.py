@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from app.integrations.agents.gateway import configured
 from app.modules.evidence import fact_extraction, facts
 from app.modules.evidence.bundle_tools import BundleTools
+from app.modules.evidence.exposure_summary import read_summary
 from app.modules.evidence.fact_schemas import FactInput, ReviewInput, RevisionInput
 from app.modules.evidence.fact_sources import page, resolve
 from app.modules.evidence.search_schemas import ContextQuery
@@ -13,6 +14,14 @@ from app.modules.identity.service import Identity, current_identity, require_ori
 
 router = APIRouter(prefix="/api/v1/me/evidence-bundles/{bundle_id}", tags=["fact-review"])
 Owner = Annotated[Identity, Depends(current_identity)]
+
+
+@router.get("/exposure-summary")
+async def exposure_summary(bundle_id: UUID, request: Request, response: Response, identity: Owner):
+    response.headers["Cache-Control"] = "no-store"
+    async with request.app.state.database.transaction() as db:
+        tools = await BundleTools.owned(db, identity, bundle_id)
+        return await read_summary(db, tools, request.app.state.database)
 
 
 @router.get("/facts")

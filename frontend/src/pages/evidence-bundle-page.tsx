@@ -7,6 +7,7 @@ import { ApiError } from '../features/session/api'
 import { getBundle, openBundle } from '../features/evidence/bundle-api'
 import { BundlePanel } from '../features/evidence/bundle-panel'
 import { ExtractionWorkspace } from '../features/evidence/extraction-workspace'
+import { MaturityLadder } from '../features/evidence/exposure-panels'
 import { LiveSignals } from '../features/risk/live-signals'
 import { PredictionWorkspace } from '../features/analysis/workspace-panels'
 import { useCollectedData } from '../features/company/collected-api'
@@ -158,6 +159,12 @@ export function EvidenceBundlePage() {
         </div>
         {tab === 'signals' ? (
           <div className="extraction-signals">
+            {params.get('detail') === 'maturity' && (
+              <MaturityLadder
+                key={`maturity:${owner}:${data.bundle_revision}`}
+                bundle={data}
+              />
+            )}
             <LiveSignals
               key={`${owner}:${data.bundle_revision}`}
               bundle={data}

@@ -119,7 +119,14 @@ export function FactForm({
             value={data.kind}
             onChange={(e) => {
               const kind = e.target.value as FactData['kind']
-              patch({ kind, category: kinds[kind][0] })
+              patch({
+                kind,
+                category: kinds[kind][0],
+                obligation_type: null,
+                project_count: null,
+                case_number: null,
+                case_count: null,
+              })
             }}
           >
             {Object.entries(kinds).map(([k, v]) => (
@@ -213,6 +220,10 @@ export function FactForm({
               ['CLAIM', '청구액'],
               ['GUARANTEE', '보증액'],
               ['PRINCIPAL', '원금'],
+              ['LOAN_BALANCE', '대출잔액'],
+              ['COMMITMENT', '보증·약정금액'],
+              ['RELATED_PARTY', '특수관계자 제공분'],
+              ['PROVISION', '소송충당부채'],
             ].map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -220,6 +231,101 @@ export function FactForm({
             ))}
           </select>
         </label>
+        {['guarantee', 'borrowing_maturity', 'litigation'].includes(
+          data.kind,
+        ) && (
+          <details className="bundle-disclosure">
+            <summary>구성·만기·소송 집계 정보</summary>
+            <label>
+              상세·합계 구분{' '}
+              <select
+                value={data.aggregation_level ?? 'UNKNOWN'}
+                onChange={(e) => patch({ aggregation_level: e.target.value })}
+              >
+                <option value="UNKNOWN">미확인 · 합산 보류</option>
+                <option value="DETAIL">상세행</option>
+                <option value="SUBTOTAL">소계행</option>
+                <option value="TOTAL">총계행</option>
+              </select>
+            </label>
+            {data.kind === 'guarantee' && (
+              <>
+                <label>
+                  보증·의무 유형{' '}
+                  <select
+                    value={data.obligation_type ?? ''}
+                    onChange={(e) =>
+                      patch({ obligation_type: e.target.value || null })
+                    }
+                  >
+                    <option value="">미확인</option>
+                    <option value="PF_GUARANTEE">PF 대출보증</option>
+                    <option value="COMPLETION_SUPPORT">
+                      책임준공 미이행 시 채무인수
+                    </option>
+                    <option value="FUNDING_SUPPORT">자금보충</option>
+                    <option value="BUYER_GUARANTEE">
+                      수분양자 중도금 보증
+                    </option>
+                    <option value="OTHER">기타 보증·조건부 의무</option>
+                  </select>
+                </label>
+                <label>
+                  사업장 수{' '}
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={data.project_count ?? ''}
+                    onChange={(e) =>
+                      patch({
+                        project_count:
+                          e.target.value === '' ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+                <p>
+                  피보증처 수를 사업장 수로 대신하지 않습니다. 각 금액 열은 별도
+                  사실로 저장하고 해당 표의 직접 인용을 연결하세요.
+                </p>
+              </>
+            )}
+            {data.kind === 'litigation' && (
+              <>
+                <label>
+                  사건번호{' '}
+                  <input
+                    maxLength={100}
+                    value={data.case_number ?? ''}
+                    onChange={(e) =>
+                      patch({ case_number: e.target.value || null })
+                    }
+                  />
+                </label>
+                <label>
+                  공시 소송 건수{' '}
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={data.case_count ?? ''}
+                    onChange={(e) =>
+                      patch({
+                        case_count:
+                          e.target.value === '' ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+              </>
+            )}
+            <p>
+              만기 요약은 YYYY-MM-DD 형식의 확인된 날짜를 사용합니다. 총괄행과
+              상세행은 중복 합산하지 않습니다.
+            </p>
+          </details>
+        )}
         <p>금액은 아래 원문 표의 셀을 눌러 선택하세요.</p>
         {data.amount && (
           <div>

@@ -14,6 +14,7 @@ import {
 } from './bundle-api'
 import { factListSchema, factPath, kinds, type Fact } from './fact-api'
 import { BundleContext } from './bundle-panel'
+import { ExposurePanels } from './exposure-panels'
 import './extraction-workspace.css'
 
 const categories = [
@@ -37,6 +38,10 @@ const amountLabels: Record<string, string> = {
   CLAIM: '청구액',
   GUARANTEE: '보증금액',
   PRINCIPAL: '원금',
+  LOAN_BALANCE: '대출잔액',
+  COMMITMENT: '보증·약정',
+  RELATED_PARTY: '특수관계자 제공분',
+  PROVISION: '소송충당부채',
   UNKNOWN: '금액',
 }
 const location = (source?: BundleCandidate) =>
@@ -397,6 +402,7 @@ export function ExtractionWorkspace({ bundle }: { bundle: EvidenceBundle }) {
           </p>
         )}
       </aside>
+      <ExposurePanels bundle={bundle} />
       {open && candidate && (
         <Modal
           open

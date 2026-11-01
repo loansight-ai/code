@@ -11,11 +11,128 @@ from app.integrations.agents.runtime import AgentResponse
 from app.integrations.messaging.rabbitmq import JobMessage
 from app.modules.evidence import fact_extraction
 from app.modules.evidence.bundle_models import EvidenceSegment
+from app.modules.evidence.dump_normalize import segments
 from app.modules.evidence.fact_models import EvidenceFact
 from app.modules.evidence.models import SourceSegment
 from app.modules.tasks.models import Job
 from app.worker.main import run_job
 from tests.integration.evidence_fixtures import create, decision
+
+
+async def test_exposure_summary_is_owned_and_does_not_promote_pending_facts(client, fact_corpus):
+    bundle, url, data, _ = fact_corpus
+    await create(client, url, data)
+    response = await client.get(url + "/exposure-summary")
+    assert response.status_code == 200, response.text
+    result = response.json()
+    assert result["bundle_id"] == bundle["bundle_id"]
+    assert result["scope"] == "OFS"
+    assert result["provided"]["totals"]["loan_balance"] is None
+    assert result["maturity"]["debt"]["total"] is None
+    assert result["litigation"]["case_count"] is None
+    await client.post("/api/v1/users")
+    assert (await client.get(url + "/exposure-summary")).status_code == 404
+
+
+async def test_exposure_summary_revalidates_reviewed_amounts_and_source_changes(
+    client, fact_corpus, environment
+):
+    _, url, _, original = fact_corpus
+    _, _, database = environment
+    entries = list(
+        segments(
+            original["report_id"],
+            "note_section",
+            {
+                "id": "exposure-summary",
+                "seq": "9",
+                "note_title": "PF 대출보증",
+                "body": "시험회사 PF 대출보증 제공 내역",
+                "tables": json.dumps(
+                    [
+                        {
+                            "caption": (
+                                "시험회사는 PF 대출보증을 제공하였습니다. "
+                                "사업장 수 7. 만기 2026-12-31."
+                            ),
+                            "unit": "단위: 백만원",
+                            "cells": [
+                                ["구분", "당기 대출잔액", "전기 대출잔액"],
+                                ["PF 대출보증", "100", "-"],
+                            ],
+                        }
+                    ]
+                ),
+            },
+        )
+    )
+    async with database.transaction() as db:
+        for entry in entries:
+            db.add(EvidenceSegment(**entry))
+    table = next(e for e in entries if e["kind"] == "table")
+    sid = str(table["id"])
+    data = {
+        "category": "off_balance",
+        "kind": "guarantee",
+        "statement": "PF 대출보증 제공",
+        "subject": "시험회사",
+        "direction": "PROVIDED",
+        "period": "2025.12",
+        "obligation_type": "PF_GUARANTEE",
+        "aggregation_level": "DETAIL",
+        "project_count": 7,
+        "amount_role": "LOAN_BALANCE",
+        "maturity": "2026-12-31",
+        "amount": {
+            "raw_value": "100",
+            "currency": "KRW",
+            "unit": "백만원",
+            "cell": {"segment_id": sid, "row": 1, "column": 1},
+        },
+        "citations": [
+            {"segment_id": sid, "field": f, "quote": table["text"]}
+            for f in [
+                "statement",
+                "subject",
+                "direction",
+                "period",
+                "obligation_type",
+                "aggregation_level",
+                "project_count",
+                "amount_role",
+                "amount",
+                "unit",
+                "maturity",
+            ]
+        ],
+    }
+    fact = await create(client, url, data)
+    assert fact["validation"]["status"] == "CITATIONS_VALID", fact["validation"]
+    pending = (await client.get(url + "/exposure-summary")).json()
+    assert pending["provided"]["totals"]["loan_balance"] is None
+    opened = (await client.post(url + f"/facts/{fact['id']}/open")).json()
+    approved, _ = await decision(client, url, fact, opening=opened["opening_id"])
+    assert approved.status_code == 200, approved.text
+    summary = (await client.get(url + "/exposure-summary")).json()
+    assert summary["provided"]["totals"]["loan_balance"] == "100000000"
+    assert summary["provided"]["rows"][0]["project_count"] == 7
+    assert summary["maturity"]["obligation"]["values"]["within"] == "100000000"
+    assert summary["provided"]["rows"][0]["sources"][0]["segment_id"] == sid
+    async with database.transaction() as db:
+        row = await db.get(EvidenceSegment, table["id"])
+        row.text += "원문 변경"
+        row.sha256 = "changed"
+    changed = (await client.get(url + "/exposure-summary")).json()
+    assert changed["provided"]["totals"]["loan_balance"] is None
+    assert changed["excluded_facts"] == 1
+    bad = copy.deepcopy(data)
+    for cite in bad["citations"]:
+        if cite["field"] == "project_count":
+            cite["quote"] = "7"
+    unsupported_count = await create(client, url, bad)
+    assert "project_count_context_required" in [
+        issue["code"] for issue in unsupported_count["validation"]["issues"]
+    ]
 
 
 async def test_review_open_required_audited_idempotent_and_revision(client, fact_corpus):

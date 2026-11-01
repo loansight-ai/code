@@ -31,6 +31,11 @@ FieldKey = Literal[
     "status",
     "absence",
     "amount_role",
+    "obligation_type",
+    "aggregation_level",
+    "project_count",
+    "case_number",
+    "case_count",
 ]
 
 
@@ -64,14 +69,31 @@ class FactInput(BaseModel):
     )
     period: str | None = Field(default=None, pattern=r"^\d{4}\.(0[1-9]|1[0-2])$")
     counterparty: str | None = Field(default=None, max_length=300)
-    amount_role: Literal["BALANCE", "LIMIT", "CLAIM", "GUARANTEE", "PRINCIPAL", "UNKNOWN"] = (
-        "UNKNOWN"
-    )
+    amount_role: Literal[
+        "BALANCE",
+        "LIMIT",
+        "CLAIM",
+        "GUARANTEE",
+        "PRINCIPAL",
+        "UNKNOWN",
+        "LOAN_BALANCE",
+        "COMMITMENT",
+        "RELATED_PARTY",
+        "PROVISION",
+    ] = "UNKNOWN"
     amount: FactAmount | None = None
     maturity: str | None = Field(default=None, max_length=200)
     status: str | None = Field(default=None, max_length=300)
     detection: Literal["DETECTED", "EXPLICITLY_NONE"] = "DETECTED"
     citations: list[FactCitation] = Field(min_length=1, max_length=20)
+    obligation_type: (
+        Literal["PF_GUARANTEE", "COMPLETION_SUPPORT", "FUNDING_SUPPORT", "BUYER_GUARANTEE", "OTHER"]
+        | None
+    ) = None
+    aggregation_level: Literal["DETAIL", "SUBTOTAL", "TOTAL", "UNKNOWN"] = "UNKNOWN"
+    project_count: int | None = Field(default=None, ge=0)
+    case_number: str | None = Field(default=None, min_length=1, max_length=100)
+    case_count: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def kind_matches_category(self):
@@ -87,6 +109,10 @@ class FactInput(BaseModel):
         }
         if self.kind not in allowed[self.category]:
             raise ValueError("fact_kind_category_mismatch")
+        if self.kind != "guarantee" and (self.obligation_type or self.project_count is not None):
+            raise ValueError("guarantee_metadata_kind_mismatch")
+        if self.kind != "litigation" and (self.case_number or self.case_count is not None):
+            raise ValueError("litigation_metadata_kind_mismatch")
         return self
 
 

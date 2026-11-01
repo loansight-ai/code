@@ -95,6 +95,47 @@ async def validate(tools, fact):
         require("maturity", fact.maturity)
     if fact.status:
         require("status", fact.status)
+    if fact.obligation_type:
+        q = require("obligation_type")
+        markers = {
+            "PF_GUARANTEE": r"PF|프로젝트파이낸|프로젝트금융",
+            "COMPLETION_SUPPORT": r"책임준공|채무인수",
+            "FUNDING_SUPPORT": r"자금보충",
+            "BUYER_GUARANTEE": r"수분양자|중도금",
+            "OTHER": r"보증|조건부|의무",
+        }
+        if not any(re.search(markers[fact.obligation_type], s, re.I) for s in q):
+            block(
+                "obligation_type", "type_not_supported", "보증·의무 유형의 직접 근거가 필요합니다."
+            )
+    if fact.aggregation_level != "UNKNOWN":
+        require("aggregation_level")
+    for field in ("project_count", "case_count", "case_number"):
+        value = getattr(fact, field)
+        if value is not None:
+            q = require(field)
+            if field == "project_count" and not any(
+                re.search(r"사업장|사업\s*수|프로젝트|현장", s) for s in q
+            ):
+                block(
+                    field,
+                    "project_count_context_required",
+                    "피보증처 수가 아닌 사업장 수의 근거가 필요합니다.",
+                )
+            if field == "case_count" and not any(re.search(r"건수|\d\s*건", s) for s in q):
+                block(
+                    field,
+                    "case_count_context_required",
+                    "공시된 소송 건수의 직접 근거가 필요합니다.",
+                )
+            if not any(
+                re.search(rf"(?<!\d){re.escape(str(value))}(?!\d)", s.replace(",", "")) for s in q
+            ):
+                block(
+                    field,
+                    "count_or_id_not_supported",
+                    "공시된 건수·사건번호를 직접 인용해야 합니다.",
+                )
     markers = {
         "PROVIDED": r"제공(?!받)|설정",
         "RECEIVED": r"제공받|수취|받은",
@@ -148,6 +189,10 @@ async def validate(tools, fact):
                 "CLAIM": r"청구|소송가액",
                 "GUARANTEE": r"보증",
                 "PRINCIPAL": r"원금",
+                "LOAN_BALANCE": r"대출잔액|대출금잔액|차입잔액",
+                "COMMITMENT": r"약정|보증금액|보증액",
+                "RELATED_PARTY": r"특수관계",
+                "PROVISION": r"소송충당부채|충당부채",
             }
             q = require("amount_role")
             if not any(re.search(role_terms[fact.amount_role], s) for s in q):
@@ -188,6 +233,21 @@ async def validate(tools, fact):
         else:
             source = sources[sid]
             cells = source["cells"]
+            if cells and money.cell.row < len(cells) and fact.aggregation_level != "UNKNOWN":
+                row_label = cells[money.cell.row][0] if cells[money.cell.row] else ""
+                is_total = bool(
+                    re.search(
+                        r"합계|소계|총계|총액|^계$|^total$|^subtotal$", normalize(row_label), re.I
+                    )
+                )
+                if (fact.aggregation_level == "DETAIL" and is_total) or (
+                    fact.aggregation_level in {"TOTAL", "SUBTOTAL"} and not is_total
+                ):
+                    block(
+                        "aggregation_level",
+                        "aggregation_row_mismatch",
+                        "상세행·합계행 구분을 원문 행과 대조해야 합니다.",
+                    )
             if money.cell.column >= 40:
                 block(
                     "amount", "cell_not_reviewable", "검수 화면에서 표시할 수 없는 금액 열입니다."

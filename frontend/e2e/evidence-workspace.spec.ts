@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { exposureFixture } from './exposure-fixture'
 
 const id = '11111111-1111-4111-8111-111111111111'
 const sid = '22222222-2222-4222-8222-222222222222'
@@ -102,6 +103,7 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
       })
     else if (path.endsWith('/fact-extraction') || path.endsWith('/agent'))
       json = { available: false, run: null }
+    else if (path.endsWith('/exposure-summary')) json = exposureFixture(bundle)
     else if (path.endsWith('/facts'))
       json = { facts: [fact], next_offset: null }
     else if (path.endsWith(`/facts/${fid}`))
@@ -242,6 +244,19 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
   ).toHaveAttribute('aria-current', 'page')
   const overview = main.getByRole('region', { name: '추출 현황' })
   const detail = main.getByRole('complementary', { name: '선택 항목 근거' })
+  const composition = main.getByRole('region', {
+    name: '제공 보증·조건부 의무 구성',
+  })
+  await expect(
+    composition.getByRole('cell', { name: '10,985', exact: true }),
+  ).toBeVisible()
+  await expect(composition.getByText('= 61.0%', { exact: true })).toBeVisible()
+  await expect(composition.getByText('합산 제외')).toBeVisible()
+  const maturity = main.getByRole('region', { name: '1년 내 만기 요약' })
+  await expect(maturity.getByText('810', { exact: true })).toBeVisible()
+  await expect(
+    main.getByRole('region', { name: '소송 현황 피고' }).getByText('12건'),
+  ).toBeVisible()
   await expect(overview.getByRole('row')).toHaveCount(7)
   await expect(
     detail.getByText('감사의견 기재: 적정', { exact: true }),
@@ -255,6 +270,24 @@ test('evidence workspace has styled panels, usable search and no viewport overfl
     path: info.outputPath('evidence-initial.png'),
     fullPage: true,
   })
+  await composition.getByRole('button', { name: /XI.2/ }).first().click()
+  const exposureDialog = page.getByRole('dialog', {
+    name: '구성·만기·소송 원문',
+  })
+  await expect(
+    exposureDialog.getByRole('table', { name: '저장된 근거 표' }),
+  ).toBeVisible()
+  await exposureDialog
+    .getByRole('button', { name: '닫기', exact: true })
+    .click()
+  await maturity.getByRole('link', { name: '만기 사다리 보기 →' }).click()
+  await expect(
+    main.getByRole('region', { name: '상세 만기 사다리' }),
+  ).toBeVisible()
+  await page
+    .getByRole('navigation', { name: '주석 확인 메뉴' })
+    .getByRole('button', { name: '주석 추출 근거' })
+    .click()
   await main.getByRole('button', { name: '담보 제공', exact: true }).click()
   await expect(detail.getByRole('heading', { name: '담보 제공' })).toBeVisible()
   await expect(detail.getByText('검색 후보', { exact: true })).toBeVisible()

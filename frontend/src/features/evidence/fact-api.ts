@@ -26,6 +26,11 @@ export const fields = {
   status: '상태',
   absence: '명시적 없음',
   amount_role: '금액 역할',
+  obligation_type: '보증·의무 유형',
+  aggregation_level: '상세·합계 구분',
+  project_count: '사업장 수',
+  case_number: '사건번호',
+  case_count: '공시 소송 건수',
 } as const
 const citation = z.object({
   segment_id: z.string().uuid(),
@@ -61,6 +66,11 @@ export const factDataSchema = z.object({
   status: z.string().nullable(),
   detection: z.string(),
   citations: z.array(citation),
+  obligation_type: z.string().nullable().optional(),
+  aggregation_level: z.string().optional(),
+  project_count: z.number().nullable().optional(),
+  case_number: z.string().nullable().optional(),
+  case_count: z.number().nullable().optional(),
 })
 const validation = z.object({
   status: z.enum(['BLOCKED', 'CITATIONS_VALID']),

@@ -28,6 +28,9 @@ def keys(data, validation):
         )
     }
     comparable = {k: normalize(v) if isinstance(v, str) else v for k, v in comparable.items()}
+    for key in ("obligation_type", "aggregation_level", "case_number"):
+        if data.get(key) not in (None, "UNKNOWN"):
+            comparable[key] = data[key]
     return fingerprint(comparable), fingerprint(
         {
             "amount": validation["normalized_amount"],
