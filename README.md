@@ -2,7 +2,7 @@
 
 기업 여신 검토를 지원하는 공시 기반 재무·주석·위험징후 분석 서비스 **LoanSight AI**의 실행 코드와 운영 환경을 관리하는 저장소입니다.
 
-- 기획 기준: 기획안 v2.3 · 요구사항 v0.0.7 · PRD/기능명세서 v0.0.6 · WBS v1.4
+- 기획 문서 기준: 기획안 v3.0 · 요구사항/PRD/기능명세 v1.0 · WBS v2.0. [최신 문서 원문](https://github.com/loansight-ai/docs#최신-기획-문서)을 확인하세요. 기획 기준(제조·건설·도소매, OFS)과 아래 코드의 구현 범위·상태는 구분합니다.
 - 현재 상태: 사용자·세션·Outbox→RabbitMQ→Worker→DB→SSE와 프론트 작업 알림 연동 구현. [OpenDART 기업 검색·주간 원장 갱신·KSIC11 코드 연결](backend/README.md#기업-검색)과 기업별 사업보고서 선택을 구현했습니다. [원본 ZIP/XML·연결/별도 주석 HTML 자동 수집](backend/README.md#dart-원문-자동-수집)과 기존 주석 구조화 작업을 연결해 원문·구조화 결과·원문 구간을 저장하고 조회할 수 있습니다. 저장된 주석의 목차·구간·원문 열람과 강조를 연결했습니다. [핵심 재무 분석](backend/README.md#financial-api)은 정형 재무·주석 보완·DB 저장·요약 화면을 연결했습니다. 통합 사실의 서버 검수와 위험규칙 입력 실행기를 구현했으며, 운영 규칙 등록·모델 추론·검토 메모 서버 저장은 후속입니다.
 - 구현 기준: [전체 시스템 아키텍처 v0.4](docs/01_LoanSight_AI_Architecture_v0.4.md)
 
@@ -48,7 +48,7 @@
 | [업종별 지표·징후 참고](docs/03_업종별_핵심재무지표_상환연체위험징후지표_v0.0.3.md) | 지표·위험단계 제안. 운영 등록/승인과 구분 |
 | [커버리지 검토](docs/reviews/01_architecture-coverage-v0.4.md) | 기능 명세·화면설계서 대조 결과와 반영 위치 |
 
-기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v1.4](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
+기획·수행일지·제출·발표 자료는 별도 [docs 저장소](https://github.com/loansight-ai/docs)에서 관리합니다. [기능 명세서](https://github.com/loansight-ai/docs/blob/main/01-planning/functions.md), [화면설계서 PDF](<docs/02_LoanSight AI_화면설계서_v0.0.1.pdf>), [최신 문서·원문](https://app.notion.com/p/40080be201ba8159ae7fcd1aebce0000), [WBS v2.0](https://app.notion.com/p/3ff80be201ba80618c52cb61cc4a6153)을 연결합니다.
 
 ## 구현·실행
 
