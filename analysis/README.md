@@ -39,11 +39,8 @@
 
 ## 출처와 무결성
 
-로컬 분석 묶음 `업종재무지표_최종제출/01_재현코드와입력`의 원본을 그대로 복사했습니다. SHA-256:
+로컬 분석 묶음 `업종재무지표_최종제출/01_재현코드와입력`의 코드를 가져왔습니다. 기존 파일의 원본 바이트는 [PR #25](https://github.com/loansight-ai/code/pull/25)에 남아 있습니다.
 
-- `run_yearly_eda.py`: `f0dd9c3234dade4284cf9c68814493d22e5c286ea91f8144786714935baba1fc`
-- `run_sensitivity.py`: `d0365bf59d97211b30ea78e63371b1c8085e5367d5bb28e1f52b44ed6c9883d2`
-- `reclassify_relative.py`: `7f7a0792e9d2d5c0639485ebebd489600273704831527e45cfd73d6f0c2bcd5b`
-- `test_sensitivity.py`: `4ffa448e903ff993aa4b04dc5135b1be0bd69b0ec49f787c44ff53e712c8b8ec`
+`run_yearly_eda.main()`이 `load_sources()`로 입력을 읽고 연도마다 `year_analysis()`를 호출합니다. `year_analysis()`는 `bootstrap()`으로 분위수 신뢰구간을 계산합니다. `--with-sensitivity`를 지정하면 `run_sensitivity.main()`이 `process_year()`와 `analyze_series()`로 구간 변동을 계산합니다. 실행 마지막에는 `reclassify_relative.main()`이 저장된 신뢰구간과 민감도 결과를 읽어 상대 구간 안내를 갱신합니다.
 
 연구 요약은 프로젝트의 OFS 분석 안내, 2025 위험징후 검증 안내, 11월 3일 모델링 작업 요약, 11월 4일 전체 연도 학습·검증 전달 기록을 대조해 작성했습니다. 현재 운영 구조와 현행 기준은 저장소 루트 README와 연결된 설계 문서를 따릅니다.
